@@ -195,14 +195,14 @@ namespace trab.Players
         {
             var uiSys = ModContent.GetInstance<AIBuildingUISystem>();
 
-            // P键打开/关闭UI
-            if (AIBuildingKeybindSystem.ToggleUIKey.JustPressed)
+            // P键打开/关闭UI（排除聊天模式和菜单）
+            if (AIBuildingKeybindSystem.ToggleUIKey.JustPressed && !Main.drawingPlayerChat && !Main.gameMenu)
             {
                 uiSys.Toggle();
             }
 
-            // UI打开时的操作
-            if (uiSys.Visible)
+            // UI打开时的操作（排除聊天模式）
+            if (uiSys.Visible && !Main.drawingPlayerChat)
             {
                 // G键生成
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G) &&
@@ -211,17 +211,24 @@ namespace trab.Players
                     if (uiSys.panel != null)
                         uiSys.panel.DoGenerate();
                 }
-                // B键放置
+                // B键放置（在鼠标位置）
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.B) &&
                     !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.B))
                 {
                     if (uiSys.panel != null)
-                        uiSys.panel.DoPlace();
+                        uiSys.panel.DoPlaceAtMouse();
+                }
+                // M键区域选择
+                if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.M) &&
+                    !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.M))
+                {
+                    if (uiSys.panel != null)
+                        uiSys.panel.ToggleAreaMode();
                 }
             }
 
-            // B键快速放置（UI关闭时）
-            if (!uiSys.Visible && AIBuildingKeybindSystem.PlaceBuildingKey.JustPressed)
+            // B键快速放置（UI关闭时，且不在聊天模式）
+            if (!uiSys.Visible && !Main.drawingPlayerChat && !Main.gameMenu && AIBuildingKeybindSystem.PlaceBuildingKey.JustPressed)
             {
                 PlaceLastDesign();
             }
