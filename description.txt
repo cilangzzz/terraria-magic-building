@@ -1,0 +1,25 @@
+AI Building Generator - Use AI to automatically generate buildings in Terraria!
+
+Features:
+- Generate buildings using AI API (OpenAI/Claude)
+- Chat commands: /aibuild <description>
+- Quick build presets: /quickbuild house/castle/tower/cave/shop
+- UI panel: Press P to open AI chat interface
+- Configurable API settings and build options
+
+How to use:
+1. Configure your API key in Mod Config (ESC -> Mod Config -> AI Building Config)
+2. Use /aibuild <description> to generate a building design
+3. Or press P to open the UI panel
+4. Use /quickbuild <preset> for quick preset buildings
+
+Examples:
+- /aibuild A medieval wooden house
+- /aibuild A golden brick castle with towers
+- /quickbuild house
+- /quickbuild castle
+
+Tips:
+- Describe your building in detail for better results
+- AI will generate valid NPC housing with furniture
+- Use /aibuild help for more commands

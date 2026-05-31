@@ -1,0 +1,4 @@
+displayName = AI Building Generator
+author = cilang
+version = 0.2
+modSide = Both

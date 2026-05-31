@@ -1,0 +1,130 @@
+Keybinds: {
+	ToggleAIUI.DisplayName: Toggle A I U I
+	PlaceBuilding.DisplayName: Place Building
+}
+
+Configs: {
+	AIBuildingConfig: {
+		DisplayName: A I Building Config
+
+		Headers: {
+			API设置: A P I设置 Header
+			生成设置: 生成设置 Header
+			UI设置: U I设置 Header
+			安全设置: 安全设置 Header
+		}
+
+		ApiKey: {
+			Label: Api Key
+			Tooltip: API密钥（不会上传到服务器）
+		}
+
+		ServiceProvider: {
+			Label: Service Provider
+			Tooltip: AI服务提供商
+		}
+
+		CustomEndpoint: {
+			Label: Custom Endpoint
+			Tooltip: 自定义API端点（仅Custom模式下使用）
+		}
+
+		ClearAreaMode: {
+			Label: Clear Area Mode
+			Tooltip: 生成时的清理模式
+		}
+
+		BuildOffsetX: {
+			Label: Build Offset X
+			Tooltip: 建筑生成位置偏移X
+		}
+
+		BuildOffsetY: {
+			Label: Build Offset Y
+			Tooltip: 建筑生成位置偏移Y
+		}
+
+		ValidateHouse: {
+			Label: Validate House
+			Tooltip: 是否自动验证房屋有效性
+		}
+
+		UIWidth: {
+			Label: U I Width
+			Tooltip: UI面板宽度
+		}
+
+		UIHeight: {
+			Label: U I Height
+			Tooltip: UI面板高度
+		}
+
+		ShowTips: {
+			Label: Show Tips
+			Tooltip: 是否显示提示信息
+		}
+
+		MaxBuildingSize: {
+			Label: Max Building Size
+			Tooltip: 最大建筑尺寸限制
+		}
+
+		LogApiRequests: {
+			Label: Log Api Requests
+			Tooltip: 是否记录API请求日志
+		}
+
+		ModelName: {
+			Label: Model Name
+			Tooltip: ""
+		}
+	}
+
+	AIServiceType: {
+		Tooltip: ""
+
+		OpenAI: {
+			Label: Open A I
+			Tooltip: ""
+		}
+
+		Claude: {
+			Label: Claude
+			Tooltip: ""
+		}
+
+		Custom: {
+			Label: Custom
+			Tooltip: ""
+		}
+
+		DashScope: {
+			Label: Dash Scope
+			Tooltip: ""
+		}
+
+		DeepSeek: {
+			Label: Deep Seek
+			Tooltip: ""
+		}
+	}
+
+	ClearMode: {
+		Tooltip: ""
+
+		None: {
+			Label: None
+			Tooltip: ""
+		}
+
+		Soft: {
+			Label: Soft
+			Tooltip: ""
+		}
+
+		Hard: {
+			Label: Hard
+			Tooltip: ""
+		}
+	}
+}
