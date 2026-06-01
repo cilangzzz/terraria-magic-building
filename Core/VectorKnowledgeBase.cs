@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace trab.Core
@@ -49,24 +50,27 @@ namespace trab.Core
             _tileEmbeddings = new Dictionary<int, float[]>();
             _tileEntries = new Dictionary<int, TileEmbeddingEntry>();
 
-            // 使用相对路径，从Mod源码目录加载
-            string basePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string modSourcePath = Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab");
-            string path = Path.Combine(modSourcePath, "Data", "tile_embeddings.json");
+            // 多路径尝试策略
+            string[] possiblePaths = GetPossibleDataPaths("tile_embeddings.json");
 
-            // 备用路径：直接从运行目录
-            if (!File.Exists(path))
+            string foundPath = null;
+            foreach (var p in possiblePaths)
             {
-                path = Path.Combine(basePath, "Data", "tile_embeddings.json");
+                if (File.Exists(p))
+                {
+                    foundPath = p;
+                    break;
+                }
             }
 
-            if (!File.Exists(path))
+            if (foundPath == null)
             {
-                trab.Instance?.Logger.Warn($"Tile向量文件不存在，使用空向量库");
+                trab.Instance?.Logger.Warn($"Tile向量文件不存在，向量检索将不可用");
                 return;
             }
 
-            string json = File.ReadAllText(path);
+            trab.Instance?.Logger.Info($"加载Tile向量: {foundPath}");
+            string json = File.ReadAllText(foundPath);
             var entries = JsonConvert.DeserializeObject<List<TileEmbeddingEntry>>(json);
 
             if (entries == null) return;
@@ -86,22 +90,26 @@ namespace trab.Core
         {
             _styleEmbeddings = new Dictionary<string, float[]>();
 
-            string basePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string modSourcePath = Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab");
-            string path = Path.Combine(modSourcePath, "Data", "style_embeddings.json");
+            string[] possiblePaths = GetPossibleDataPaths("style_embeddings.json");
 
-            if (!File.Exists(path))
+            string foundPath = null;
+            foreach (var p in possiblePaths)
             {
-                path = Path.Combine(basePath, "Data", "style_embeddings.json");
+                if (File.Exists(p))
+                {
+                    foundPath = p;
+                    break;
+                }
             }
 
-            if (!File.Exists(path))
+            if (foundPath == null)
             {
-                trab.Instance?.Logger.Warn($"Style向量文件不存在，使用空向量库");
+                trab.Instance?.Logger.Warn($"Style向量文件不存在，向量检索将不可用");
                 return;
             }
 
-            string json = File.ReadAllText(path);
+            trab.Instance?.Logger.Info($"加载Style向量: {foundPath}");
+            string json = File.ReadAllText(foundPath);
             var entries = JsonConvert.DeserializeObject<List<StyleEmbeddingEntry>>(json);
 
             if (entries == null) return;
@@ -113,6 +121,37 @@ namespace trab.Core
                     _styleEmbeddings[entry.style.ToLower()] = entry.embedding;
                 }
             }
+        }
+
+        private string[] GetPossibleDataPaths(string filename)
+        {
+            var paths = new List<string>();
+
+            // 1. Mod源码目录 (开发模式)
+            string modSourcePath = Path.Combine(
+                "C:", "Users", "admin", "Documents", "My Games", "Terraria",
+                "tModLoader", "ModSources", "trab", "Data", filename);
+            paths.Add(modSourcePath);
+
+            // 2. 从Assembly位置推导
+            try
+            {
+                string basePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                // tModLoader运行目录结构
+                paths.Add(Path.Combine(basePath, "Data", filename));
+                // ModSources相对路径
+                paths.Add(Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab", "Data", filename));
+                // Terraria数据目录
+                string terrariaPath = Path.Combine(Main.SavePath, "Mods", "trab", "Data", filename);
+                paths.Add(terrariaPath);
+            }
+            catch { }
+
+            // 3. 当前工作目录
+            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "Data", filename));
+            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "..", "Data", filename));
+
+            return paths.ToArray();
         }
 
         /// <summary>

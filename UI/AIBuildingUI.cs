@@ -72,7 +72,7 @@ namespace trab.UI
 
     public enum BuildingStyle
     {
-        Simple, Medieval, Modern, Japanese, Underground, Tower, Castle
+        Medieval, Modern, Japanese, Fantasy, Underground, Custom
     }
 
     public class AIBuildingPanel : UIState
@@ -85,6 +85,13 @@ namespace trab.UI
         private UIPanel sizeModule;       // 大小模块
         private UIPanel functionModule;   // 功能模块
         private UIPanel logModule;        // 日志模块
+
+        // 自定义风格弹窗
+        private UIPanel customStylePopup;
+        private UIText customStyleHint;
+        private bool showCustomPopup = false;
+        private bool waitingForCustomInput = false;
+        private string customStyleText = "";
 
         // 日志
         private UIPanel logContainer;      // 日志裁剪容器
@@ -102,7 +109,7 @@ namespace trab.UI
         private UITextPanel<string>[] styleButtons;
         private UITextPanel<string>[] sizeButtons;
 
-        public BuildingStyle currentStyle = BuildingStyle.Simple;
+        public BuildingStyle currentStyle = BuildingStyle.Medieval;
         public int currentSizeIndex = 0;
 
         // 选区
@@ -115,21 +122,21 @@ namespace trab.UI
 
         private int[] sizeWidths = { 10, 20, 35 };
         private int[] sizeHeights = { 8, 15, 25 };
-        private string[] styleNames = { "简单", "中世纪", "现代", "日式", "地下", "塔楼", "城堡" };
+        private string[] styleNames = { "中世纪", "现代", "日式", "奇幻", "地下", "自定义" };
         private string[] sizeNames = { "小", "中", "大" };
 
         private bool wasMouseLeftPressed = false;
 
         // UI尺寸常量
         private const float PANEL_WIDTH = 320f;
-        private const float PANEL_HEIGHT = 450f;
+        private const float PANEL_HEIGHT = 480f;
         private const float MODULE_MARGIN = 8f;
         private const float MODULE_PADDING = 6f;
         private const float MODULE_TOP_MARGIN = 10f;    // 模块上边距
         private const float MODULE_HEIGHT_STYLE = 44f;
         private const float MODULE_HEIGHT_SIZE = 44f;
         private const float MODULE_HEIGHT_FUNC = 48f;
-        private const float MODULE_HEIGHT_LOG = 225f;   // 日志框高度增大
+        private const float MODULE_HEIGHT_LOG = 271f;   // 日志框高度，容器高度259f
         private const float BUTTON_HEIGHT = 24f;
         private const float BUTTON_VPADDING = 5f;
 
@@ -166,21 +173,22 @@ namespace trab.UI
             styleLabel.TextColor = Color.LightGray;
             styleModule.Append(styleLabel);
 
-            // 风格按钮组 - 7个按钮，宽度32f防止超出
-            // 内容宽度292f，标签约45f，剩余247f，7按钮+6间距=230f，安全
+            // 风格按钮组 - 6个按钮（5个预设+自定义）
+            // 内容宽度292f，标签约45f，剩余247f，6按钮+5间距约250f
             styleButtons = new UITextPanel<string>[styleNames.Length];
-            float btnW = 32f;
-            float btnGap = 1f;
+            float btnW = 38f;
+            float btnGap = 2f;
             float startX = 46f;
             for (int i = 0; i < styleNames.Length; i++)
             {
-                styleButtons[i] = new UITextPanel<string>(styleNames[i], 0.55f);
+                styleButtons[i] = new UITextPanel<string>(styleNames[i], 0.6f);
                 styleButtons[i].Width.Set(btnW, 0f);
                 styleButtons[i].Height.Set(BUTTON_HEIGHT, 0f);
                 styleButtons[i].Left.Set(startX + i * (btnW + btnGap), 0f);
                 styleButtons[i].Top.Set(10f, 0f);
                 styleButtons[i].SetPadding(BUTTON_VPADDING);
-                styleButtons[i].BackgroundColor = i == 0 ? new Color(50, 100, 50) : new Color(45, 45, 65);
+                styleButtons[i].BackgroundColor = i == 0 ? new Color(50, 100, 50) :
+                    (i == styleNames.Length - 1 ? new Color(80, 80, 120) : new Color(45, 45, 65));
                 int idx = i;
                 styleButtons[i].OnLeftClick += (evt, elem) => SelectStyle(idx);
                 styleModule.Append(styleButtons[i]);
@@ -350,15 +358,62 @@ namespace trab.UI
             logModule.Append(clearBtn);
 
             AddMessage("AI建筑助手已启动");
-            AddMessage("P关闭 | M选区 | 滚轮翻日志");
+            AddMessage("P关闭 | M选区 | 自定义风格在聊天输入");
+
+            // ─────────────────────────────────────────
+            // 自定义风格弹窗
+            // ─────────────────────────────────────────
+            customStylePopup = new UIPanel();
+            customStylePopup.SetPadding(10);
+            customStylePopup.Width.Set(280f, 0f);
+            customStylePopup.Height.Set(80f, 0f);
+            customStylePopup.Left.Set(PANEL_WIDTH / 2 - 140f, 0f);
+            customStylePopup.Top.Set(PANEL_HEIGHT / 2 - 40f, 0f);
+            customStylePopup.BackgroundColor = new Color(40, 40, 60, 240);
+            customStylePopup.BorderColor = new Color(100, 100, 140);
+            mainPanel.Append(customStylePopup);
+
+            var popupTitle = new UIText("自定义风格", 1.0f);
+            popupTitle.Left.Set(10f, 0f);
+            popupTitle.Top.Set(5f, 0f);
+            popupTitle.TextColor = Color.Cyan;
+            customStylePopup.Append(popupTitle);
+
+            customStyleHint = new UIText("在聊天框输入风格描述\n按Enter确认，按Esc取消", 0.85f);
+            customStyleHint.Left.Set(10f, 0f);
+            customStyleHint.Top.Set(30f, 0f);
+            customStyleHint.TextColor = Color.LightGray;
+            customStylePopup.Append(customStyleHint);
+
+            customStylePopup.Remove();  // 初始隐藏
         }
 
         private void SelectStyle(int idx)
         {
             currentStyle = (BuildingStyle)idx;
-            AddMessage($"风格: {styleNames[idx]}");
+
+            // 如果选择自定义，打开弹窗
+            if (idx == styleNames.Length - 1)  // 自定义按钮
+            {
+                showCustomPopup = true;
+                AddMessage("请输入自定义风格描述");
+            }
+            else
+            {
+                showCustomPopup = false;
+                AddMessage($"风格: {styleNames[idx]}");
+            }
+
+            // 更新按钮颜色
             for (int i = 0; i < styleButtons.Length; i++)
-                styleButtons[i].BackgroundColor = i == idx ? new Color(50, 100, 50) : new Color(45, 45, 65);
+            {
+                if (i == idx)
+                    styleButtons[i].BackgroundColor = new Color(50, 100, 50);
+                else if (i == styleNames.Length - 1)  // 自定义按钮特殊颜色
+                    styleButtons[i].BackgroundColor = new Color(80, 80, 120);
+                else
+                    styleButtons[i].BackgroundColor = new Color(45, 45, 65);
+            }
         }
 
         private void SelectSize(int idx)
@@ -418,16 +473,28 @@ namespace trab.UI
 
         private string GetStylePrompt(BuildingStyle style, int w, int h)
         {
+            // 更丰富的提示词，包含方块和家具要求
             return style switch
             {
-                BuildingStyle.Simple => $"生成简单木屋 {w}x{h}",
-                BuildingStyle.Medieval => $"生成中世纪石砖建筑 {w}x{h}",
-                BuildingStyle.Modern => $"生成现代玻璃建筑 {w}x{h}",
-                BuildingStyle.Japanese => $"生成日式木屋 {w}x{h}",
-                BuildingStyle.Underground => $"生成地下基地 {w}x{h}",
-                BuildingStyle.Tower => $"生成高塔 高{h}宽{w}",
-                BuildingStyle.Castle => $"生成小型城堡 {w}x{h}",
-                _ => $"生成建筑 {w}x{h}"
+                BuildingStyle.Medieval =>
+                    $"生成中世纪风格建筑 {w}x{h}。使用GrayBrick、StoneSlab方块，Wood地板，添加WorkBench、Chair、Table家具，放置Torch照明，WoodenDoor作为门。墙壁使用GrayBrickWall。返回JSON格式。",
+
+                BuildingStyle.Modern =>
+                    $"生成现代风格建筑 {w}x{h}。使用Glass、GrayBrick方块，Platform地板，添加Bed、Dresser、Table家具，放置Chandelier照明，使用各种Paint涂色。墙壁使用GlassWall。返回JSON格式。",
+
+                BuildingStyle.Japanese =>
+                    $"生成日式风格建筑 {w}x{h}。使用Wood、BorealWood方块，Wood地板，添加WorkBench、Chair、Table家具，放置Torch照明，使用红棕色Paint。墙壁使用WoodWall。屋顶用斜坡Slope。返回JSON格式。",
+
+                BuildingStyle.Fantasy =>
+                    $"生成奇幻风格建筑 {w}x{h}。使用GoldBrick、Marble方块，添加Piano、Bathtub、Bed豪华家具，放置红蓝Paint配色。墙壁使用GoldBrickWall。返回JSON格式。",
+
+                BuildingStyle.Underground =>
+                    $"生成地下基地建筑 {w}x{h}。使用Stone、Obsidian方块，添加Furnace、Anvil、WorkBench工坊家具，放置Torch照明。墙壁使用StoneWall。返回JSON格式。",
+
+                BuildingStyle.Custom =>
+                    !string.IsNullOrEmpty(customStyleText) ? $"{customStyleText} {w}x{h}，使用合适方块和家具，返回JSON格式。" : $"生成建筑 {w}x{h}，返回JSON格式。",
+
+                _ => $"生成建筑 {w}x{h}，使用多种方块和家具，返回JSON格式。"
             };
         }
 
@@ -582,6 +649,41 @@ namespace trab.UI
         {
             base.Update(gt);
             mainPanel.Left.Set(Main.screenWidth - PANEL_WIDTH - 20f, 0f);
+
+            // 处理自定义风格弹窗显示
+            if (showCustomPopup)
+            {
+                if (!mainPanel.HasChild(customStylePopup))
+                    mainPanel.Append(customStylePopup);
+
+                // 检测聊天输入
+                if (Main.drawingPlayerChat)
+                {
+                    waitingForCustomInput = true;
+                }
+                else if (waitingForCustomInput)
+                {
+                    // 聊天框关闭时获取输入内容
+                    string chatText = Main.chatText;
+                    if (!string.IsNullOrEmpty(chatText) && chatText != "/")
+                    {
+                        customStyleText = chatText.TrimStart('/');
+                        AddMessage($"自定义风格: {customStyleText}");
+                    }
+                    waitingForCustomInput = false;
+                    showCustomPopup = false;
+                    customStylePopup.Remove();
+                }
+
+                // Esc取消
+                if (Main.keyState.IsKeyDown(Keys.Escape))
+                {
+                    showCustomPopup = false;
+                    waitingForCustomInput = false;
+                    customStylePopup.Remove();
+                    AddMessage("已取消自定义风格");
+                }
+            }
 
             // 同步busy状态
             var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();

@@ -1,5 +1,12 @@
 -- Terraria 建筑知识库数据库 (完整版)
--- 更新时间: 2026-06-01T20:40:54.363556
+-- 更新时间: 2026-06-01T21:20:48.784552
+--
+-- 向量数据文件:
+--   tile_embeddings.json    - 方块向量 (384维)
+--   style_embeddings.json   - 风格向量 (384维)
+--   biome_embeddings.json   - 生物群落向量 (384维)
+--
+-- 向量生成: python Tools/python/generate_embeddings.py
 
 -- === tiles ===
 INSERT OR IGNORE INTO tiles VALUES (1, 'StoneBlock', '石头', 'brick', '["medieval","natural","underground"]', '["forest","underground"]', 1, 1, 50, 0, '基础建筑材料', 'manual');

@@ -28,32 +28,42 @@ namespace trab.Core
 
         private const int MAX_AGENT_ROUNDS = 10;  // 增加轮数限制，让AI有足够时间思考
 
-        private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。简洁生成建筑JSON。
+        private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。生成有设计感的建筑JSON。
 
-## 流程
-1. 调用 get_style_template 一次
-2. 调用 search_tiles 一到两次
-3. 直接输出JSON（最多3轮）
+## 推荐流程（按顺序调用工具）
+1. get_floor_structure - 获取楼层结构（单层/双层/塔楼）
+2. get_roof_template - 获取屋顶设计（人字形/平顶/圆顶）
+3. get_window_template - 获取窗户样式（单窗/双窗/拱窗）
+4. search_tiles - 选择建筑材料
+5. 输出完整JSON
+
+## 设计要点
+- 屋顶要有形状：人字形(gable)最常用，用斜坡方块实现三角上升
+- 窗户对称布局：每层左右各1-2个窗户
+- 楼层区分：不同楼层使用不同方块或油漆
+- 墙壁厚度：城堡类建筑墙壁厚度=2
 
 ## JSON格式（必须完整输出）
 {
-""name"": ""木屋"",
-""width"": 10,
-""height"": 8,
-""tiles"": [{""x"":0,""y"":0,""tile_id"":5}],
-""wallRanges"": [{""x1"":1,""y1"":1,""x2"":9,""y2"":7,""wall_id"":4}],
-""furniture"": [{""x"":2,""y"":1,""tile_id"":17}],
+""name"": ""中世纪双层小屋"",
+""width"": 12,
+""height"": 14,
+""style"": ""medieval"",
+""tiles"": [{""x"":0,""y"":0,""tile_id"":4,""slope"":0}],
+""wallRanges"": [{""x1"":1,""y1"":1,""x2"":11,""y2"":13,""wall_id"":4}],
+""furniture"": [{""x"":3,""y"":6,""tile_id"":17}],
 ""doors"": [{""x"":5,""y"":1,""tile_id"":10}],
-""lightSources"": [{""x"":3,""y"":3,""tile_id"":4}]
+""lightSources"": [{""x"":2,""y"":3,""tile_id"":4},{""x"":10,""y"":3,""tile_id"":4}]
 }
 
 ## 常用ID
-木材5|石头1|灰砖4|石板143|木墙4|石墙1|门10|火把4|工作台17|桌子87|椅子88
+木材5|石头1|灰砖4|石板143|玻璃13|大理石57|木墙4|石墙1|门10|火把4|工作台17|桌子87|椅子88
 
 ## 规则
 - 输出完整JSON，不要截断
-- 不写解释，只输出JSON
-- 小建筑10x8就够了";
+- tiles数组包含所有方块位置
+- 窗户位置放入tiles（玻璃+窗框）
+- 屋顶用斜坡方块(slope=1-4)实现形状";
 
         public AIAgentService(string apiKey, AIServiceType serviceType = AIServiceType.DeepSeek, string modelName = "deepseek-chat")
         {
