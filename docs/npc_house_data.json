@@ -1,0 +1,384 @@
+{
+  "house_requirements": {
+    "minimum_tiles": 60,
+    "maximum_tiles": 750,
+    "minimum_dimensions": {
+      "excluding_frame": [
+        {"width": 3, "height": 10},
+        {"width": 4, "height": 8},
+        {"width": 5, "height": 7},
+        {"width": 6, "height": 6},
+        {"width": 7, "height": 5},
+        {"width": 8, "height": 4},
+        {"width": 10, "height": 3}
+      ],
+      "including_frame": [
+        {"width": 5, "height": 12},
+        {"width": 6, "height": 10},
+        {"width": 7, "height": 9},
+        {"width": 8, "height": 8},
+        {"width": 9, "height": 7},
+        {"width": 10, "height": 6},
+        {"width": 12, "height": 5}
+      ]
+    },
+    "required_furniture": {
+      "light_source": {
+        "description": "Any item providing light (Torches, Candles, Lanterns, Chandeliers, etc.)",
+        "tile_ids": [4, 33, 34, 35, 42, 49, 92, 93, 95, 98, 100, 149, 173, 174, 270, 271, 316, 317, 318, 372, 405, 572, 581, 592, 646, 660],
+        "examples": ["Torch", "Tiki Torch", "Candle", "Skull Lantern", "Candelabra", "Lamp", "Lantern", "Chandelier", "Fireplace", "Jack 'O Lantern", "Christmas lights", "Jellyfish jars", "Lamp Post", "Hanging Brazier"]
+      },
+      "table": {
+        "description": "Any flat surface item",
+        "tile_ids": [14, 18, 87, 88, 90, 101, 354, 355, 464, 469, 487, 699],
+        "examples": ["Work Bench", "Table", "Picnic Table", "Piano", "Bookcase", "Bench", "War Table", "Research Bench"]
+      },
+      "chair": {
+        "description": "Any seating item",
+        "tile_ids": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86],
+        "examples": ["Chair", "Throne", "Bench"]
+      },
+      "door": {
+        "description": "Any entrance item (Door, Platform, Trap Door, Tall Gate)",
+        "examples": ["Door", "Wood Platform", "Trap Door", "Tall Gate"]
+      }
+    },
+    "wall_requirements": {
+      "description": "Player-placed background walls required throughout the house",
+      "unsafe_walls_invalid": true,
+      "max_hole_size": 4,
+      "hole_description": "Holes 5 tiles or more in width/height are not permitted"
+    },
+    "frame_requirements": {
+      "description": "Frame must be completely closed with solid blocks, platforms (not actuated), Trap Doors, Doors, or Tall Gates",
+      "must_be_closed": true,
+      "valid_frame_materials": ["solid blocks", "platforms", "trap doors", "doors", "tall gates"]
+    },
+    "location_requirements": {
+      "min_distance_from_world_edge": 10,
+      "evil_biome_restriction": "Must not be too close to Corruption or Crimson biomes"
+    },
+    "special_restrictions": {
+      "stinkbug_blocker_invalid": true,
+      "truffle_special_rule": "House must be in above-ground Glowing Mushroom biome during Hardmode"
+    }
+  },
+  "npcs": [
+    {
+      "npc_name": "Guide",
+      "display_name": "Guide",
+      "spawn_condition": "Always present when starting a new regular world",
+      "preferred_biome": {"likes": "Forest", "loves": "Ocean"},
+      "preferred_neighbors": {"likes": ["Clothier", "Zoologist"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Painter"], "hates": ["Steampunker"]}
+    },
+    {
+      "npc_name": "Merchant",
+      "display_name": "Merchant",
+      "spawn_condition": "All players combined have more than 50 silver coins in their inventories",
+      "preferred_biome": {"likes": "Forest", "loves": "Desert"},
+      "preferred_neighbors": {"likes": ["Golfer", "Nurse"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Angler"], "hates": ["Tax Collector"]}
+    },
+    {
+      "npc_name": "Nurse",
+      "display_name": "Nurse",
+      "spawn_condition": "A player has more than 100 health and the Merchant is present",
+      "preferred_biome": {"likes": "Hallow", "loves": "Snow biome"},
+      "preferred_neighbors": {"likes": ["Wizard"], "loves": ["Arms Dealer"]},
+      "disliked_neighbors": {"dislikes": ["Dryad", "Party Girl"], "hates": ["Zoologist"]}
+    },
+    {
+      "npc_name": "Demolitionist",
+      "display_name": "Demolitionist",
+      "spawn_condition": "A player has an explosive in their inventory and the Merchant is present",
+      "preferred_biome": {"likes": "Underground/Cavern/Underworld", "loves": "Ocean"},
+      "preferred_neighbors": {"likes": ["Mechanic"], "loves": ["Tavernkeep"]},
+      "disliked_neighbors": {"dislikes": ["Arms Dealer", "Goblin Tinkerer"], "hates": []}
+    },
+    {
+      "npc_name": "Dye_Trader",
+      "display_name": "Dye Trader",
+      "spawn_condition": "A player has a dye item or any item used to craft dye in their inventory",
+      "preferred_biome": {"likes": "Desert", "loves": "Forest"},
+      "preferred_neighbors": {"likes": ["Arms Dealer", "Painter"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Pirate", "Steampunker"], "hates": ["Goblin Tinkerer"]}
+    },
+    {
+      "npc_name": "Angler",
+      "display_name": "Angler",
+      "spawn_condition": "Found and spoken to in an Ocean biome",
+      "preferred_biome": {"likes": "Ocean", "loves": null},
+      "preferred_neighbors": {"likes": ["Golfer", "Tavernkeep", "Tax Collector"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Demolitionist", "Wizard"], "hates": []}
+    },
+    {
+      "npc_name": "Zoologist",
+      "display_name": "Zoologist",
+      "spawn_condition": "At least 10% of the Bestiary (55 entries) has been filled",
+      "preferred_biome": {"likes": "Forest", "loves": "Desert"},
+      "preferred_neighbors": {"likes": ["Golfer"], "loves": ["Witch Doctor"]},
+      "disliked_neighbors": {"dislikes": ["Angler", "Golfer"], "hates": ["Arms Dealer"]}
+    },
+    {
+      "npc_name": "Dryad",
+      "display_name": "Dryad",
+      "spawn_condition": "Eye of Cthulhu, Eater of Worlds/Brain of Cthulhu, or Skeletron has been defeated",
+      "preferred_biome": {"likes": "Jungle", "loves": "Desert"},
+      "preferred_neighbors": {"likes": ["Truffle", "Angler"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Golfer"], "hates": []}
+    },
+    {
+      "npc_name": "Painter",
+      "display_name": "Painter",
+      "spawn_condition": "8 other town NPCs are in the world",
+      "preferred_biome": {"likes": "Jungle", "loves": "Forest"},
+      "preferred_neighbors": {"likes": ["Party Girl", "Steampunker"], "loves": ["Dryad"]},
+      "disliked_neighbors": {"dislikes": ["Cyborg"], "hates": []}
+    },
+    {
+      "npc_name": "Golfer",
+      "display_name": "Golfer",
+      "spawn_condition": "Found and spoken to in the Underground Desert",
+      "preferred_biome": {"likes": "Forest", "loves": "Underground/Cavern/Underworld"},
+      "preferred_neighbors": {"likes": ["Painter", "Zoologist"], "loves": ["Angler"]},
+      "disliked_neighbors": {"dislikes": ["Pirate"], "hates": ["Merchant"]}
+    },
+    {
+      "npc_name": "Arms_Dealer",
+      "display_name": "Arms Dealer",
+      "spawn_condition": "A player has bullets or a gun that shoots bullets in their inventory",
+      "preferred_biome": {"likes": "Desert", "loves": "Snow biome"},
+      "preferred_neighbors": {"likes": ["Steampunker", "Golfer", "Mechanic"], "loves": ["Nurse"]},
+      "disliked_neighbors": {"dislikes": [], "hates": ["Demolitionist"]}
+    },
+    {
+      "npc_name": "Tavernkeep",
+      "display_name": "Tavernkeep",
+      "spawn_condition": "Found and spoken to after Eater of Worlds or Brain of Cthulhu has been defeated",
+      "preferred_biome": {"likes": "Hallow", "loves": "Snow biome"},
+      "preferred_neighbors": {"likes": ["Goblin Tinkerer"], "loves": ["Demolitionist"]},
+      "disliked_neighbors": {"dislikes": ["Guide"], "hates": ["Dye Trader"]}
+    },
+    {
+      "npc_name": "Stylist",
+      "display_name": "Stylist",
+      "spawn_condition": "Found and spoken to in a Spider Nest",
+      "preferred_biome": {"likes": "Ocean", "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []}
+    },
+    {
+      "npc_name": "Goblin_Tinkerer",
+      "display_name": "Goblin Tinkerer",
+      "spawn_condition": "Found and spoken to in the Cavern layer, after a Goblin Army has been defeated",
+      "preferred_biome": {"likes": "Underground/Cavern/Underworld", "loves": "Jungle"},
+      "preferred_neighbors": {"likes": ["Dye Trader"], "loves": ["Mechanic"]},
+      "disliked_neighbors": {"dislikes": ["Clothier"], "hates": ["Stylist"]}
+    },
+    {
+      "npc_name": "Witch_Doctor",
+      "display_name": "Witch Doctor",
+      "spawn_condition": "Queen Bee has been defeated",
+      "preferred_biome": {"likes": "Jungle", "loves": "Hallow"},
+      "preferred_neighbors": {"likes": ["Dryad", "Guide"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Truffle", "Nurse"], "hates": []}
+    },
+    {
+      "npc_name": "Clothier",
+      "display_name": "Clothier",
+      "spawn_condition": "Skeletron has been defeated",
+      "preferred_biome": {"likes": "Underground/Cavern/Underworld", "loves": "Hallow"},
+      "preferred_neighbors": {"likes": ["Tax Collector", "Nurse"], "loves": ["Truffle"]},
+      "disliked_neighbors": {"dislikes": ["Goblin Tinkerer", "Truffle"], "hates": ["Mechanic"]}
+    },
+    {
+      "npc_name": "Mechanic",
+      "display_name": "Mechanic",
+      "spawn_condition": "Found and spoken to in the Dungeon",
+      "preferred_biome": {"likes": "Snow biome", "loves": null},
+      "preferred_neighbors": {"likes": ["Goblin Tinkerer"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Tavernkeep", "Angler", "Tax Collector"], "hates": []}
+    },
+    {
+      "npc_name": "Party_Girl",
+      "display_name": "Party Girl",
+      "spawn_condition": "1/40 chance of spawning after 20 other town NPCs are in the world",
+      "preferred_biome": {"likes": "Hallow", "loves": "Underground/Cavern/Underworld"},
+      "preferred_neighbors": {"likes": ["Stylist", "Tax Collector"], "loves": ["Wizard", "Zoologist"]},
+      "disliked_neighbors": {"dislikes": ["Merchant", "Angler"], "hates": ["Tax Collector"]}
+    },
+    {
+      "npc_name": "Wizard",
+      "display_name": "Wizard",
+      "spawn_condition": "Found and spoken to in the Cavern layer (Hardmode)",
+      "preferred_biome": {"likes": "Hallow", "loves": "Ocean"},
+      "preferred_neighbors": {"likes": ["Merchant", "Witch Doctor"], "loves": ["Golfer"]},
+      "disliked_neighbors": {"dislikes": ["Nurse", "Steampunker"], "hates": ["Cyborg"]}
+    },
+    {
+      "npc_name": "Tax_Collector",
+      "display_name": "Tax Collector",
+      "spawn_condition": "A Tortured Soul is transformed with Purification Powder in the Underworld (Hardmode)",
+      "preferred_biome": {"likes": "Underground/Cavern/Underworld", "loves": null},
+      "preferred_neighbors": {"likes": ["Merchant", "Party Girl"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Demolitionist", "Angler"], "hates": []}
+    },
+    {
+      "npc_name": "Truffle",
+      "display_name": "Truffle",
+      "spawn_condition": "A house is available in an above-ground Glowing Mushroom biome during Hardmode",
+      "preferred_biome": {"likes": "Glowing Mushroom biome", "loves": null},
+      "preferred_neighbors": {"likes": ["Guide", "Witch Doctor"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Clothier"], "hates": []}
+    },
+    {
+      "npc_name": "Pirate",
+      "display_name": "Pirate",
+      "spawn_condition": "A Pirate Invasion has been defeated (Hardmode)",
+      "preferred_biome": {"likes": "Ocean", "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []}
+    },
+    {
+      "npc_name": "Steampunker",
+      "display_name": "Steampunker",
+      "spawn_condition": "A mechanical boss has been defeated (Hardmode)",
+      "preferred_biome": {"likes": "Desert", "loves": "Jungle"},
+      "preferred_neighbors": {"likes": ["Painter", "Wizard", "Party Girl"], "loves": ["Cyborg"]},
+      "disliked_neighbors": {"dislikes": ["Dryad", "Dye Trader"], "hates": []}
+    },
+    {
+      "npc_name": "Cyborg",
+      "display_name": "Cyborg",
+      "spawn_condition": "Plantera has been defeated (Hardmode)",
+      "preferred_biome": {"likes": "Snow biome", "loves": null},
+      "preferred_neighbors": {"likes": ["Steampunker", "Zoologist"], "loves": []},
+      "disliked_neighbors": {"dislikes": ["Wizard", "Painter"], "hates": []}
+    },
+    {
+      "npc_name": "Santa_Claus",
+      "display_name": "Santa Claus",
+      "spawn_condition": "Frost Legion has been defeated and it is Christmas (Hardmode)",
+      "preferred_biome": {"likes": "Snow biome", "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []}
+    },
+    {
+      "npc_name": "Princess",
+      "display_name": "Princess",
+      "spawn_condition": "All other town NPCs are in the world (except for town pets and Santa Claus)",
+      "preferred_biome": {"likes": null, "loves": null},
+      "preferred_neighbors": {"likes": "All NPCs", "loves": null},
+      "disliked_neighbors": {"dislikes": [], "hates": []}
+    },
+    {
+      "npc_name": "Old_Man",
+      "display_name": "Old Man",
+      "spawn_condition": "At the Dungeon entrance at night",
+      "preferred_biome": {"likes": null, "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []},
+      "requires_house": false
+    },
+    {
+      "npc_name": "Traveling_Merchant",
+      "display_name": "Traveling Merchant",
+      "spawn_condition": "Randomly spawns between 4:30 AM and 12:00 PM",
+      "preferred_biome": {"likes": null, "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []},
+      "requires_house": false
+    },
+    {
+      "npc_name": "Skeleton_Merchant",
+      "display_name": "Skeleton Merchant",
+      "spawn_condition": "Randomly spawns in the Cavern layer",
+      "preferred_biome": {"likes": null, "loves": null},
+      "preferred_neighbors": {"likes": [], "loves": []},
+      "disliked_neighbors": {"dislikes": [], "hates": []},
+      "requires_house": false
+    }
+  ],
+  "rescuable_npcs": [
+    {
+      "npc_name": "Angler",
+      "rescue_condition": "Press Open/Activate on Sleeping Angler in Ocean biome",
+      "rescue_form": "Sleeping Angler"
+    },
+    {
+      "npc_name": "Golfer",
+      "rescue_condition": "Press Open/Activate on Golfer Rescue in Underground Desert",
+      "rescue_form": "Golfer Rescue"
+    },
+    {
+      "npc_name": "Stylist",
+      "rescue_condition": "Press Open/Activate on Webbed Stylist in Spider Nest",
+      "rescue_form": "Webbed Stylist"
+    },
+    {
+      "npc_name": "Goblin_Tinkerer",
+      "rescue_condition": "Press Open/Activate on Bound Goblin in Cavern layer after Goblin Army defeated",
+      "rescue_form": "Bound Goblin"
+    },
+    {
+      "npc_name": "Tavernkeep",
+      "rescue_condition": "Press Open/Activate on Unconscious Man after Eater of Worlds/Brain of Cthulhu defeated",
+      "rescue_form": "Unconscious Man"
+    },
+    {
+      "npc_name": "Mechanic",
+      "rescue_condition": "Press Open/Activate on Bound Mechanic in Dungeon",
+      "rescue_form": "Bound Mechanic"
+    },
+    {
+      "npc_name": "Wizard",
+      "rescue_condition": "Press Open/Activate on Bound Wizard in Cavern layer (Hardmode)",
+      "rescue_form": "Bound Wizard"
+    },
+    {
+      "npc_name": "Tax_Collector",
+      "rescue_condition": "Use Purification Powder on Tortured Soul in Underworld (Hardmode)",
+      "rescue_form": "Tortured Soul"
+    }
+  ],
+  "happiness_system": {
+    "solitude_bonus": {
+      "condition": "No more than 2 other NPCs within 25 tiles, no more than 3 other NPCs between 25-120 tiles",
+      "price_modifier_buy": 0.95,
+      "price_modifier_sell": 1.05
+    },
+    "crowded_penalty": {
+      "condition": "For each 4th, 5th, etc. NPC within 25 tiles",
+      "price_modifier_buy": 1.05,
+      "price_modifier_sell": 0.95
+    },
+    "biome_preferences": {
+      "loved": {"price_modifier_buy": 0.88, "price_modifier_sell": 1.14},
+      "liked": {"price_modifier_buy": 0.94, "price_modifier_sell": 1.06},
+      "disliked": {"price_modifier_buy": 1.06, "price_modifier_sell": 0.94},
+      "hated": {"price_modifier_buy": 1.12, "price_modifier_sell": 0.89}
+    },
+    "neighbor_preferences": {
+      "loved": {"price_modifier_buy": 0.88, "price_modifier_sell": 1.14},
+      "liked": {"price_modifier_buy": 0.94, "price_modifier_sell": 1.06},
+      "disliked": {"price_modifier_buy": 1.06, "price_modifier_sell": 0.94},
+      "hated": {"price_modifier_buy": 1.12, "price_modifier_sell": 0.89}
+    }
+  },
+  "biomes": [
+    {"name": "Forest", "internal_name": "Forest"},
+    {"name": "Desert", "internal_name": "Desert"},
+    {"name": "Ocean", "internal_name": "Ocean"},
+    {"name": "Jungle", "internal_name": "Jungle"},
+    {"name": "Snow biome", "internal_name": "Snow"},
+    {"name": "The Hallow", "internal_name": "Hallow"},
+    {"name": "Underground", "internal_name": "Underground"},
+    {"name": "Cavern", "internal_name": "Cavern"},
+    {"name": "The Underworld", "internal_name": "Underworld"},
+    {"name": "Glowing Mushroom biome", "internal_name": "Mushroom"},
+    {"name": "Dungeon", "internal_name": "Dungeon"},
+    {"name": "Spider Nest", "internal_name": "SpiderCave"},
+    {"name": "Underground Desert", "internal_name": "UndergroundDesert"}
+  ]
+}

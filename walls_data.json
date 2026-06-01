@@ -1,0 +1,3662 @@
+[
+  {
+    "id": 1,
+    "name": "Stone Wall",
+    "display_name": "Stone Wall",
+    "internal_name": "Stone",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 2,
+    "name": "Dirt Wall (natural)",
+    "display_name": "Dirt Wall (natural)",
+    "internal_name": "DirtUnsafe",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 3,
+    "name": "Ebonstone Wall",
+    "display_name": "Ebonstone Wall",
+    "internal_name": "EbonstoneUnsafe",
+    "category": "Corruption",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 4,
+    "name": "Wood Wall",
+    "display_name": "Wood Wall",
+    "internal_name": "Wood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 5,
+    "name": "Gray Brick Wall",
+    "display_name": "Gray Brick Wall",
+    "internal_name": "GrayBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 6,
+    "name": "Red Brick Wall",
+    "display_name": "Red Brick Wall",
+    "internal_name": "RedBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 7,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeonUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 8,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeonUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 9,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeonUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 10,
+    "name": "Gold Brick Wall",
+    "display_name": "Gold Brick Wall",
+    "internal_name": "GoldBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 11,
+    "name": "Silver Brick Wall",
+    "display_name": "Silver Brick Wall",
+    "internal_name": "SilverBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 12,
+    "name": "Copper Brick Wall",
+    "display_name": "Copper Brick Wall",
+    "internal_name": "CopperBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 13,
+    "name": "Hellstone Brick Wall",
+    "display_name": "Hellstone Brick Wall",
+    "internal_name": "HellstoneBrickUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 14,
+    "name": "Obsidian Brick Wall (natural)",
+    "display_name": "Obsidian Brick Wall (natural)",
+    "internal_name": "ObsidianBrickUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 15,
+    "name": "Mud Wall",
+    "display_name": "Mud Wall",
+    "internal_name": "MudUnsafe",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 16,
+    "name": "Dirt Wall",
+    "display_name": "Dirt Wall",
+    "internal_name": "Dirt",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 17,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeon",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 18,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeon",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 19,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeon",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 20,
+    "name": "Obsidian Brick Wall",
+    "display_name": "Obsidian Brick Wall",
+    "internal_name": "ObsidianBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 21,
+    "name": "Glass Wall",
+    "display_name": "Glass Wall",
+    "internal_name": "Glass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 22,
+    "name": "Pearlstone Brick Wall",
+    "display_name": "Pearlstone Brick Wall",
+    "internal_name": "PearlstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 23,
+    "name": "Iridescent Brick Wall",
+    "display_name": "Iridescent Brick Wall",
+    "internal_name": "IridescentBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 24,
+    "name": "Mudstone Brick Wall",
+    "display_name": "Mudstone Brick Wall",
+    "internal_name": "MudstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 25,
+    "name": "Cobalt Brick Wall",
+    "display_name": "Cobalt Brick Wall",
+    "internal_name": "CobaltBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 26,
+    "name": "Mythril Brick Wall",
+    "display_name": "Mythril Brick Wall",
+    "internal_name": "MythrilBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 27,
+    "name": "Planked Wall",
+    "display_name": "Planked Wall",
+    "internal_name": "Planked",
+    "category": "Planked",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 28,
+    "name": "Pearlstone Wall",
+    "display_name": "Pearlstone Wall",
+    "internal_name": "PearlstoneBrickUnsafe",
+    "category": "Hallow",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 29,
+    "name": "Candy Cane Walls",
+    "display_name": "Candy Cane Walls",
+    "internal_name": "CandyCane",
+    "category": "Candy",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 30,
+    "name": "Candy Cane Walls",
+    "display_name": "Candy Cane Walls",
+    "internal_name": "GreenCandyCane",
+    "category": "Candy",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 31,
+    "name": "Snow Brick Wall",
+    "display_name": "Snow Brick Wall",
+    "internal_name": "SnowBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 32,
+    "name": "Adamantite Beam Wall",
+    "display_name": "Adamantite Beam Wall",
+    "internal_name": "AdamantiteBeam",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 33,
+    "name": "Demonite Brick Wall",
+    "display_name": "Demonite Brick Wall",
+    "internal_name": "DemoniteBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 34,
+    "name": "Sandstone Brick Wall",
+    "display_name": "Sandstone Brick Wall",
+    "internal_name": "SandstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 35,
+    "name": "Ebonstone Brick Wall",
+    "display_name": "Ebonstone Brick Wall",
+    "internal_name": "EbonstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 36,
+    "name": "Stucco Walls",
+    "display_name": "Stucco Walls",
+    "internal_name": "RedStucco",
+    "category": "Stucco",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 37,
+    "name": "Stucco Walls",
+    "display_name": "Stucco Walls",
+    "internal_name": "YellowStucco",
+    "category": "Stucco",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 38,
+    "name": "Stucco Walls",
+    "display_name": "Stucco Walls",
+    "internal_name": "GreenStucco",
+    "category": "Stucco",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 39,
+    "name": "Stucco Walls",
+    "display_name": "Stucco Walls",
+    "internal_name": "Gray",
+    "category": "Stucco",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 40,
+    "name": "Snow Wall",
+    "display_name": "Snow Wall",
+    "internal_name": "SnowWallUnsafe",
+    "category": "Snow/Ice",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 41,
+    "name": "Ebonwood Wall",
+    "display_name": "Ebonwood Wall",
+    "internal_name": "Ebonwood",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 42,
+    "name": "Rich Mahogany Wall",
+    "display_name": "Rich Mahogany Wall",
+    "internal_name": "RichMaogany",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 43,
+    "name": "Pearlwood Wall",
+    "display_name": "Pearlwood Wall",
+    "internal_name": "Pearlwood",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 44,
+    "name": "Rainbow Brick Wall",
+    "display_name": "Rainbow Brick Wall",
+    "internal_name": "RainbowBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 45,
+    "name": "Tin Brick Wall",
+    "display_name": "Tin Brick Wall",
+    "internal_name": "TinBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 46,
+    "name": "Tungsten Brick Wall",
+    "display_name": "Tungsten Brick Wall",
+    "internal_name": "TungstenBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 47,
+    "name": "Platinum Brick Wall",
+    "display_name": "Platinum Brick Wall",
+    "internal_name": "PlatinumBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 48,
+    "name": "Amethyst Stone Wall",
+    "display_name": "Amethyst Stone Wall",
+    "internal_name": "AmethystUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 49,
+    "name": "Topaz Stone Wall",
+    "display_name": "Topaz Stone Wall",
+    "internal_name": "TopazUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 50,
+    "name": "Sapphire Stone Wall",
+    "display_name": "Sapphire Stone Wall",
+    "internal_name": "SapphireUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 51,
+    "name": "Emerald Stone Wall",
+    "display_name": "Emerald Stone Wall",
+    "internal_name": "EmeraldUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 52,
+    "name": "Ruby Stone Wall",
+    "display_name": "Ruby Stone Wall",
+    "internal_name": "RubyUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 53,
+    "name": "Diamond Stone Wall",
+    "display_name": "Diamond Stone Wall",
+    "internal_name": "DiamondUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 54,
+    "name": "Green Mossy Wall",
+    "display_name": "Green Mossy Wall",
+    "internal_name": "CaveUnsafe",
+    "category": "Moss",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 55,
+    "name": "Brown Mossy Wall",
+    "display_name": "Brown Mossy Wall",
+    "internal_name": "Cave2Unsafe",
+    "category": "Moss",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 56,
+    "name": "Red Mossy Wall",
+    "display_name": "Red Mossy Wall",
+    "internal_name": "Cave3Unsafe",
+    "category": "Moss",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 57,
+    "name": "Blue Mossy Wall",
+    "display_name": "Blue Mossy Wall",
+    "internal_name": "Cave4Unsafe",
+    "category": "Moss",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 58,
+    "name": "Purple Mossy Wall",
+    "display_name": "Purple Mossy Wall",
+    "internal_name": "Cave5Unsafe",
+    "category": "Moss",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 59,
+    "name": "Rocky Dirt Wall",
+    "display_name": "Rocky Dirt Wall",
+    "internal_name": "Cave6Unsafe",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 60,
+    "name": "Living Leaf Wall",
+    "display_name": "Living Leaf Wall",
+    "internal_name": "LivingLeaf",
+    "category": "Leaf",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 61,
+    "name": "Old Stone Wall",
+    "display_name": "Old Stone Wall",
+    "internal_name": "Cave7Unsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 62,
+    "name": "Spider Wall",
+    "display_name": "Spider Wall",
+    "internal_name": "SpiderUnsafe",
+    "category": "Spider",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 63,
+    "name": "Grass Wall",
+    "display_name": "Grass Wall",
+    "internal_name": "GrassUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 64,
+    "name": "Jungle Wall",
+    "display_name": "Jungle Wall",
+    "internal_name": "JungleUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 65,
+    "name": "Flower Wall",
+    "display_name": "Flower Wall",
+    "internal_name": "FlowerUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 66,
+    "name": "Grass Wall",
+    "display_name": "Grass Wall",
+    "internal_name": "Grass",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 67,
+    "name": "Jungle Wall",
+    "display_name": "Jungle Wall",
+    "internal_name": "Jungle",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 68,
+    "name": "Flower Wall",
+    "display_name": "Flower Wall",
+    "internal_name": "Flower",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 69,
+    "name": "Corrupt Grass Wall",
+    "display_name": "Corrupt Grass Wall",
+    "internal_name": "CorruptGrassUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 70,
+    "name": "Hallowed Grass Wall",
+    "display_name": "Hallowed Grass Wall",
+    "internal_name": "HallowedGrassUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 71,
+    "name": "Ice Wall",
+    "display_name": "Ice Wall",
+    "internal_name": "IceUnsafe",
+    "category": "Snow/Ice",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 72,
+    "name": "Cactus Wall",
+    "display_name": "Cactus Wall",
+    "internal_name": "Cactus",
+    "category": "Cactus",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 73,
+    "name": "Cloud Wall",
+    "display_name": "Cloud Wall",
+    "internal_name": "Cloud",
+    "category": "Cloud",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 74,
+    "name": "Mushroom Wall",
+    "display_name": "Mushroom Wall",
+    "internal_name": "Mushroom",
+    "category": "Mushroom",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 75,
+    "name": "Bone Block Wall",
+    "display_name": "Bone Block Wall",
+    "internal_name": "Bone",
+    "category": "Bone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 76,
+    "name": "Slime Block Wall",
+    "display_name": "Slime Block Wall",
+    "internal_name": "Slime",
+    "category": "Slime",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 77,
+    "name": "Flesh Block Wall",
+    "display_name": "Flesh Block Wall",
+    "internal_name": "Flesh",
+    "category": "Flesh",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 78,
+    "name": "Living Wood Wall",
+    "display_name": "Living Wood Wall",
+    "internal_name": "LivingWood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 79,
+    "name": "Obsidian Wall",
+    "display_name": "Obsidian Wall",
+    "internal_name": "ObsidianBackUnsafe",
+    "category": "Obsidian/Hell",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 80,
+    "name": "Mushroom Wall",
+    "display_name": "Mushroom Wall",
+    "internal_name": "MushroomUnsafe",
+    "category": "Mushroom",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 81,
+    "name": "Crimson Grass Wall",
+    "display_name": "Crimson Grass Wall",
+    "internal_name": "CrimsonGrassUnsafe",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 82,
+    "name": "Disc Wall",
+    "display_name": "Disc Wall",
+    "internal_name": "DiscWall",
+    "category": "Disc",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 83,
+    "name": "Crimstone Wall",
+    "display_name": "Crimstone Wall",
+    "internal_name": "CrimstoneUnsafe",
+    "category": "Crimson",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 84,
+    "name": "Ice Brick Wall",
+    "display_name": "Ice Brick Wall",
+    "internal_name": "IceBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 85,
+    "name": "Shadewood Wall",
+    "display_name": "Shadewood Wall",
+    "internal_name": "Shadewood",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 86,
+    "name": "Hive Wall",
+    "display_name": "Hive Wall",
+    "internal_name": "HiveUnsafe",
+    "category": "Hive",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 87,
+    "name": "Lihzahrd Brick Wall",
+    "display_name": "Lihzahrd Brick Wall",
+    "internal_name": "LihzahrdBrickUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 88,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "PurpleStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 89,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "YellowStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 90,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "BlueStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 91,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "GreenStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 92,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "RedStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 93,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "RainbowStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 94,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeonSlabUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 95,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeonTileUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 96,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeonSlabUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 97,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeonTileUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 98,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeonSlabUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 99,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeonTileUnsafe",
+    "category": "Brick",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 100,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeonSlab",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 101,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "BlueDungeonTile",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 102,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeonSlab",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 103,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "PinkDungeonTile",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 104,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeonSlab",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 105,
+    "name": "Dungeon Brick Walls",
+    "display_name": "Dungeon Brick Walls",
+    "internal_name": "GreenDungeonTile",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 106,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "WoodenFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 107,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "MetalFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 108,
+    "name": "Hive Wall",
+    "display_name": "Hive Wall",
+    "internal_name": "Hive",
+    "category": "Hive",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 109,
+    "name": "Palladium Column Wall",
+    "display_name": "Palladium Column Wall",
+    "internal_name": "PalladiumColumn",
+    "category": "Special Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 110,
+    "name": "Bubblegum Block Wall",
+    "display_name": "Bubblegum Block Wall",
+    "internal_name": "BubblegumBlock",
+    "category": "Special Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 111,
+    "name": "Titanstone Block Wall",
+    "display_name": "Titanstone Block Wall",
+    "internal_name": "TitanstoneBlock",
+    "category": "Special Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 112,
+    "name": "Lihzahrd Brick Wall",
+    "display_name": "Lihzahrd Brick Wall",
+    "internal_name": "LihzahrdBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 113,
+    "name": "Pumpkin Wall",
+    "display_name": "Pumpkin Wall",
+    "internal_name": "Pumpkin",
+    "category": "Harvest",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 114,
+    "name": "Hay Wall",
+    "display_name": "Hay Wall",
+    "internal_name": "Hay",
+    "category": "Harvest",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 115,
+    "name": "Spooky Wood Wall",
+    "display_name": "Spooky Wood Wall",
+    "internal_name": "SpookyWood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 116,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "ChristmasTreeWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 117,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "OrnamentWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 118,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "CandyCaneWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 119,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "FestiveWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 120,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "StarsWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 121,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "SquigglesWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 122,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "SnowflakeWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 123,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "KrampusHornWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 124,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "BluegreenWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 125,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "GrinchFingerWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 126,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "FancyGrayWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 127,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "IceFloeWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 128,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "MusicWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 129,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "PurpleRainWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 130,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "RainbowWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 131,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "SparkleStoneWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 132,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "StarlitHeavenWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 133,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "BubbleWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 134,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "CopperPipeWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 135,
+    "name": "Wallpapers",
+    "display_name": "Wallpapers",
+    "internal_name": "DuckyWallpaper",
+    "category": "Wallpaper",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 136,
+    "name": "Waterfall Wall",
+    "display_name": "Waterfall Wall",
+    "internal_name": "Waterfall",
+    "category": "Liquid Effect",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 137,
+    "name": "Lavafall Wall",
+    "display_name": "Lavafall Wall",
+    "internal_name": "Lavafall",
+    "category": "Liquid Effect",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 138,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "EbonwoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 139,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "RichMahoganyFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 140,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "PearlwoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 141,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "ShadewoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 142,
+    "name": "Dynasty Walls",
+    "display_name": "Dynasty Walls",
+    "internal_name": "WhiteDynasty",
+    "category": "Dynasty",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 143,
+    "name": "Dynasty Walls",
+    "display_name": "Dynasty Walls",
+    "internal_name": "BlueDynasty",
+    "category": "Dynasty",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 144,
+    "name": "Arcane Rune Wall",
+    "display_name": "Arcane Rune Wall",
+    "internal_name": "ArcaneRunes",
+    "category": "Arcane",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 145,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "IronFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 146,
+    "name": "Copper Plating Wall",
+    "display_name": "Copper Plating Wall",
+    "internal_name": "CopperPlating",
+    "category": "Plating",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 147,
+    "name": "Stone Slab Wall",
+    "display_name": "Stone Slab Wall",
+    "internal_name": "StoneSlab",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 148,
+    "name": "Sail",
+    "display_name": "Sail",
+    "internal_name": "Sail",
+    "category": "Sail",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 149,
+    "name": "Boreal Wood Wall",
+    "display_name": "Boreal Wood Wall",
+    "internal_name": "BorealWood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 150,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "BorealWoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 151,
+    "name": "Palm Wood Wall",
+    "display_name": "Palm Wood Wall",
+    "internal_name": "PalmWood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 152,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "PalmWoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 153,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "AmberGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 154,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "AmethystGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 155,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "DiamondGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 156,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "EmeraldGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 157,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "AmberGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 158,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "AmethystGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 159,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "DiamondGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 160,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "EmeraldGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 161,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "RubyGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 162,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "SapphireGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 163,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "TopazGemsparkOff",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 164,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "RubyGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 165,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "SapphireGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 166,
+    "name": "Gemspark Walls",
+    "display_name": "Gemspark Walls",
+    "internal_name": "TopazGemspark",
+    "category": "Gemspark",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 167,
+    "name": "Tin Plating Wall",
+    "display_name": "Tin Plating Wall",
+    "internal_name": "TinPlating",
+    "category": "Plating",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 168,
+    "name": "Confetti Wall",
+    "display_name": "Confetti Wall",
+    "internal_name": "Confetti",
+    "category": "Confetti",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 169,
+    "name": "Midnight Confetti Wall",
+    "display_name": "Midnight Confetti Wall",
+    "internal_name": "ConfettiBlack",
+    "category": "Confetti",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 170,
+    "name": "Cave Dirt Wall",
+    "display_name": "Cave Dirt Wall",
+    "internal_name": "CaveWall",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 171,
+    "name": "Rough Dirt Wall",
+    "display_name": "Rough Dirt Wall",
+    "internal_name": "CaveWall2",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 172,
+    "name": "Honeyfall Wall",
+    "display_name": "Honeyfall Wall",
+    "internal_name": "Honeyfall",
+    "category": "Liquid Effect",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 173,
+    "name": "Chlorophyte Brick Wall",
+    "display_name": "Chlorophyte Brick Wall",
+    "internal_name": "ChlorophyteBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 174,
+    "name": "Crimtane Brick Wall",
+    "display_name": "Crimtane Brick Wall",
+    "internal_name": "CrimtaneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 175,
+    "name": "Shroomite Plating Wall",
+    "display_name": "Shroomite Plating Wall",
+    "internal_name": "ShroomitePlating",
+    "category": "Plating",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 176,
+    "name": "Martian Conduit Wall",
+    "display_name": "Martian Conduit Wall",
+    "internal_name": "MartianConduit",
+    "category": "Martian",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 177,
+    "name": "Hellstone Brick Wall",
+    "display_name": "Hellstone Brick Wall",
+    "internal_name": "HellstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 178,
+    "name": "Marble Wall",
+    "display_name": "Marble Wall",
+    "internal_name": "MarbleUnsafe",
+    "category": "Marble",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 179,
+    "name": "Smooth Marble Wall",
+    "display_name": "Smooth Marble Wall",
+    "internal_name": "MarbleBlock",
+    "category": "Marble",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 180,
+    "name": "Granite Wall",
+    "display_name": "Granite Wall",
+    "internal_name": "GraniteUnsafe",
+    "category": "Granite",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 181,
+    "name": "Smooth Granite Wall",
+    "display_name": "Smooth Granite Wall",
+    "internal_name": "GraniteBlock",
+    "category": "Granite",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 182,
+    "name": "Meteorite Brick Wall",
+    "display_name": "Meteorite Brick Wall",
+    "internal_name": "MeteoriteBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 183,
+    "name": "Marble Wall",
+    "display_name": "Marble Wall",
+    "internal_name": "Marble",
+    "category": "Marble",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 184,
+    "name": "Granite Wall",
+    "display_name": "Granite Wall",
+    "internal_name": "Granite",
+    "category": "Granite",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 185,
+    "name": "Craggy Stone Wall",
+    "display_name": "Craggy Stone Wall",
+    "internal_name": "Cave8Unsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 186,
+    "name": "Crystal Block Wall",
+    "display_name": "Crystal Block Wall",
+    "internal_name": "Crystal",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 187,
+    "name": "Sandstone Walls",
+    "display_name": "Sandstone Walls",
+    "internal_name": "Sandstone",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 188,
+    "name": "Corrupt Growth Wall",
+    "display_name": "Corrupt Growth Wall",
+    "internal_name": "CorruptionUnsafe1",
+    "category": "Corruption",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 189,
+    "name": "Corrupt Mass Wall",
+    "display_name": "Corrupt Mass Wall",
+    "internal_name": "CorruptionUnsafe2",
+    "category": "Corruption",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 190,
+    "name": "Corrupt Pustule Wall",
+    "display_name": "Corrupt Pustule Wall",
+    "internal_name": "CorruptionUnsafe3",
+    "category": "Corruption",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 191,
+    "name": "Corrupt Tendril Wall",
+    "display_name": "Corrupt Tendril Wall",
+    "internal_name": "CorruptionUnsafe4",
+    "category": "Corruption",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 192,
+    "name": "Crimson Crust Wall",
+    "display_name": "Crimson Crust Wall",
+    "internal_name": "CrimsonUnsafe1",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 193,
+    "name": "Crimson Scab Wall",
+    "display_name": "Crimson Scab Wall",
+    "internal_name": "CrimsonUnsafe2",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 194,
+    "name": "Crimson Teeth Wall",
+    "display_name": "Crimson Teeth Wall",
+    "internal_name": "CrimsonUnsafe3",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 195,
+    "name": "Crimson Blister Wall",
+    "display_name": "Crimson Blister Wall",
+    "internal_name": "CrimsonUnsafe4",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 196,
+    "name": "Layered Dirt Wall",
+    "display_name": "Layered Dirt Wall",
+    "internal_name": "DirtUnsafe1",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 197,
+    "name": "Crumbling Dirt Wall",
+    "display_name": "Crumbling Dirt Wall",
+    "internal_name": "DirtUnsafe2",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 198,
+    "name": "Cracked Dirt Wall",
+    "display_name": "Cracked Dirt Wall",
+    "internal_name": "DirtUnsafe3",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 199,
+    "name": "Wavy Dirt Wall",
+    "display_name": "Wavy Dirt Wall",
+    "internal_name": "DirtUnsafe4",
+    "category": "Dirt/Cave",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 200,
+    "name": "Hallowed Prism Wall",
+    "display_name": "Hallowed Prism Wall",
+    "internal_name": "HallowUnsafe1",
+    "category": "Hallow",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 201,
+    "name": "Hallowed Cavern Wall",
+    "display_name": "Hallowed Cavern Wall",
+    "internal_name": "HallowUnsafe2",
+    "category": "Hallow",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 202,
+    "name": "Hallowed Shard Wall",
+    "display_name": "Hallowed Shard Wall",
+    "internal_name": "HallowUnsafe3",
+    "category": "Hallow",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 203,
+    "name": "Hallowed Crystalline Wall",
+    "display_name": "Hallowed Crystalline Wall",
+    "internal_name": "HallowUnsafe4",
+    "category": "Hallow",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 204,
+    "name": "Lichen Stone Wall",
+    "display_name": "Lichen Stone Wall",
+    "internal_name": "JungleUnsafe1",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 205,
+    "name": "Leafy Jungle Wall",
+    "display_name": "Leafy Jungle Wall",
+    "internal_name": "JungleUnsafe2",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 206,
+    "name": "Ivy Stone Wall",
+    "display_name": "Ivy Stone Wall",
+    "internal_name": "JungleUnsafe3",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 207,
+    "name": "Jungle Vine Wall",
+    "display_name": "Jungle Vine Wall",
+    "internal_name": "JungleUnsafe4",
+    "category": "Grass/Nature",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 208,
+    "name": "Ember Wall",
+    "display_name": "Ember Wall",
+    "internal_name": "LavaUnsafe1",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 209,
+    "name": "Cinder Wall",
+    "display_name": "Cinder Wall",
+    "internal_name": "LavaUnsafe2",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 210,
+    "name": "Magma Wall",
+    "display_name": "Magma Wall",
+    "internal_name": "LavaUnsafe3",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 211,
+    "name": "Smouldering Stone Wall",
+    "display_name": "Smouldering Stone Wall",
+    "internal_name": "LavaUnsafe4",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 212,
+    "name": "Worn Stone Wall",
+    "display_name": "Worn Stone Wall",
+    "internal_name": "RocksUnsafe1",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 213,
+    "name": "Stalactite Stone Wall",
+    "display_name": "Stalactite Stone Wall",
+    "internal_name": "RocksUnsafe2",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 214,
+    "name": "Mottled Stone Wall",
+    "display_name": "Mottled Stone Wall",
+    "internal_name": "RocksUnsafe3",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 215,
+    "name": "Fractured Stone Wall",
+    "display_name": "Fractured Stone Wall",
+    "internal_name": "RocksUnsafe4",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 216,
+    "name": "Hardened Sand Walls",
+    "display_name": "Hardened Sand Walls",
+    "internal_name": "HardenedSand",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 217,
+    "name": "Hardened Sand Walls",
+    "display_name": "Hardened Sand Walls",
+    "internal_name": "CorruptHardenedSand",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 218,
+    "name": "Hardened Sand Walls",
+    "display_name": "Hardened Sand Walls",
+    "internal_name": "CrimsonHardenedSand",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 219,
+    "name": "Hardened Sand Walls",
+    "display_name": "Hardened Sand Walls",
+    "internal_name": "HallowHardenedSand",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 220,
+    "name": "Sandstone Walls",
+    "display_name": "Sandstone Walls",
+    "internal_name": "CorruptSandstone",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 221,
+    "name": "Sandstone Walls",
+    "display_name": "Sandstone Walls",
+    "internal_name": "CrimsonSandstone",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 222,
+    "name": "Sandstone Walls",
+    "display_name": "Sandstone Walls",
+    "internal_name": "HallowSandstone",
+    "category": "Sand",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 223,
+    "name": "Desert Fossil Wall",
+    "display_name": "Desert Fossil Wall",
+    "internal_name": "DesertFossil",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 224,
+    "name": "Luminite Brick Wall",
+    "display_name": "Luminite Brick Wall",
+    "internal_name": "LunarBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 225,
+    "name": "Cog Wall",
+    "display_name": "Cog Wall",
+    "internal_name": "CogWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 226,
+    "name": "Sandfall Wall",
+    "display_name": "Sandfall Wall",
+    "internal_name": "SandFall",
+    "category": "Sand",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 227,
+    "name": "Snowfall Wall",
+    "display_name": "Snowfall Wall",
+    "internal_name": "SnowFall",
+    "category": "Snow/Ice",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 228,
+    "name": "Silly Balloon Walls",
+    "display_name": "Silly Balloon Walls",
+    "internal_name": "SillyBalloonPinkWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 229,
+    "name": "Silly Balloon Walls",
+    "display_name": "Silly Balloon Walls",
+    "internal_name": "SillyBalloonPurpleWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 230,
+    "name": "Silly Balloon Walls",
+    "display_name": "Silly Balloon Walls",
+    "internal_name": "SillyBalloonGreenWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 231,
+    "name": "Iron Brick Wall",
+    "display_name": "Iron Brick Wall",
+    "internal_name": "IronBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 232,
+    "name": "Lead Brick Wall",
+    "display_name": "Lead Brick Wall",
+    "internal_name": "LeadBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 233,
+    "name": "Lesion Block Wall",
+    "display_name": "Lesion Block Wall",
+    "internal_name": "LesionBlock",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 234,
+    "name": "Crimstone Brick Wall",
+    "display_name": "Crimstone Brick Wall",
+    "internal_name": "CrimstoneBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 235,
+    "name": "Smooth Sandstone Wall",
+    "display_name": "Smooth Sandstone Wall",
+    "internal_name": "SmoothSandstone",
+    "category": "Sand",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 236,
+    "name": "Spider Nest Wall",
+    "display_name": "Spider Nest Wall",
+    "internal_name": "Spider",
+    "category": "Spider",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 237,
+    "name": "Solar Brick Wall",
+    "display_name": "Solar Brick Wall",
+    "internal_name": "SolarBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 238,
+    "name": "Vortex Brick Wall",
+    "display_name": "Vortex Brick Wall",
+    "internal_name": "VortexBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 239,
+    "name": "Nebula Brick Wall",
+    "display_name": "Nebula Brick Wall",
+    "internal_name": "NebulaBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 240,
+    "name": "Stardust Brick Wall",
+    "display_name": "Stardust Brick Wall",
+    "internal_name": "StardustBrick",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 241,
+    "name": "Stained Glass",
+    "display_name": "Stained Glass",
+    "internal_name": "OrangeStainedGlass",
+    "category": "Glass",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 242,
+    "name": "Gold Starry Wall",
+    "display_name": "Gold Starry Wall",
+    "internal_name": "GoldStarryGlassWall",
+    "category": "Metal Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 243,
+    "name": "Blue Starry Wall",
+    "display_name": "Blue Starry Wall",
+    "internal_name": "BlueStarryGlassWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 244,
+    "name": "Living Wood Wall",
+    "display_name": "Living Wood Wall",
+    "internal_name": "LivingWoodUnsafe",
+    "category": "Wood",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 245,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "WroughtIronFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 246,
+    "name": "Ebonstone Wall",
+    "display_name": "Ebonstone Wall",
+    "internal_name": "EbonstoneEcho",
+    "category": "Corruption",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 247,
+    "name": "Mud Wall",
+    "display_name": "Mud Wall",
+    "internal_name": "MudWallEcho",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 248,
+    "name": "Pearlstone Wall",
+    "display_name": "Pearlstone Wall",
+    "internal_name": "PearlstoneEcho",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 249,
+    "name": "Snow Wall",
+    "display_name": "Snow Wall",
+    "internal_name": "SnowWallEcho",
+    "category": "Snow/Ice",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 250,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "AmethystEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 251,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "TopazEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 252,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "SapphireEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 253,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "EmeraldEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 254,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "RubyEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 255,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "DiamondEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 256,
+    "name": "Green Mossy Wall",
+    "display_name": "Green Mossy Wall",
+    "internal_name": "Cave1Echo",
+    "category": "Moss",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 257,
+    "name": "Brown Mossy Wall",
+    "display_name": "Brown Mossy Wall",
+    "internal_name": "Cave2Echo",
+    "category": "Moss",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 258,
+    "name": "Red Mossy Wall",
+    "display_name": "Red Mossy Wall",
+    "internal_name": "Cave3Echo",
+    "category": "Moss",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 259,
+    "name": "Blue Mossy Wall",
+    "display_name": "Blue Mossy Wall",
+    "internal_name": "Cave4Echo",
+    "category": "Moss",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 260,
+    "name": "Purple Mossy Wall",
+    "display_name": "Purple Mossy Wall",
+    "internal_name": "Cave5Echo",
+    "category": "Moss",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 261,
+    "name": "Rocky Dirt Wall",
+    "display_name": "Rocky Dirt Wall",
+    "internal_name": "Cave6Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 262,
+    "name": "Old Stone Wall",
+    "display_name": "Old Stone Wall",
+    "internal_name": "Cave7Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 263,
+    "name": "Spider Wall",
+    "display_name": "Spider Wall",
+    "internal_name": "SpiderEcho",
+    "category": "Spider",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 264,
+    "name": "Corrupt Grass Wall",
+    "display_name": "Corrupt Grass Wall",
+    "internal_name": "CorruptGrassEcho",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 265,
+    "name": "Hallowed Grass Wall",
+    "display_name": "Hallowed Grass Wall",
+    "internal_name": "HallowedGrassEcho",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 266,
+    "name": "Ice Wall",
+    "display_name": "Ice Wall",
+    "internal_name": "IceEcho",
+    "category": "Snow/Ice",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 267,
+    "name": "Obsidian Wall",
+    "display_name": "Obsidian Wall",
+    "internal_name": "ObsidianBackEcho",
+    "category": "Obsidian/Hell",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 268,
+    "name": "Crimson Grass Wall",
+    "display_name": "Crimson Grass Wall",
+    "internal_name": "CrimsonGrassEcho",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 269,
+    "name": "Crimstone Wall",
+    "display_name": "Crimstone Wall",
+    "internal_name": "CrimstoneEcho",
+    "category": "Crimson",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 270,
+    "name": "Cave Dirt Wall",
+    "display_name": "Cave Dirt Wall",
+    "internal_name": "CaveWall1Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 271,
+    "name": "Rough Dirt Wall",
+    "display_name": "Rough Dirt Wall",
+    "internal_name": "CaveWall2Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 272,
+    "name": "Marble Wall",
+    "display_name": "Marble Wall",
+    "internal_name": "MarbleEchoUnused",
+    "category": "Marble",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 273,
+    "name": "Granite Wall",
+    "display_name": "Granite Wall",
+    "internal_name": "GraniteEchoUnused",
+    "category": "Granite",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 274,
+    "name": "Craggy Stone Wall",
+    "display_name": "Craggy Stone Wall",
+    "internal_name": "Cave8Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 275,
+    "name": "Sandstone Wall",
+    "display_name": "Sandstone Wall",
+    "internal_name": "SandstoneEcho",
+    "category": "Sand",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 276,
+    "name": "Corrupt Growth Wall",
+    "display_name": "Corrupt Growth Wall",
+    "internal_name": "Corruption1Echo",
+    "category": "Corruption",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 277,
+    "name": "Corrupt Mass Wall",
+    "display_name": "Corrupt Mass Wall",
+    "internal_name": "Corruption2Echo",
+    "category": "Corruption",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 278,
+    "name": "Corrupt Pustule Wall",
+    "display_name": "Corrupt Pustule Wall",
+    "internal_name": "Corruption3Echo",
+    "category": "Corruption",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 279,
+    "name": "Corrupt Tendril Wall",
+    "display_name": "Corrupt Tendril Wall",
+    "internal_name": "Corruption4Echo",
+    "category": "Corruption",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 280,
+    "name": "Crimson Crust Wall",
+    "display_name": "Crimson Crust Wall",
+    "internal_name": "Crimson1Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 281,
+    "name": "Crimson Scab Wall",
+    "display_name": "Crimson Scab Wall",
+    "internal_name": "Crimson2Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 282,
+    "name": "Crimson Teeth Wall",
+    "display_name": "Crimson Teeth Wall",
+    "internal_name": "Crimson3Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 283,
+    "name": "Crimson Blister Wall",
+    "display_name": "Crimson Blister Wall",
+    "internal_name": "Crimson4Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 284,
+    "name": "Layered Dirt Wall",
+    "display_name": "Layered Dirt Wall",
+    "internal_name": "Dirt1Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 285,
+    "name": "Crumbling Dirt Wall",
+    "display_name": "Crumbling Dirt Wall",
+    "internal_name": "Dirt2Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 286,
+    "name": "Cracked Dirt Wall",
+    "display_name": "Cracked Dirt Wall",
+    "internal_name": "Dirt3Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 287,
+    "name": "Wavy Dirt Wall",
+    "display_name": "Wavy Dirt Wall",
+    "internal_name": "Dirt4Echo",
+    "category": "Dirt/Cave",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 288,
+    "name": "Hallowed Prism Wall",
+    "display_name": "Hallowed Prism Wall",
+    "internal_name": "Hallow1Echo",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 289,
+    "name": "Hallowed Cavern Wall",
+    "display_name": "Hallowed Cavern Wall",
+    "internal_name": "Hallow2Echo",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 290,
+    "name": "Hallowed Shard Wall",
+    "display_name": "Hallowed Shard Wall",
+    "internal_name": "Hallow3Echo",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 291,
+    "name": "Hallowed Crystalline Wall",
+    "display_name": "Hallowed Crystalline Wall",
+    "internal_name": "Hallow4Echo",
+    "category": "Hallow",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 292,
+    "name": "Lichen Stone Wall",
+    "display_name": "Lichen Stone Wall",
+    "internal_name": "Jungle1Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 293,
+    "name": "Leafy Jungle Wall",
+    "display_name": "Leafy Jungle Wall",
+    "internal_name": "Jungle2Echo",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 294,
+    "name": "Ivy Stone Wall",
+    "display_name": "Ivy Stone Wall",
+    "internal_name": "Jungle3Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 295,
+    "name": "Jungle Vine Wall",
+    "display_name": "Jungle Vine Wall",
+    "internal_name": "Jungle4Echo",
+    "category": "Grass/Nature",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 296,
+    "name": "Ember Wall",
+    "display_name": "Ember Wall",
+    "internal_name": "Lava1Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 297,
+    "name": "Cinder Wall",
+    "display_name": "Cinder Wall",
+    "internal_name": "Lava2Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 298,
+    "name": "Magma Wall",
+    "display_name": "Magma Wall",
+    "internal_name": "Lava3Echo",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 299,
+    "name": "Smouldering Stone Wall",
+    "display_name": "Smouldering Stone Wall",
+    "internal_name": "Lava4Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 300,
+    "name": "Worn Stone Wall",
+    "display_name": "Worn Stone Wall",
+    "internal_name": "Rocks1Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 301,
+    "name": "Stalactite Stone Wall",
+    "display_name": "Stalactite Stone Wall",
+    "internal_name": "Rocks2Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 302,
+    "name": "Mottled Stone Wall",
+    "display_name": "Mottled Stone Wall",
+    "internal_name": "Rocks3Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 303,
+    "name": "Fractured Stone Wall",
+    "display_name": "Fractured Stone Wall",
+    "internal_name": "Rocks4Echo",
+    "category": "Stone",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 304,
+    "name": "Hardened Sand Wall",
+    "display_name": "Hardened Sand Wall",
+    "internal_name": "HardenedSandEcho",
+    "category": "Sand",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 305,
+    "name": "Hardened Ebonsand Wall",
+    "display_name": "Hardened Ebonsand Wall",
+    "internal_name": "CorruptHardenedSandEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 306,
+    "name": "Hardened Crimsand Wall",
+    "display_name": "Hardened Crimsand Wall",
+    "internal_name": "CrimsonHardenedSandEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 307,
+    "name": "Hardened Pearlsand Wall",
+    "display_name": "Hardened Pearlsand Wall",
+    "internal_name": "HallowHardenedSandEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 308,
+    "name": "Ebonsandstone Wall",
+    "display_name": "Ebonsandstone Wall",
+    "internal_name": "CorruptSandstoneEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 309,
+    "name": "Crimsandstone Wall",
+    "display_name": "Crimsandstone Wall",
+    "internal_name": "CrimsonSandstoneEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 310,
+    "name": "Pearlsandstone Wall",
+    "display_name": "Pearlsandstone Wall",
+    "internal_name": "HallowSandstoneEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 311,
+    "name": "Desert Fossil Wall",
+    "display_name": "Desert Fossil Wall",
+    "internal_name": "DesertFossilEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 312,
+    "name": "Bamboo Wall",
+    "display_name": "Bamboo Wall",
+    "internal_name": "BambooBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 313,
+    "name": "Large Bamboo Wall",
+    "display_name": "Large Bamboo Wall",
+    "internal_name": "LargeBambooBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 314,
+    "name": "Gemstone Walls",
+    "display_name": "Gemstone Walls",
+    "internal_name": "AmberStoneWallEcho",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 315,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "BambooFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 316,
+    "name": "Ash Wood Wall",
+    "display_name": "Ash Wood Wall",
+    "internal_name": "AshWood",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 317,
+    "name": "Fences",
+    "display_name": "Fences",
+    "internal_name": "AshWoodFence",
+    "category": "Fence",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 318,
+    "name": "Echo Wall",
+    "display_name": "Echo Wall",
+    "internal_name": "EchoWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 319,
+    "name": "Reef Wall",
+    "display_name": "Reef Wall",
+    "internal_name": "ReefWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 320,
+    "name": "Poo Wall",
+    "display_name": "Poo Wall",
+    "internal_name": "PoopWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 321,
+    "name": "Aetherium Wall",
+    "display_name": "Aetherium Wall",
+    "internal_name": "ShimmerBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 322,
+    "name": "Aetherium Brick Wall",
+    "display_name": "Aetherium Brick Wall",
+    "internal_name": "ShimmerBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 323,
+    "name": "Lunar Rust Brick Wall",
+    "display_name": "Lunar Rust Brick Wall",
+    "internal_name": "LunarRustBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 324,
+    "name": "Dark Celestial Brick Wall",
+    "display_name": "Dark Celestial Brick Wall",
+    "internal_name": "DarkCelestialBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 325,
+    "name": "Astra Brick Wall",
+    "display_name": "Astra Brick Wall",
+    "internal_name": "AstraBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 326,
+    "name": "Cosmic Ember Brick Wall",
+    "display_name": "Cosmic Ember Brick Wall",
+    "internal_name": "CosmicEmberBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 327,
+    "name": "Cryocore Brick Wall",
+    "display_name": "Cryocore Brick Wall",
+    "internal_name": "CryocoreBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 328,
+    "name": "Mercury Brick Wall",
+    "display_name": "Mercury Brick Wall",
+    "internal_name": "MercuryBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 329,
+    "name": "Star Royale Brick Wall",
+    "display_name": "Star Royale Brick Wall",
+    "internal_name": "StarRoyaleBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 330,
+    "name": "Heavenforge Brick Wall",
+    "display_name": "Heavenforge Brick Wall",
+    "internal_name": "HeavenforgeBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 331,
+    "name": "Ancient Blue Brick Wall",
+    "display_name": "Ancient Blue Brick Wall",
+    "internal_name": "AncientBlueBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 332,
+    "name": "Ancient Green Brick Wall",
+    "display_name": "Ancient Green Brick Wall",
+    "internal_name": "AncientGreenBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 333,
+    "name": "Ancient Pink Brick Wall",
+    "display_name": "Ancient Pink Brick Wall",
+    "internal_name": "AncientPinkBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 334,
+    "name": "Ancient Gold Brick Wall",
+    "display_name": "Ancient Gold Brick Wall",
+    "internal_name": "AncientGoldBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 335,
+    "name": "Ancient Silver Brick Wall",
+    "display_name": "Ancient Silver Brick Wall",
+    "internal_name": "AncientSilverBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 336,
+    "name": "Ancient Copper Brick Wall",
+    "display_name": "Ancient Copper Brick Wall",
+    "internal_name": "AncientCopperBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 337,
+    "name": "Ancient Obsidian Brick Wall",
+    "display_name": "Ancient Obsidian Brick Wall",
+    "internal_name": "AncientObsidianBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 338,
+    "name": "Ancient Hellstone Brick Wall",
+    "display_name": "Ancient Hellstone Brick Wall",
+    "internal_name": "AncientHellstoneBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 339,
+    "name": "Ancient Cobalt Brick Wall",
+    "display_name": "Ancient Cobalt Brick Wall",
+    "internal_name": "AncientCobaltBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 340,
+    "name": "Ancient Mythril Brick Wall",
+    "display_name": "Ancient Mythril Brick Wall",
+    "internal_name": "AncientMythrilBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 341,
+    "name": "Lava Moss Brick Wall",
+    "display_name": "Lava Moss Brick Wall",
+    "internal_name": "LavaMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 342,
+    "name": "Argon Moss Brick Wall",
+    "display_name": "Argon Moss Brick Wall",
+    "internal_name": "ArgonMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 343,
+    "name": "Krypton Moss Brick Wall",
+    "display_name": "Krypton Moss Brick Wall",
+    "internal_name": "KryptonMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 344,
+    "name": "Xenon Moss Brick Wall",
+    "display_name": "Xenon Moss Brick Wall",
+    "internal_name": "XenonMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 345,
+    "name": "Neon Moss Brick Wall",
+    "display_name": "Neon Moss Brick Wall",
+    "internal_name": "VioletMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 346,
+    "name": "Helium Moss Brick Wall",
+    "display_name": "Helium Moss Brick Wall",
+    "internal_name": "RainbowMossBlockWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 347,
+    "name": "Shimmerfall Wall",
+    "display_name": "Shimmerfall Wall",
+    "internal_name": "Shimmerfall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 348,
+    "name": "Fallen Star Wall",
+    "display_name": "Fallen Star Wall",
+    "internal_name": "FallenStarWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 349,
+    "name": "Stone Wall",
+    "display_name": "Stone Wall",
+    "internal_name": "StoneUnsafe",
+    "category": "Stone",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 350,
+    "name": "Unbreakable Wall",
+    "display_name": "Unbreakable Wall",
+    "internal_name": "UnbreakableBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 0,
+    "is_natural": 1,
+    "is_safe": 0
+  },
+  {
+    "id": 351,
+    "name": "Feywood Wall",
+    "display_name": "Feywood Wall",
+    "internal_name": "FeywoodWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 352,
+    "name": "Hallowed Brick Wall",
+    "display_name": "Hallowed Brick Wall",
+    "internal_name": "HallowedBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 353,
+    "name": "Pine Tree Wall",
+    "display_name": "Pine Tree Wall",
+    "internal_name": "PineTreeBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 354,
+    "name": "Easter Wall",
+    "display_name": "Easter Wall",
+    "internal_name": "EasterBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 355,
+    "name": "Gothic Brick Wall",
+    "display_name": "Gothic Brick Wall",
+    "internal_name": "GothicBrickWall",
+    "category": "Brick",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 356,
+    "name": "Flinx Fur Wall",
+    "display_name": "Flinx Fur Wall",
+    "internal_name": "FlinxFurBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 357,
+    "name": "Jellyfish Wall",
+    "display_name": "Jellyfish Wall",
+    "internal_name": "JellyfishBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 358,
+    "name": "Pine Wood Wall",
+    "display_name": "Pine Wood Wall",
+    "internal_name": "PineWoodBlockWall",
+    "category": "Wood",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 359,
+    "name": "Harpy Wall",
+    "display_name": "Harpy Wall",
+    "internal_name": "HarpyBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 360,
+    "name": "Crescent Wall",
+    "display_name": "Crescent Wall",
+    "internal_name": "MoonplateBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 361,
+    "name": "Librarian Wall",
+    "display_name": "Librarian Wall",
+    "internal_name": "LibrarianBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 362,
+    "name": "Spike Wall",
+    "display_name": "Spike Wall",
+    "internal_name": "SpikeBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 363,
+    "name": "Office Wall",
+    "display_name": "Office Wall",
+    "internal_name": "OfficeBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 364,
+    "name": "Forbidden Wall",
+    "display_name": "Forbidden Wall",
+    "internal_name": "ForbiddenBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 365,
+    "name": "Aquarium Wall",
+    "display_name": "Aquarium Wall",
+    "internal_name": "WaterBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  },
+  {
+    "id": 366,
+    "name": "Boulder Wall",
+    "display_name": "Boulder Wall",
+    "internal_name": "BoulderBlockWall",
+    "category": "Unknown",
+    "paint_compatible": 1,
+    "is_natural": 0,
+    "is_safe": 1
+  }
+]

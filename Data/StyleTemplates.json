@@ -1,0 +1,904 @@
+{
+  "styles": {
+    "medieval": {
+      "name": "中世纪风格",
+      "display_name": "Medieval",
+      "description": "经典欧洲中世纪建筑风格，适合城堡、村庄和堡垒",
+      "primary_tiles": [
+        {"name": "GrayBrick", "id": 4, "usage": "wall, foundation"},
+        {"name": "StoneSlab", "id": 143, "usage": "floor, stairs"},
+        {"name": "Stone", "id": 1, "usage": "foundation, wall"},
+        {"name": "Wood", "id": 5, "usage": "roof, floor, furniture"}
+      ],
+      "primary_walls": [
+        {"name": "GrayBrickWall", "id": 6, "usage": "main_wall"},
+        {"name": "StoneWall", "id": 1, "usage": "foundation_wall"},
+        {"name": "WoodWall", "id": 4, "usage": "interior_wall"}
+      ],
+      "accent_tiles": [
+        {"name": "GoldBrick", "id": 41, "usage": "decoration, trim"},
+        {"name": "IronBrick", "id": 47, "usage": "metal_parts"}
+      ],
+      "roof_style": "triangular",
+      "roof_tiles": [
+        {"name": "Wood", "id": 5, "paint": 28},
+        {"name": "GrayBrick", "id": 4, "paint": 28}
+      ],
+      "furniture_style": [
+        {"name": "WorkBench", "id": 17, "variant": "wooden"},
+        {"name": "Tables", "id": 87, "variant": 0},
+        {"name": "Chairs", "id": 88, "variant": 0},
+        {"name": "Torches", "id": 4, "variant": 0},
+        {"name": "Banners", "id": 27}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "保持原色"},
+        "shadow": {"paint_id": 28, "description": "阴影油漆增加深度"},
+        "highlight": {"paint_id": 30, "description": "白色油漆作为高光"},
+        "trim": {"paint_id": 13, "description": "深红作为装饰边框"}
+      },
+      "architectural_rules": [
+        "使用灰砖作为主要墙壁材料",
+        "添加木质屋顶和地板",
+        "使用阴影油漆(28)在边缘增加层次",
+        "放置火把作为光源",
+        "使用斜坡方块创建三角屋顶",
+        "添加旗帜和雕像作为装饰"
+      ],
+      "building_templates": {
+        "house": {
+          "min_width": 10,
+          "min_height": 8,
+          "structure": {
+            "foundation": "StoneSlab, 1层",
+            "walls": "GrayBrick, 四周",
+            "interior_wall": "WoodWall",
+            "roof": "Wood斜坡三角屋顶",
+            "door_position": "bottom_center",
+            "window_count": 2
+          }
+        },
+        "castle": {
+          "min_width": 25,
+          "min_height": 20,
+          "structure": {
+            "foundation": "StoneSlab, 2层",
+            "walls": "GrayBrick, 四周+塔楼",
+            "tower_count": 4,
+            "roof": "GoldBrick装饰屋顶",
+            "gate": "大型门+大门",
+            "inner_courtyard": true
+          }
+        },
+        "tower": {
+          "min_width": 7,
+          "min_height": 15,
+          "structure": {
+            "foundation": "Stone",
+            "walls": "GrayBrick, 圆形或多边形",
+            "roof": "Wood尖顶",
+            "windows": "Glass小窗",
+            "spire": "可选金顶装饰"
+          }
+        }
+      },
+      "biome_recommendations": ["forest", "plain"],
+      "difficulty": "easy"
+    },
+
+    "fantasy": {
+      "name": "奇幻风格",
+      "display_name": "Fantasy",
+      "description": "魔法与幻想风格，适合精灵建筑、魔法塔和神圣殿堂",
+      "primary_tiles": [
+        {"name": "Pearlstone", "id": 166, "usage": "wall, foundation"},
+        {"name": "Glass", "id": 13, "usage": "window, decoration"},
+        {"name": "GoldBrick", "id": 41, "usage": "accent, trim"},
+        {"name": "Marble", "id": 57, "usage": "floor, pillar"}
+      ],
+      "primary_walls": [
+        {"name": "PearlstoneWall", "id": 68, "usage": "main_wall"},
+        {"name": "GlassWall", "id": 17, "usage": "window_wall"},
+        {"name": "MarbleWall", "id": 80, "usage": "interior"}
+      ],
+      "accent_tiles": [
+        {"name": "DiamondGemspark", "id": 357, "usage": "glowing_decoration"},
+        {"name": "RubyGemspark", "id": 358, "usage": "glowing_decoration"}
+      ],
+      "roof_style": "dome",
+      "roof_tiles": [
+        {"name": "GoldBrick", "id": 41, "paint": 30},
+        {"name": "Pearlstone", "id": 166, "paint": 28}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": 2},
+        {"name": "Chairs", "id": 88, "variant": 2},
+        {"name": "Chandeliers", "id": 35, "variant": 0},
+        {"name": "Candles", "id": 33},
+        {"name": "Statues", "id": 65}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 23, "description": "深青柠色"},
+        "highlight": {"paint_id": 7, "description": "青色高光"},
+        "shadow": {"paint_id": 28, "description": "阴影效果"},
+        "magic": {"paint_id": 29, "description": "反转效果用于魔法区域"}
+      },
+      "architectural_rules": [
+        "使用珍珠石作为主体材料，自带微光效果",
+        "大量使用玻璃创造通透感",
+        "圆顶或尖顶屋顶设计",
+        "使用吊灯而非火把作为光源",
+        "添加发光宝石方块作为装饰",
+        "使用反转油漆创造魔法效果"
+      ],
+      "building_templates": {
+        "temple": {
+          "min_width": 20,
+          "min_height": 15,
+          "structure": {
+            "foundation": "Marble",
+            "walls": "Pearlstone + Glass",
+            "roof": "GoldBrick圆顶",
+            "pillars": "Marble柱子",
+            "lighting": "Chandeliers"
+          }
+        },
+        "mage_tower": {
+          "min_width": 9,
+          "min_height": 20,
+          "structure": {
+            "foundation": "Stone",
+            "walls": "Pearlstone螺旋上升",
+            "roof": "GoldBrick尖顶",
+            "windows": "Glass彩色窗",
+            "crystals": "Gemspark装饰"
+          }
+        }
+      },
+      "biome_recommendations": ["hallow", "sky"],
+      "difficulty": "medium"
+    },
+
+    "steampunk": {
+      "name": "蒸汽朋克风格",
+      "display_name": "Steampunk",
+      "description": "工业革命风格，适合工厂、机械建筑和发明家住所",
+      "primary_tiles": [
+        {"name": "CopperBrick", "id": 45, "usage": "wall, pipe"},
+        {"name": "IronBrick", "id": 47, "usage": "metal_frame"},
+        {"name": "GrayBrick", "id": 4, "usage": "foundation"},
+        {"name": "GearPlatform", "id": 426, "usage": "floor, decoration"}
+      ],
+      "primary_walls": [
+        {"name": "CopperBrickWall", "id": 11, "usage": "main_wall"},
+        {"name": "IronBrickWall", "id": 47, "usage": "metal_wall"}
+      ],
+      "accent_tiles": [
+        {"name": "Cog", "id": 424, "usage": "decoration"},
+        {"name": "SteamPipe", "id": 425, "usage": "pipe_system"}
+      ],
+      "roof_style": "industrial",
+      "roof_tiles": [
+        {"name": "IronBrick", "id": 47},
+        {"name": "CopperBrick", "id": 45, "paint": 13}
+      ],
+      "furniture_style": [
+        {"name": "WorkBench", "id": 17, "variant": 1},
+        {"name": "Anvils", "id": 78},
+        {"name": "Furnaces", "id": 77},
+        {"name": "LogicGateLamp", "id": 427}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 13, "description": "深红/铜色"},
+        "metal": {"paint_id": 14, "description": "蔚蓝色金属"},
+        "shadow": {"paint_id": 28, "description": "阴影"},
+        "rust": {"paint_id": 2, "description": "橙色锈迹效果"}
+      },
+      "architectural_rules": [
+        "使用铜砖和铁砖作为主要材料",
+        "添加齿轮和管道作为装饰",
+        "工业风格平顶或斜顶",
+        "使用熔炉和铁砧作为功能性装饰",
+        "可以添加电路系统控制灯光",
+        "使用橙色油漆创造锈迹效果"
+      ],
+      "building_templates": {
+        "factory": {
+          "min_width": 15,
+          "min_height": 12,
+          "structure": {
+            "foundation": "GrayBrick",
+            "walls": "CopperBrick + IronBrick",
+            "roof": "IronBrick平顶",
+            "machinery": "Furnaces + Anvils",
+            "pipes": "SteamPipe装饰"
+          }
+        },
+        "workshop": {
+          "min_width": 12,
+          "min_height": 8,
+          "structure": {
+            "foundation": "StoneSlab",
+            "walls": "CopperBrickWall",
+            "work_area": "WorkBench + Anvils",
+            "storage": "Chests"
+          }
+        }
+      },
+      "biome_recommendations": ["any"],
+      "difficulty": "medium",
+      "wire_required": true
+    },
+
+    "natural": {
+      "name": "自然风格",
+      "display_name": "Natural",
+      "description": "与自然融合的建筑风格，适合树屋、洞穴住所和田园小屋",
+      "primary_tiles": [
+        {"name": "Wood", "id": 5, "usage": "structure"},
+        {"name": "Dirt", "id": 2, "usage": "foundation"},
+        {"name": "Stone", "id": 1, "usage": "rock_parts"},
+        {"name": "LivingWood", "id": 156, "usage": "organic_decoration"}
+      ],
+      "primary_walls": [
+        {"name": "WoodWall", "id": 4, "usage": "main_wall"},
+        {"name": "DirtWall", "id": 2, "usage": "natural_wall"},
+        {"name": "LivingWoodWall", "id": 156, "usage": "tree_wall"}
+      ],
+      "accent_tiles": [
+        {"name": "Grass", "id": 3, "usage": "roof_garden"},
+        {"name": "LeafBlock", "id": 157, "usage": "canopy"}
+      ],
+      "roof_style": "organic",
+      "roof_tiles": [
+        {"name": "Wood", "id": 5},
+        {"name": "LeafBlock", "id": 157}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": 0},
+        {"name": "Chairs", "id": 88, "variant": 0},
+        {"name": "Torches", "id": 4},
+        {"name": "Campfire", "id": 449}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "保持自然原色"},
+        "highlight": {"paint_id": 4, "description": "青柠色点缀"},
+        "shadow": {"paint_id": 28, "description": "自然阴影"}
+      },
+      "architectural_rules": [
+        "使用木材和泥土作为主要材料",
+        "建筑应与周围地形融合",
+        "不规则的形状更自然",
+        "使用树叶方块创造树冠效果",
+        "火把或篝火作为光源",
+        "减少直线边缘，使用斜坡软化轮廓"
+      ],
+      "building_templates": {
+        "treehouse": {
+          "min_width": 10,
+          "min_height": 12,
+          "structure": {
+            "trunk": "LivingWood",
+            "walls": "WoodWall",
+            "roof": "LeafBlock canopy",
+            "platforms": "WoodPlatform连接",
+            "entrance": "从下方进入"
+          }
+        },
+        "cave_home": {
+          "min_width": 15,
+          "min_height": 10,
+          "structure": {
+            "walls": "StoneWall自然形状",
+            "floor": "Dirt + Wood",
+            "lighting": "Torches",
+            "storage": "自然角落放置Chest"
+          }
+        },
+        "farmhouse": {
+          "min_width": 12,
+          "min_height": 8,
+          "structure": {
+            "foundation": "Dirt",
+            "walls": "WoodWall",
+            "roof": "Wood三角屋顶",
+            "fence": "Gate围栏"
+          }
+        }
+      },
+      "biome_recommendations": ["forest", "jungle"],
+      "difficulty": "easy"
+    },
+
+    "asian": {
+      "name": "东方风格",
+      "display_name": "Asian/Dynasty",
+      "description": "中日式建筑风格，适合茶室、寺庙和东方庭院",
+      "primary_tiles": [
+        {"name": "DynastyWood", "id": 633, "usage": "structure"},
+        {"name": "Wood", "id": 5, "usage": "floor"},
+        {"name": "StoneSlab", "id": 143, "usage": "path"},
+        {"name": "RichMahogany", "id": 183, "usage": "furniture"}
+      ],
+      "primary_walls": [
+        {"name": "DynastyWall", "id": 191, "usage": "main_wall"},
+        {"name": "WoodWall", "id": 4, "usage": "interior"}
+      ],
+      "accent_tiles": [
+        {"name": "Teapot", "id": 573, "usage": "decoration"},
+        {"name": "Teacup", "id": 622, "usage": "decoration"}
+      ],
+      "roof_style": "curved",
+      "roof_tiles": [
+        {"name": "DynastyWood", "id": 633},
+        {"name": "Wood", "id": 5, "paint": 28}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": "low"},
+        {"name": "Chairs", "id": 88, "variant": "floor_sitting"},
+        {"name": "HangingLanterns", "id": 133},
+        {"name": "Banners", "id": 27, "variant": "asian"}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "保持原色"},
+        "accent": {"paint_id": 1, "description": "红色点缀"},
+        "shadow": {"paint_id": 28, "description": "阴影"},
+        "gold": {"paint_id": 3, "description": "金色装饰"}
+      },
+      "architectural_rules": [
+        "使用王朝木作为主要材料",
+        "弯曲屋顶线条（使用斜坡模拟）",
+        "悬挂灯笼作为光源",
+        "使用低矮家具",
+        "添加茶具作为装饰",
+        "红色和金色点缀"
+      ],
+      "building_templates": {
+        "tea_house": {
+          "min_width": 10,
+          "min_height": 6,
+          "structure": {
+            "foundation": "StoneSlab",
+            "walls": "DynastyWall",
+            "roof": "DynastyWood弯曲屋顶",
+            "furniture": "低桌 + 茶具",
+            "lighting": "HangingLanterns"
+          }
+        },
+        "temple": {
+          "min_width": 15,
+          "min_height": 12,
+          "structure": {
+            "foundation": "StoneSlab台阶",
+            "walls": "DynastyWall多层",
+            "roof": "DynastyWood多层弯曲屋顶",
+            "entrance": "大型门",
+            "decoration": "Banners + Statues"
+          }
+        }
+      },
+      "biome_recommendations": ["any"],
+      "difficulty": "medium"
+    },
+
+    "snow": {
+      "name": "冰雪风格",
+      "display_name": "Snow/Ice",
+      "description": "冬季风格，适合雪屋、冰堡和北欧建筑",
+      "primary_tiles": [
+        {"name": "SnowBlock", "id": 147, "usage": "wall, roof"},
+        {"name": "IceBlock", "id": 164, "usage": "window, decoration"},
+        {"name": "BorealWood", "id": 124, "usage": "structure"},
+        {"name": "SilverBrick", "id": 43, "usage": "accent"}
+      ],
+      "primary_walls": [
+        {"name": "SnowWall", "id": 64, "usage": "main_wall"},
+        {"name": "IceWall", "id": 164, "usage": "window"}
+      ],
+      "accent_tiles": [
+        {"name": "ChristmasTree", "id": 451, "usage": "decoration"},
+        {"name": "ChristmasLights", "id": 452, "usage": "lighting"}
+      ],
+      "roof_style": "snow_covered",
+      "roof_tiles": [
+        {"name": "SnowBlock", "id": 147},
+        {"name": "BorealWood", "id": 124, "paint": 28}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": "boreal"},
+        {"name": "Chairs", "id": 88, "variant": "boreal"},
+        {"name": "Torches", "id": 4, "variant": "ice"},
+        {"name": "Fireplace", "id": 449}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "保持雪白色"},
+        "ice": {"paint_id": 7, "description": "青色冰效果"},
+        "shadow": {"paint_id": 28, "description": "阴影"},
+        "warm": {"paint_id": 1, "description": "红色暖色点缀"}
+      },
+      "architectural_rules": [
+        "使用雪块和冰块作为主要材料",
+        "厚实圆润的墙壁（模拟积雪）",
+        "针叶木作为内部结构",
+        "冰块作为窗户",
+        "篝火或壁炉作为光源",
+        "圣诞装饰（节日时）"
+      ],
+      "building_templates": {
+        "igloo": {
+          "min_width": 8,
+          "min_height": 6,
+          "structure": {
+            "walls": "SnowBlock圆形",
+            "entrance": "SnowBlock隧道入口",
+            "interior": "BorealWood家具",
+            "lighting": "Torches"
+          }
+        },
+        "winter_house": {
+          "min_width": 10,
+          "min_height": 8,
+          "structure": {
+            "foundation": "StoneSlab",
+            "walls": "BorealWood + SnowBlock覆盖",
+            "roof": "SnowBlock屋顶",
+            "windows": "IceBlock",
+            "fireplace": "Campfire"
+          }
+        }
+      },
+      "biome_recommendations": ["snow", "tundra", "ice"],
+      "difficulty": "easy"
+    },
+
+    "desert": {
+      "name": "沙漠风格",
+      "display_name": "Desert/Egyptian",
+      "description": "沙漠和古埃及风格，适合金字塔、沙漠宫殿和集市",
+      "primary_tiles": [
+        {"name": "Sandstone", "id": 171, "usage": "wall, foundation"},
+        {"name": "SandstoneSlab", "id": 179, "usage": "floor, stairs"},
+        {"name": "PalmWood", "id": 250, "usage": "furniture"},
+        {"name": "GoldBrick", "id": 41, "usage": "palace_decoration"}
+      ],
+      "primary_walls": [
+        {"name": "SandstoneWall", "id": 28, "usage": "main_wall"}
+      ],
+      "accent_tiles": [
+        {"name": "Mummy", "id": 446, "usage": "decoration"},
+        {"name": "Sarcophagus", "id": 447, "usage": "tomb"}
+      ],
+      "roof_style": "flat_or_pyramid",
+      "roof_tiles": [
+        {"name": "Sandstone", "id": 171},
+        {"name": "GoldBrick", "id": 41, "paint": 3}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": "palm"},
+        {"name": "Chairs", "id": 88, "variant": "palm"},
+        {"name": "Torches", "id": 4, "variant": "desert"},
+        {"name": "Chests", "id": 21, "variant": "gold"}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 2, "description": "橙色沙漠色"},
+        "accent": {"paint_id": 3, "description": "金色"},
+        "shadow": {"paint_id": 28, "description": "阴影"}
+      },
+      "architectural_rules": [
+        "使用砂岩作为主要材料",
+        "平顶或金字塔形屋顶",
+        "棕榈木家具",
+        "金色装饰点缀",
+        "大型柱子作为支撑",
+        "宽敞的内部空间"
+      ],
+      "building_templates": {
+        "pyramid": {
+          "min_width": 20,
+          "min_height": 15,
+          "structure": {
+            "walls": "Sandstone金字塔形状",
+            "entrance": "隐藏入口",
+            "inner_chamber": "GoldBrick装饰",
+            "treasure": "Chests + Sarcophagus"
+          }
+        },
+        "desert_house": {
+          "min_width": 10,
+          "min_height": 6,
+          "structure": {
+            "foundation": "SandstoneSlab",
+            "walls": "Sandstone",
+            "roof": "Sandstone平顶",
+            "furniture": "PalmWood"
+          }
+        }
+      },
+      "biome_recommendations": ["desert", "oasis"],
+      "difficulty": "medium"
+    },
+
+    "underground": {
+      "name": "地下风格",
+      "display_name": "Underground/Cavern",
+      "description": "地下洞穴风格，适合矿工住所、洞穴基地和地牢房间",
+      "primary_tiles": [
+        {"name": "Stone", "id": 1, "usage": "natural_wall"},
+        {"name": "Dirt", "id": 2, "usage": "fill"},
+        {"name": "Wood", "id": 5, "usage": "structure"},
+        {"name": "Platform", "id": 19, "usage": "scaffolding"}
+      ],
+      "primary_walls": [
+        {"name": "StoneWall", "id": 1, "usage": "natural"},
+        {"name": "DirtWall", "id": 2, "usage": "fill"},
+        {"name": "WoodWall", "id": 4, "usage": "built_area"}
+      ],
+      "accent_tiles": [
+        {"name": "GemsparkBlocks", "id": 357, "usage": "ore_display"},
+        {"name": "Obsidian", "id": 54, "usage": "dark_areas"}
+      ],
+      "roof_style": "natural_cave",
+      "roof_tiles": [
+        {"name": "Stone", "id": 1}
+      ],
+      "furniture_style": [
+        {"name": "WorkBench", "id": 17},
+        {"name": "Furnaces", "id": 77},
+        {"name": "Anvils", "id": 78},
+        {"name": "Chests", "id": 21, "variant": "shadow"},
+        {"name": "Torches", "id": 4}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "自然石色"},
+        "shadow": {"paint_id": 28, "description": "深度阴影"},
+        "dark": {"paint_id": 31, "description": "黑色暗区"},
+        "gem": {"paint_id": 29, "description": "反转效果突出矿石"}
+      ],
+      "architectural_rules": [
+        "利用自然洞穴形状",
+        "不规则的空间布局",
+        "木质平台作为楼梯",
+        "熔炉和铁砧作为采矿设施",
+        "大量火把照明",
+        "宝箱存储矿物"
+      ],
+      "building_templates": {
+        "mining_base": {
+          "min_width": 15,
+          "min_height": 10,
+          "structure": {
+            "walls": "自然Stone + WoodWall加固",
+            "floor": "Wood + Platform",
+            "work_area": "WorkBench + Furnaces + Anvils",
+            "storage": "多个Chests",
+            "lighting": "大量Torches"
+          }
+        },
+        "safe_room": {
+          "min_width": 8,
+          "min_height": 6,
+          "structure": {
+            "walls": "WoodWall完全封闭",
+            "furniture": "基本NPC房屋配置",
+            "lighting": "明亮照明"
+          }
+        }
+      },
+      "biome_recommendations": ["underground", "cavern", "hell"],
+      "difficulty": "easy"
+    },
+
+    "ocean": {
+      "name": "海洋风格",
+      "display_name": "Ocean/Beach",
+      "description": "海洋和海滩风格，适合海滨小屋、船屋和水下建筑",
+      "primary_tiles": [
+        {"name": "PalmWood", "id": 250, "usage": "structure"},
+        {"name": "Glass", "id": 13, "usage": "window, underwater"},
+        {"name": "SandBlock", "id": 53, "usage": "foundation"},
+        {"name": "Coral", "id": 313, "usage": "decoration"}
+      ],
+      "primary_walls": [
+        {"name": "GlassWall", "id": 17, "usage": "underwater"},
+        {"name": "WoodWall", "id": 4, "usage": "beach_house"}
+      ],
+      "accent_tiles": [
+        {"name": "ShipWheel", "id": 448, "usage": "nautical"},
+        {"name": "Anchor", "id": 449, "usage": "decoration"}
+      ],
+      "roof_style": "thatch_or_palm",
+      "roof_tiles": [
+        {"name": "PalmWood", "id": 250},
+        {"name": "Wood", "id": 5, "paint": 2}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": "palm"},
+        {"name": "Chairs", "id": 88, "variant": "palm"},
+        {"name": "Cannon", "id": 128},
+        {"name": "Barrel", "id": 450}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 0, "description": "自然棕榈色"},
+        "ocean": {"paint_id": 8, "description": "天蓝色"},
+        "shadow": {"paint_id": 28, "description": "阴影"},
+        "sunny": {"paint_id": 3, "description": "黄色阳光"}
+      },
+      "architectural_rules": [
+        "使用棕榈木作为主要材料",
+        "大量玻璃创造通透感",
+        "茅草或棕榈叶屋顶",
+        "海洋装饰（船舵、锚、炮）",
+        "水下建筑使用玻璃墙",
+        "明亮的颜色方案"
+      ],
+      "building_templates": {
+        "beach_house": {
+          "min_width": 12,
+          "min_height": 8,
+          "structure": {
+            "foundation": "SandBlock",
+            "walls": "PalmWood + Glass",
+            "roof": "PalmWood茅草屋顶",
+            "deck": "WoodPlatform阳台",
+            "decoration": "海洋装饰"
+          }
+        },
+        "underwater_base": {
+          "min_width": 15,
+          "min_height": 10,
+          "structure": {
+            "walls": "GlassWall全封闭",
+            "floor": "StoneSlab",
+            "entrance": "从上方进入",
+            "lighting": "明亮照明",
+            "coral": "Coral装饰"
+          }
+        }
+      },
+      "biome_recommendations": ["ocean", "beach"],
+      "difficulty": "medium"
+    },
+
+    "dark": {
+      "name": "黑暗风格",
+      "display_name": "Dark/Evil",
+      "description": "腐化/猩红/地狱风格，适合邪恶建筑和恐怖场景",
+      "primary_tiles": [
+        {"name": "Ebonstone", "id": 168, "usage": "corruption_wall"},
+        {"name": "Crimstone", "id": 169, "usage": "crimson_wall"},
+        {"name": "Obsidian", "id": 54, "usage": "hell_structure"},
+        {"name": "DemoniteBrick", "id": 47, "usage": "decoration"}
+      ],
+      "primary_walls": [
+        {"name": "EbonstoneWall", "id": 72, "usage": "corruption"},
+        {"name": "CrimstoneWall", "id": 83, "usage": "crimson"},
+        {"name": "ObsidianWall", "id": 54, "usage": "hell"}
+      ],
+      "accent_tiles": [
+        {"name": "Ebonsand", "id": 323, "usage": "corruption_sand"},
+        {"name": "Crimsand", "id": 324, "usage": "crimson_sand"}
+      ],
+      "roof_style": "spiked_or_organic",
+      "roof_tiles": [
+        {"name": "Ebonstone", "id": 168},
+        {"name": "Obsidian", "id": 54}
+      ],
+      "furniture_style": [
+        {"name": "Torches", "id": 4, "variant": "corruption/crimson"},
+        {"name": "Candle", "id": 33},
+        {"name": "Graveyard", "id": 424}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 31, "description": "黑色"},
+        "accent": {"paint_id": 10, "description": "紫色(corruption)"},
+        "blood": {"paint_id": 13, "description": "深红(crimson)"},
+        "shadow": {"paint_id": 28, "description": "阴影"}
+      },
+      "architectural_rules": [
+        "使用对应邪恶生物群落的材料",
+        "不规则的有机形状",
+        "暗色调油漆",
+        "墓地装饰",
+        "微弱光源营造恐怖氛围",
+        "尖刺状装饰"
+      ],
+      "building_templates": {
+        "evil_temple": {
+          "min_width": 15,
+          "min_height": 12,
+          "structure": {
+            "walls": "Ebonstone/Crimstone有机形状",
+            "floor": "对应邪恶材料",
+            "lighting": "微弱紫色/红色光源",
+            "decoration": "Graveyard + Candles"
+          }
+        },
+        "hell_fortress": {
+          "min_width": 20,
+          "min_height": 15,
+          "structure": {
+            "walls": "Obsidian",
+            "floor": "Obsidian",
+            "lighting": "Hellstone光源",
+            "trap": "机关陷阱"
+          }
+        }
+      },
+      "biome_recommendations": ["corruption", "crimson", "hell"],
+      "difficulty": "hard"
+    },
+
+    "modern": {
+      "name": "现代风格",
+      "display_name": "Modern/Clean",
+      "description": "现代简约风格，适合现代住宅、办公室和实验室",
+      "primary_tiles": [
+        {"name": "Granite", "id": 58, "usage": "wall, floor"},
+        {"name": "Glass", "id": 13, "usage": "window, wall"},
+        {"name": "Marble", "id": 57, "usage": "floor, accent"},
+        {"name": "GrayBrick", "id": 4, "usage": "structure"}
+      ],
+      "primary_walls": [
+        {"name": "GraniteWall", "id": 81, "usage": "main_wall"},
+        {"name": "GlassWall", "id": 17, "usage": "window"},
+        {"name": "GrayBrickWall", "id": 6, "usage": "exterior"}
+      ],
+      "accent_tiles": [
+        {"name": "LCDScreen", "id": 445, "usage": "decoration"},
+        {"name": "Computer", "id": 444, "usage": "desk"}
+      ],
+      "roof_style": "flat",
+      "roof_tiles": [
+        {"name": "Granite", "id": 58},
+        {"name": "GrayBrick", "id": 4}
+      ],
+      "furniture_style": [
+        {"name": "Tables", "id": 87, "variant": "modern"},
+        {"name": "Chairs", "id": 88, "variant": "modern"},
+        {"name": "Lamps", "id": 132},
+        {"name": "Computer", "id": 444}
+      ],
+      "paint_scheme": {
+        "primary": {"paint_id": 30, "description": "白色"},
+        "accent": {"paint_id": 14, "description": "蔚蓝"},
+        "shadow": {"paint_id": 28, "description": "阴影"},
+        "minimalist": {"paint_id": 31, "description": "黑色点缀"}
+      },
+      "architectural_rules": [
+        "使用花岗岩和大理石作为主要材料",
+        "大量玻璃创造现代通透感",
+        "平顶设计",
+        "简约线条，避免过多装饰",
+        "白色为主的颜色方案",
+        "现代灯具"
+      ],
+      "building_templates": {
+        "modern_house": {
+          "min_width": 15,
+          "min_height": 10,
+          "structure": {
+            "foundation": "Marble",
+            "walls": "Granite + GlassWall大窗",
+            "roof": "Granite平顶",
+            "furniture": "现代家具",
+            "lighting": "Lamps"
+          }
+        },
+        "office": {
+          "min_width": 20,
+          "min_height": 12,
+          "structure": {
+            "walls": "GraniteWall",
+            "floor": "Marble",
+            "workstations": "Tables + Computers",
+            "meeting_room": "大型桌椅"
+          }
+        }
+      },
+      "biome_recommendations": ["any"],
+      "difficulty": "medium"
+    }
+  },
+
+  "paint_schemes": {
+    "depth_shadow": {
+      "name": "深度阴影方案",
+      "description": "使用阴影油漆增加建筑层次感",
+      "edge_paint": 28,
+      "corner_paint": 29,
+      "inner_paint": 0,
+      "technique": "在建筑边缘使用阴影油漆(28)，内部保持原色，角落使用反转(29)增强对比"
+    },
+    "warm_light": {
+      "name": "暖光方案",
+      "description": "营造温暖明亮的氛围",
+      "primary_paint": 3,
+      "accent_paint": 1,
+      "shadow_paint": 28,
+      "technique": "黄色为主色，红色点缀，阴影保持层次"
+    },
+    "cold_ice": {
+      "name": "冰冷方案",
+      "description": "创造冰冷寒冷的氛围",
+      "primary_paint": 7,
+      "accent_paint": 8,
+      "shadow_paint": 28,
+      "technique": "青色和蓝色为主，阴影增强冰冷感"
+    },
+    "luxury_gold": {
+      "name": "豪华金方案",
+      "description": "营造豪华富贵的氛围",
+      "primary_paint": 3,
+      "accent_paint": 1,
+      "shadow_paint": 28,
+      "technique": "金色为主，红色点缀，阴影增加质感"
+    },
+    "natural_organic": {
+      "name": "自然有机方案",
+      "description": "保持自然原色的有机方案",
+      "primary_paint": 0,
+      "accent_paint": 4,
+      "shadow_paint": 28,
+      "technique": "保持原色为主，青柠点缀，自然阴影"
+    }
+  },
+
+  "building_types": {
+    "house": {
+      "min_width": 10,
+      "max_width": 25,
+      "min_height": 8,
+      "max_height": 20,
+      "required_elements": ["light_source", "flat_surface", "comfort", "door", "wall"],
+      "description": "基本居住建筑"
+    },
+    "castle": {
+      "min_width": 25,
+      "max_width": 60,
+      "min_height": 20,
+      "max_height": 40,
+      "required_elements": ["towers", "gate", "courtyard"],
+      "description": "大型防御建筑"
+    },
+    "tower": {
+      "min_width": 7,
+      "max_width": 12,
+      "min_height": 15,
+      "max_height": 35,
+      "required_elements": ["spire", "windows"],
+      "description": "塔楼建筑"
+    },
+    "shop": {
+      "min_width": 12,
+      "max_width": 20,
+      "min_height": 8,
+      "max_height": 15,
+      "required_elements": ["counter", "display", "storage"],
+      "description": "商店建筑"
+    },
+    "temple": {
+      "min_width": 20,
+      "max_width": 40,
+      "min_height": 15,
+      "max_height": 30,
+      "required_elements": ["altar", "pillars", "light_source"],
+      "description": "宗教/仪式建筑"
+    },
+    "farmhouse": {
+      "min_width": 10,
+      "max_width": 20,
+      "min_height": 6,
+      "max_height": 12,
+      "required_elements": ["gate", "pen", "storage"],
+      "description": "农场建筑"
+    },
+    "workshop": {
+      "min_width": 12,
+      "max_width": 25,
+      "min_height": 8,
+      "max_height": 15,
+      "required_elements": ["workbench", "furnace", "anvil", "storage"],
+      "description": "工匠工作场所"
+    }
+  }
+}

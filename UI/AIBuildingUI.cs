@@ -14,6 +14,7 @@ using Terraria.UI;
 using trab.Config;
 using trab.Core;
 using trab.Data;
+using trab.Players;
 
 namespace trab.UI
 {
@@ -86,6 +87,11 @@ namespace trab.UI
         private bool busy = false;
         private int maxLogLines = 12;
         private Texture2D whitePixel;  // 用于绘制的单像素纹理
+
+        // Agent模式状态
+        public bool useAgentMode = true;  // 默认使用Agent模式
+        private string agentProgress = "";
+        private List<string> toolCallLog = new List<string>();
 
         public BuildingStyle currentStyle = BuildingStyle.Simple;
         public int currentSizeIndex = 0;
@@ -196,8 +202,18 @@ namespace trab.UI
             clearBtn.OnLeftClick += (evt, elem) => ClearLog();
             bg.Append(clearBtn);
 
+            // Agent模式切换按钮
+            var agentBtn = new UITextPanel<string>("Agent", 0.8f);
+            agentBtn.Width.Set(60f, 0f);
+            agentBtn.Height.Set(22f, 0f);
+            agentBtn.Left.Set(295f, 0f);
+            agentBtn.Top.Set(202f, 0f);
+            agentBtn.BackgroundColor = useAgentMode ? new Color(60, 120, 60) : new Color(60, 60, 60);
+            agentBtn.OnLeftClick += (evt, elem) => ToggleAgentMode();
+            bg.Append(agentBtn);
+
             // 状态信息
-            statusText = new UIText("风格:简单 尺寸:小 选区:无", 0.8f);
+            statusText = new UIText("风格:简单 尺寸:小 选区:无 Agent:开", 0.8f);
             statusText.Left.Set(5f, 0f);
             statusText.Top.Set(230f, 0f);
             statusText.TextColor = Color.LightGray;
@@ -245,7 +261,39 @@ namespace trab.UI
                 areaStr = "选择中";
             }
 
-            statusText.SetText($"风格:{styleNames[(int)currentStyle]} 尺寸:{sizeNames[currentSizeIndex]} 选区:{areaStr}");
+            string agentStr = useAgentMode ? "开" : "关";
+            statusText.SetText($"风格:{styleNames[(int)currentStyle]} 尺寸:{sizeNames[currentSizeIndex]} 选区:{areaStr} Agent:{agentStr}");
+        }
+
+        /// <summary>
+        /// 切换Agent模式
+        /// </summary>
+        public void ToggleAgentMode()
+        {
+            useAgentMode = !useAgentMode;
+            AddMessage($"Agent模式: {(useAgentMode ? "开启" : "关闭")}");
+
+            if (useAgentMode)
+            {
+                AddMessage("Agent模式将检索知识库生成更精美的建筑");
+            }
+            else
+            {
+                AddMessage("传统模式直接生成简单建筑");
+            }
+            UpdateStatus();
+
+            // 更新按钮颜色
+            // 需要重新创建按钮或更新颜色
+        }
+
+        /// <summary>
+        /// 更新Agent进度显示
+        /// </summary>
+        public void UpdateProgress(string progress)
+        {
+            agentProgress = progress;
+            AddMessage($"[Agent] {progress}");
         }
 
         public void ToggleAreaMode()
@@ -312,45 +360,70 @@ namespace trab.UI
                 AddMessage($"根据预设生成: {w}x{h}");
             }
 
-            string prompt = GetStylePrompt(currentStyle, w, h) + "，返回JSON格式建筑设计";
-            AddMessage($"正在请求AI...");
+            string prompt = GetStylePrompt(currentStyle, w, h);
 
-            busy = true;
-            Task.Run(async () =>
+            // 根据模式选择生成方式
+            if (useAgentMode)
             {
-                try
+                // Agent模式生成
+                AddMessage($"[Agent] 启动智能生成...");
+                AddMessage($"[Agent] 知识库: {GetKBStatus()}");
+                busy = true;
+                toolCallLog.Clear();
+
+                var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();
+                player.RequestBuildingDesignAgent(prompt);
+            }
+            else
+            {
+                // 传统API模式生成
+                prompt += "，返回JSON格式建筑设计";
+                AddMessage($"正在请求AI...");
+
+                busy = true;
+                Task.Run(async () =>
                 {
-                    var s = new AIApiService(cfg.ApiKey, cfg.ServiceProvider, cfg.CustomEndpoint, cfg.ModelName);
-                    var r = await s.SendChatRequestAsync(prompt, CancellationToken.None);
-                    Main.QueueMainThreadAction(() =>
+                    try
                     {
-                        lastResp = r ?? "";
-                        if (!string.IsNullOrEmpty(r))
+                        var s = new AIApiService(cfg.ApiKey, cfg.ServiceProvider, cfg.CustomEndpoint, cfg.ModelName);
+                        var r = await s.SendChatRequestAsync(prompt, CancellationToken.None);
+                        Main.QueueMainThreadAction(() =>
                         {
-                            AddMessage("[成功] 建筑已生成!");
-                            string j = AIApiService.ExtractJsonFromResponse(r);
-                            if (j != null)
+                            lastResp = r ?? "";
+                            if (!string.IsNullOrEmpty(r))
                             {
-                                var d = new BuildingExecutor(trab.Instance).ParseDesign(j);
-                                if (d != null)
-                                    AddMessage($"{d.Name}: {d.Width}x{d.Height}");
+                                AddMessage("[成功] 建筑已生成!");
+                                string j = AIApiService.ExtractJsonFromResponse(r);
+                                if (j != null)
+                                {
+                                    var d = new BuildingExecutor(trab.Instance).ParseDesign(j);
+                                    if (d != null)
+                                        AddMessage($"{d.Name}: {d.Width}x{d.Height}");
+                                }
+                                AddMessage("按B在鼠标位置放置");
                             }
-                            AddMessage("按B在鼠标位置放置");
-                        }
-                        else
-                            AddMessage("[失败] 空响应");
-                        busy = false;
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Main.QueueMainThreadAction(() =>
+                            else
+                                AddMessage("[失败] 空响应");
+                            busy = false;
+                        });
+                    }
+                    catch (Exception ex)
                     {
-                        AddMessage("[错误] " + ex.Message);
-                        busy = false;
-                    });
-                }
-            });
+                        Main.QueueMainThreadAction(() =>
+                        {
+                            AddMessage("[错误] " + ex.Message);
+                            busy = false;
+                        });
+                    }
+                });
+            }
+        }
+
+        private string GetKBStatus()
+        {
+            var kb = KnowledgeBaseManager.Instance;
+            if (!kb.IsInitialized) return "未初始化";
+            return $"{kb.Tiles.TileCount}方块 {kb.Styles.StyleCount}风格";
         }
 
         /// <summary>
@@ -358,18 +431,28 @@ namespace trab.UI
         /// </summary>
         public void DoPlaceAtMouse()
         {
-            if (string.IsNullOrEmpty(lastResp))
+            var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();
+            var lastDesign = player.LastDesign;
+
+            if (lastDesign == null)
             {
-                AddMessage("[提示] 先按G生成建筑");
-                return;
+                if (!string.IsNullOrEmpty(lastResp))
+                {
+                    // 传统模式的数据
+                    string j = AIApiService.ExtractJsonFromResponse(lastResp);
+                    if (j == null) { AddMessage("[错误] JSON解析失败"); return; }
+
+                    var e = new BuildingExecutor(trab.Instance);
+                    var d = e.ParseDesign(j);
+                    if (d == null) { AddMessage("[错误] 无效建筑数据"); return; }
+                    lastDesign = d;
+                }
+                else
+                {
+                    AddMessage("[提示] 先按G生成建筑");
+                    return;
+                }
             }
-
-            string j = AIApiService.ExtractJsonFromResponse(lastResp);
-            if (j == null) { AddMessage("[错误] JSON解析失败"); return; }
-
-            var e = new BuildingExecutor(trab.Instance);
-            var d = e.ParseDesign(j);
-            if (d == null) { AddMessage("[错误] 无效建筑数据"); return; }
 
             // 使用鼠标位置
             int x = (int)(Main.MouseWorld.X / 16);
@@ -387,8 +470,10 @@ namespace trab.UI
                 AddMessage($"放置到鼠标位置: ({x}, {y})");
             }
 
-            e.BuildAtLocation(d, x, y, Main.LocalPlayer);
-            AddMessage($"建筑 '{d.Name}' 已放置!");
+            // 使用增强版执行器（支持油漆、斜坡、阴影）
+            var executor = trab.Instance.EnhancedBuilder;
+            executor.BuildAtLocationEnhanced(lastDesign, x, y, Main.LocalPlayer);
+            AddMessage($"建筑 '{lastDesign.Name}' 已放置!");
 
             // 清除选区
             confirmedAreaStart = null;

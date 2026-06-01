@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -12,11 +13,12 @@ using trab.UI;
 namespace trab.Players
 {
     /// <summary>
-    /// AI建筑玩家扩展类
+    /// AI建筑玩家扩展类 - Agent模式增强版
     /// </summary>
     public class AIBuildingPlayer : ModPlayer
     {
         private AIApiService _aiService;
+        private AIAgentService _agentService;
         private CancellationTokenSource _currentRequest;
 
         // 存储最后一次生成的建筑设计
@@ -28,17 +30,26 @@ namespace trab.Players
         // 是否正在生成
         public bool IsGenerating { get; private set; }
 
+        // Agent模式进度信息
+        public string AgentProgress { get; private set; } = "";
+
+        // 工具调用历史
+        public List<string> ToolCallHistory { get; private set; } = new List<string>();
+
         public override void Initialize()
         {
             _aiService = null;
+            _agentService = null;
             _currentRequest = null;
             LastDesign = null;
             LastAIResponse = "";
             IsGenerating = false;
+            AgentProgress = "";
+            ToolCallHistory.Clear();
         }
 
         /// <summary>
-        /// 请求AI生成建筑设计
+        /// 请求AI生成建筑设计（传统API模式）
         /// </summary>
         public void RequestBuildingDesign(string prompt)
         {
@@ -110,7 +121,157 @@ namespace trab.Players
         }
 
         /// <summary>
-        /// 处理AI响应
+        /// 请求AI生成建筑设计（Agent模式 - 推荐）
+        /// </summary>
+        public void RequestBuildingDesignAgent(string prompt)
+        {
+            var config = ModContent.GetInstance<AIBuildingConfig>();
+
+            // 检查API密钥
+            if (string.IsNullOrEmpty(config.ApiKey))
+            {
+                Main.NewText("请先在模组配置中设置API密钥!", Color.Red);
+                return;
+            }
+
+            // 取消之前的请求
+            _currentRequest?.Cancel();
+            _currentRequest = new CancellationTokenSource();
+
+            IsGenerating = true;
+            AgentProgress = "启动Agent...";
+            ToolCallHistory.Clear();
+
+            Main.NewText($"[Agent模式] 正在生成建筑: {prompt}", Color.Cyan);
+
+            // 初始化Agent服务
+            if (_agentService == null)
+            {
+                _agentService = new AIAgentService(config.ApiKey, config.ServiceProvider, config.ModelName);
+            }
+
+            // 异步请求（带进度回调）
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var design = await _agentService.GenerateBuildingAsync(
+                        prompt,
+                        (progress) =>
+                        {
+                            Main.QueueMainThreadAction(() =>
+                            {
+                                AgentProgress = progress;
+                                ToolCallHistory.Add(progress);
+
+                                // 显示进度
+                                var uiSys = ModContent.GetInstance<AIBuildingUISystem>();
+                                if (uiSys.Visible && uiSys.panel != null)
+                                {
+                                    uiSys.panel.UpdateProgress(progress);
+                                }
+                                else
+                                {
+                                    Main.NewText($"[Agent] {progress}", Color.LightBlue);
+                                }
+                            });
+                        },
+                        _currentRequest.Token
+                    );
+
+                    if (_currentRequest.Token.IsCancellationRequested)
+                    {
+                        Main.QueueMainThreadAction(() =>
+                        {
+                            Main.NewText("Agent生成请求已取消", Color.Yellow);
+                            IsGenerating = false;
+                            AgentProgress = "已取消";
+                        });
+                        return;
+                    }
+
+                    if (design != null)
+                    {
+                        Main.QueueMainThreadAction(() =>
+                        {
+                            ProcessAgentDesign(design);
+                            IsGenerating = false;
+                            AgentProgress = "完成";
+                        });
+                    }
+                    else
+                    {
+                        Main.QueueMainThreadAction(() =>
+                        {
+                            Main.NewText("Agent返回空设计", Color.Red);
+                            IsGenerating = false;
+                            AgentProgress = "失败";
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Main.QueueMainThreadAction(() =>
+                    {
+                        Main.NewText($"Agent生成失败: {ex.Message}", Color.Red);
+                        IsGenerating = false;
+                        AgentProgress = $"错误: {ex.Message}";
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// 处理Agent返回的设计
+        /// </summary>
+        private void ProcessAgentDesign(BuildingDesign design)
+        {
+            LastDesign = design;
+
+            Main.NewText($"=== Agent建筑设计 ===", Color.Cyan);
+            Main.NewText($"名称: {design.Name}", Color.Green);
+            Main.NewText($"描述: {design.Description}", Color.White);
+            Main.NewText($"尺寸: {design.Width}x{design.Height}", Color.White);
+            Main.NewText($"风格: {design.Style}", Color.LightBlue);
+            Main.NewText($"方块数: {design.Tiles.Count}", Color.White);
+            Main.NewText($"墙壁数: {design.Walls.Count + design.WallRanges.Count}", Color.White);
+            Main.NewText($"家具数: {design.Furniture.Count}", Color.White);
+            Main.NewText($"光源数: {design.LightSources.Count}", Color.White);
+
+            // 显示油漆方案
+            if (design.PaintScheme != null)
+            {
+                Main.NewText($"油漆方案: {design.PaintScheme.Description}", Color.Purple);
+            }
+
+            // 显示NPC房屋验证
+            if (design.NpcSuitability != null)
+            {
+                if (design.NpcSuitability.IsValidHouse)
+                {
+                    Main.NewText($"NPC房屋: ✓ 有效", Color.Green);
+                }
+                else
+                {
+                    Main.NewText($"NPC房屋: ⚠ 缺少: {string.Join(", ", design.NpcSuitability.MissingRequirements)}", Color.Yellow);
+                }
+            }
+
+            // 显示工具调用历史
+            if (design.ToolCalls.Count > 0)
+            {
+                Main.NewText($"工具调用: {design.ToolCalls.Count}次", Color.Gray);
+                foreach (var call in design.ToolCalls)
+                {
+                    Main.NewText($"  - {call.ToolName}", Color.Gray);
+                }
+            }
+
+            Main.NewText("按 B 键或使用 /aibuild place 在当前位置生成建筑", Color.Yellow);
+        }
+
+        /// <summary>
+        /// 处理AI响应（传统模式）
         /// </summary>
         private void ProcessBuildingResponse(string jsonResponse)
         {
@@ -159,19 +320,36 @@ namespace trab.Players
             }
 
             var config = ModContent.GetInstance<AIBuildingConfig>();
-            var executor = new BuildingExecutor(Mod);
+
+            // 使用增强版执行器（支持油漆、斜坡、阴影）
+            var executor = trab.Instance.EnhancedBuilder;
 
             int startX = (int)(Player.position.X / 16) + config.BuildOffsetX;
             int startY = (int)(Player.position.Y / 16) + config.BuildOffsetY - LastDesign.Height / 2;
 
             Main.NewText($"正在在位置 ({startX}, {startY}) 生成建筑...", Color.Yellow);
 
-            bool success = executor.BuildAtLocation(LastDesign, startX, startY, Player);
+            bool success = executor.BuildAtLocationEnhanced(LastDesign, startX, startY, Player);
 
             if (success)
             {
                 Main.NewText($"建筑 '{LastDesign.Name}' 已成功生成!", Color.Green);
             }
+        }
+
+        /// <summary>
+        /// 在指定位置生成建筑
+        /// </summary>
+        public void PlaceDesignAt(BuildingDesign design, int startX, int startY)
+        {
+            if (design == null)
+            {
+                Main.NewText("无效的设计", Color.Red);
+                return;
+            }
+
+            var executor = trab.Instance.EnhancedBuilder;
+            executor.BuildAtLocationEnhanced(design, startX, startY, Player);
         }
 
         /// <summary>
@@ -184,11 +362,26 @@ namespace trab.Players
                 _currentRequest.Cancel();
                 Main.NewText("已停止当前AI生成请求", Color.Yellow);
                 IsGenerating = false;
+                AgentProgress = "已取消";
             }
             else
             {
                 Main.NewText("当前没有正在进行的生成请求", Color.Gray);
             }
+        }
+
+        /// <summary>
+        /// 获取知识库状态信息
+        /// </summary>
+        public string GetKnowledgeBaseStatus()
+        {
+            var kb = KnowledgeBaseManager.Instance;
+            if (!kb.IsInitialized)
+            {
+                return "知识库未初始化";
+            }
+
+            return $"方块: {kb.Tiles.TileCount} | 墙壁: {kb.Tiles.WallCount} | 油漆: {kb.Tiles.PaintCount} | 风格: {kb.Styles.StyleCount} | 家具: {kb.Furniture.FurnitureCount}";
         }
 
         public override void PreUpdate()
@@ -224,6 +417,12 @@ namespace trab.Players
                 {
                     if (uiSys.panel != null)
                         uiSys.panel.ToggleAreaMode();
+                }
+                // S键停止生成
+                if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S) &&
+                    !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
+                {
+                    StopGeneration();
                 }
             }
 

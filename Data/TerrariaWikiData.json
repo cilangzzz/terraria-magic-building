@@ -1,0 +1,486 @@
+{
+  "furniture": [
+    {
+      "id": 14,
+      "name": "Tables",
+      "display_name": "桌子",
+      "category": "table",
+      "width": 3,
+      "height": 1,
+      "npc_function": "flat_surface",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Golf", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd", "Obsidian"],
+      "additional_ids": [469, 487]
+    },
+    {
+      "id": 15,
+      "name": "Chairs",
+      "display_name": "椅子",
+      "category": "chair",
+      "width": 1,
+      "height": 2,
+      "npc_function": "comfort",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 79,
+      "name": "Beds",
+      "display_name": "床",
+      "category": "bed",
+      "width": 4,
+      "height": 2,
+      "npc_function": ["comfort", "spawn_point"],
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 21,
+      "name": "Chests",
+      "display_name": "宝箱",
+      "category": "chest",
+      "width": 2,
+      "height": 2,
+      "npc_function": "storage",
+      "paint_compatible": false,
+      "storage_slots": 40,
+      "variants": ["Wooden", "Gold", "Shadow", "Ebonwood", "Rich Mahogany", "Ivy", "Ice", "Living Wood", "Dynasty", "Honey", "Glass", "Obsidian", "Hellstone", "Dungeon", "Corruption", "Crimson", "Hallowed", "Jungle", "Sky", "Water", "Web", "Lihzahrd", "Frozen", "Desert", "Gold Locked", "Shadow Locked", "Crystal", "Mushroom", "Pumpkin", "Spooky", "Sports", "Sandstone", "Bamboo", "Pigron", "Void", "Safe", "Defender's", "Golf", "Terraprisma"],
+      "additional_ids": [467]
+    },
+    {
+      "id": 18,
+      "name": "WorkBench",
+      "display_name": "工作台",
+      "category": "crafting",
+      "width": 2,
+      "height": 1,
+      "npc_function": ["flat_surface", "crafting"],
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 88,
+      "name": "Dressers",
+      "display_name": "梳妆台",
+      "category": "dresser",
+      "width": 3,
+      "height": 2,
+      "npc_function": ["flat_surface", "storage"],
+      "paint_compatible": true,
+      "storage_slots": 40,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 101,
+      "name": "Bookcases",
+      "display_name": "书架",
+      "category": "bookcase",
+      "width": 3,
+      "height": 4,
+      "npc_function": "flat_surface",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd", "Boulder"]
+    },
+    {
+      "id": 87,
+      "name": "Pianos",
+      "display_name": "钢琴",
+      "category": "piano",
+      "width": 3,
+      "height": 2,
+      "npc_function": "flat_surface",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 90,
+      "name": "Bathtubs",
+      "display_name": "浴缸",
+      "category": "bathtub",
+      "width": 4,
+      "height": 2,
+      "npc_function": null,
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 89,
+      "name": "Sofas",
+      "display_name": "沙发",
+      "category": "sofa",
+      "width": 3,
+      "height": 2,
+      "npc_function": "comfort",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd"]
+    },
+    {
+      "id": 17,
+      "name": "Furnace",
+      "display_name": "熔炉",
+      "category": "crafting",
+      "width": 3,
+      "height": 2,
+      "npc_function": "crafting",
+      "paint_compatible": false,
+      "light_emission": 5,
+      "variants": ["Furnace", "Hellforge", "Adamantite Forge", "Titanium Forge"]
+    },
+    {
+      "id": 16,
+      "name": "Anvils",
+      "display_name": "铁砧",
+      "category": "crafting",
+      "width": 2,
+      "height": 1,
+      "npc_function": "crafting",
+      "paint_compatible": false,
+      "variants": ["Iron Anvil", "Lead Anvil", "Mythril Anvil", "Orichalcum Anvil"],
+      "additional_ids": [134]
+    },
+    {
+      "id": 19,
+      "name": "Platforms",
+      "display_name": "平台",
+      "category": "platform",
+      "width": 1,
+      "height": 1,
+      "npc_function": "door",
+      "paint_compatible": true,
+      "variants": ["Wood", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd", "Obsidian", "Pine", "Tin", "Copper", "Lead", "Iron", "Silver", "Tungsten", "Gold", "Platinum", "Hellstone", "Meteorite", "Obsidian"]
+    },
+    {
+      "id": 124,
+      "name": "Benches",
+      "display_name": "长椅",
+      "category": "bench",
+      "width": 3,
+      "height": 1,
+      "npc_function": "comfort",
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo"]
+    },
+    {
+      "id": 125,
+      "name": "GrandfatherClocks",
+      "display_name": "落地钟",
+      "category": "clock",
+      "width": 2,
+      "height": 5,
+      "npc_function": null,
+      "paint_compatible": true,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo"]
+    },
+    {
+      "id": 126,
+      "name": "Statues",
+      "display_name": "雕像",
+      "category": "decoration",
+      "width": 2,
+      "height": 3,
+      "npc_function": null,
+      "paint_compatible": false,
+      "variants": ["Angel", "Armor", "Corruption", "Crimson", "Demon", "Gargoyle", "Goblin", "Guardian", "Hero", "Imp", "Jellyfish", "King", "Knight", "Lihzahrd", "Mermaid", "Penguin", "Piranha", "Plague", "Princess", "Reaper", "Rock", "Scorpion", "Shield", "Slime", "Skeleton", "Sun", "Toad", "Unicorn", "Vulture", "Woman", "Wraith", "Bunny", "Fish", "Bird", "Bat", "Bear", "Boulder", "Cactus", "Cat", "Chicken", "Cow", "Crab", "Deer", "Dog", "Dragon", "Eagle", "Elephant", "Fox", "Goat", "Gopher", "Griffin", "Horse", "Iguana", "Jackal", "Koala", "Lion", "Lizard", "Monkey", "Moose", "Mouse", "Owl", "Panther", "Parrot", "Pig", "Pigeon", "Rabbit", "Raccoon", "Rat", "Raven", "Rhinoceros", "Rooster", "Shark", "Sheep", "Snake", "Squirrel", "Stork", "Swan", "Tiger", "Tortoise", "Turkey", "Turtle", "Viper", "Walrus", "Wolf", "Zebra"]
+    },
+    {
+      "id": 94,
+      "name": "Signs",
+      "display_name": "告示牌",
+      "category": "decoration",
+      "width": 2,
+      "height": 1,
+      "npc_function": null,
+      "paint_compatible": true,
+      "variants": ["Wooden", "Read"]
+    },
+    {
+      "id": 424,
+      "name": "Tombstones",
+      "display_name": "墓碑",
+      "category": "decoration",
+      "width": 2,
+      "height": 1,
+      "npc_function": null,
+      "paint_compatible": false,
+      "variants": ["Gravestone", "Cross Grave", "Obelisk", "Angel Statue", "Tombstone", "Headstone"]
+    },
+    {
+      "id": 27,
+      "name": "Banners",
+      "display_name": "旗帜",
+      "category": "decoration",
+      "width": 1,
+      "height": 3,
+      "npc_function": null,
+      "paint_compatible": true
+    },
+    {
+      "id": 467,
+      "name": "Mannequin",
+      "display_name": "人偶",
+      "category": "display",
+      "width": 2,
+      "height": 3,
+      "npc_function": null,
+      "paint_compatible": false
+    },
+    {
+      "id": 470,
+      "name": "WeaponRack",
+      "display_name": "武器架",
+      "category": "display",
+      "width": 3,
+      "height": 2,
+      "npc_function": null,
+      "paint_compatible": false
+    },
+    {
+      "id": 488,
+      "name": "ItemFrame",
+      "display_name": "物品框",
+      "category": "display",
+      "width": 1,
+      "height": 1,
+      "npc_function": null,
+      "paint_compatible": false
+    },
+    {
+      "id": 573,
+      "name": "Teapot",
+      "display_name": "茶壶",
+      "category": "decoration",
+      "width": 1,
+      "height": 1,
+      "npc_function": null,
+      "paint_compatible": true
+    },
+    {
+      "id": 622,
+      "name": "Teacup",
+      "display_name": "茶杯",
+      "category": "decoration",
+      "width": 1,
+      "height": 1,
+      "npc_function": null,
+      "paint_compatible": true
+    }
+  ],
+
+  "light_sources": [
+    {
+      "id": 4,
+      "name": "Torches",
+      "display_name": "火把",
+      "category": "torch",
+      "width": 1,
+      "height": 1,
+      "light_radius": 10,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": [
+        {"name": "Orange Torch", "light_color": "orange"},
+        {"name": "Blue Torch", "light_color": "blue"},
+        {"name": "Green Torch", "light_color": "green"},
+        {"name": "Purple Torch", "light_color": "purple"},
+        {"name": "Red Torch", "light_color": "red"},
+        {"name": "Yellow Torch", "light_color": "yellow"},
+        {"name": "Cyan Torch", "light_color": "cyan"},
+        {"name": "White Torch", "light_color": "white"},
+        {"name": "Pink Torch", "light_color": "pink"},
+        {"name": "Ice Torch", "light_color": "cyan", "variant_id": 8},
+        {"name": "Demon Torch", "light_color": "purple", "variant_id": 9},
+        {"name": "Crimson Torch", "light_color": "red", "variant_id": 10},
+        {"name": "Cursed Torch", "light_color": "green", "variant_id": 11},
+        {"name": "Ichor Torch", "light_color": "yellow", "variant_id": 12},
+        {"name": "Rainbow Torch", "light_color": "rainbow", "variant_id": 13},
+        {"name": "Ultrabright Torch", "light_color": "white", "variant_id": 14},
+        {"name": "Bone Torch", "light_color": "orange", "variant_id": 15},
+        {"name": "Desert Torch", "light_color": "orange", "variant_id": 16},
+        {"name": "Coral Torch", "light_color": "blue", "variant_id": 17},
+        {"name": "Corrupt Torch", "light_color": "purple", "variant_id": 18},
+        {"name": "Crimson Torch", "light_color": "red", "variant_id": 19},
+        {"name": "Hallowed Torch", "light_color": "cyan", "variant_id": 20},
+        {"name": "Jungle Torch", "light_color": "green", "variant_id": 21}
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Candles",
+      "display_name": "蜡烛",
+      "category": "candle",
+      "width": 1,
+      "height": 1,
+      "light_radius": 5,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": ["Candle", "Platinum Candle"],
+      "additional_ids": [174, 49, 372, 646],
+      "special_variants": [
+        {"id": 49, "name": "Water Candle", "light_radius": 7, "effect": "increases_enemy_spawn"},
+        {"id": 372, "name": "Peace Candle", "light_radius": 5, "effect": "reduces_enemy_spawn"},
+        {"id": 646, "name": "Shadow Candle", "light_radius": 5, "effect": "increases_enemy_spawn_prevents_grass"}
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Chandeliers",
+      "display_name": "吊灯",
+      "category": "chandelier",
+      "width": 3,
+      "height": 3,
+      "light_radius": 15,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": ["Gold", "Silver", "Tungsten", "Platinum", "Copper", "Iron", "Lead", "Obsidian", "Mushroom", "Steampunk", "Crystal", "Lesion", "Jackelier", "Large Dynasty Lantern"]
+    },
+    {
+      "id": 42,
+      "name": "Lanterns",
+      "display_name": "灯笼",
+      "category": "lantern",
+      "width": 1,
+      "height": 2,
+      "light_radius": 10,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": ["Chain Lantern", "Mushroom Lantern", "Steampunk Lantern", "Blue Lantern", "Green Lantern", "Red Lantern", "Orange Lantern", "Purple Lantern", "White Lantern", "Yellow Lantern"],
+      "additional_ids": [95, 270, 271, 572, 581, 660],
+      "special_variants": [
+        {"id": 95, "name": "Chinese Lantern", "light_radius": 10},
+        {"id": 270, "name": "Firefly in a Bottle", "light_radius": 5},
+        {"id": 271, "name": "Lightning Bug in a Bottle", "light_radius": 7},
+        {"id": 572, "name": "Souls in a Bottle", "light_radius": 8},
+        {"id": 581, "name": "Lavafly in a Bottle", "light_radius": 10},
+        {"id": 660, "name": "Faeling in a Bottle", "light_radius": 7}
+      ]
+    },
+    {
+      "id": 93,
+      "name": "Lamps",
+      "display_name": "立灯",
+      "category": "lamp",
+      "width": 1,
+      "height": 3,
+      "light_radius": 10,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo"]
+    },
+    {
+      "id": 215,
+      "name": "Campfires",
+      "display_name": "篝火",
+      "category": "campfire",
+      "width": 3,
+      "height": 2,
+      "light_radius": 20,
+      "npc_function": ["light_source", "regeneration"],
+      "paint_compatible": false,
+      "effect": "health_regeneration_boost",
+      "variants": ["Campfire", "Soul Campfire", "Corrupt Campfire", "Crimson Campfire", "Hallowed Campfire", "Frozen Campfire", "Desert Campfire", "Ocean Campfire", "Obsidian Campfire", "Hellfire Campfire", "Starlit Campfire", "Spider Campfire", "Cactus Campfire", "Mushroom Campfire", "Boreal Campfire", "Slime Campfire", "Pumpkin Campfire", "Spooky Campfire", "Flesh Campfire", "Lihzahrd Campfire", "Holy Campfire"]
+    },
+    {
+      "id": 427,
+      "name": "LogicGateLamp",
+      "display_name": "逻辑门灯",
+      "category": "logic",
+      "width": 1,
+      "height": 1,
+      "light_radius": 5,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "wire_required": true
+    },
+    {
+      "id": 132,
+      "name": "HangingLanterns",
+      "display_name": "悬挂灯笼",
+      "category": "hanging_lantern",
+      "width": 1,
+      "height": 2,
+      "light_radius": 10,
+      "npc_function": "light_source",
+      "paint_compatible": false,
+      "variants": ["Paper", "Chinese", "Japanese"]
+    },
+    {
+      "id": 133,
+      "name": "PlasmaLamp",
+      "display_name": "等离子灯",
+      "category": "lamp",
+      "width": 1,
+      "height": 2,
+      "light_radius": 12,
+      "npc_function": "light_source",
+      "paint_compatible": false
+    }
+  ],
+
+  "doors": [
+    {
+      "id": 10,
+      "name": "Doors",
+      "display_name": "门",
+      "category": "door",
+      "width": 1,
+      "height": 3,
+      "npc_function": "door",
+      "paint_compatible": true,
+      "open_tile_id": 11,
+      "variants": ["Wooden", "Rich Mahogany", "Boreal", "Palm", "Granite", "Marble", "Dynasty", "Glass", "Golden", "Obsidian", "Ebonwood", "Shadewood", "Pearlwood", "Spider", "Lesion", "Steampunk", "Mushroom", "Crystal", "Sandstone", "Bamboo", "Ocean", "Balloon", "Pigron", "Arcane", "Monar", "Titan", "Solar", "Vortex", "Nebula", "Stardust", "Cactus", "Slime", "Pumpkin", "Spooky", "Flesh", "Lihzahrd", "Iron", "Lead", "Silver", "Tungsten", "Gold", "Platinum", "Temple", "Obsidian", "Hellstone", "Frozen"]
+    },
+    {
+      "id": 387,
+      "name": "TrapDoor",
+      "display_name": "活板门",
+      "category": "trapdoor",
+      "width": 2,
+      "height": 1,
+      "npc_function": "door",
+      "paint_compatible": true,
+      "open_tile_id": 386
+    },
+    {
+      "id": 388,
+      "name": "TallGate",
+      "display_name": "大门",
+      "category": "gate",
+      "width": 1,
+      "height": 5,
+      "npc_function": "door",
+      "paint_compatible": true,
+      "open_tile_id": 389
+    },
+    {
+      "id": 19,
+      "name": "Platforms",
+      "display_name": "平台",
+      "category": "platform",
+      "width": 1,
+      "height": 1,
+      "npc_function": "door",
+      "paint_compatible": true,
+      "note": "Platforms can serve as door substitutes for NPC housing"
+    }
+  ],
+
+  "metadata": {
+    "source": "Terraria Wiki (terraria.wiki.gg)",
+    "version": "1.4.5.6",
+    "crawl_date": "2026-06-01",
+    "notes": {
+      "npc_functions": {
+        "flat_surface": "Provides a flat surface for NPC housing requirement",
+        "comfort": "Provides comfort item for NPC housing requirement",
+        "storage": "Provides storage capability",
+        "crafting": "Functions as a crafting station",
+        "light_source": "Provides light for NPC housing requirement",
+        "door": "Functions as entrance for NPC housing requirement",
+        "spawn_point": "Allows setting spawn/respawn point"
+      },
+      "paint_compatible": "True if the tile can be painted with Paint Sprayer",
+      "light_radius": "Approximate light emission radius in tiles",
+      "variants": "Different material/style versions of the same tile type"
+    }
+  }
+}

@@ -28,9 +28,14 @@ namespace trab
         public static trab Instance { get; private set; }
 
         /// <summary>
-        /// 建筑执行器实例
+        /// 建筑执行器实例（基础版）
         /// </summary>
         public BuildingExecutor Builder { get; private set; }
+
+        /// <summary>
+        /// 增强版建筑执行器实例（Agent模式专用）
+        /// </summary>
+        public EnhancedBuildingExecutor EnhancedBuilder { get; private set; }
 
         public override void Load()
         {
@@ -38,17 +43,23 @@ namespace trab
 
             // 初始化建筑执行器
             Builder = new BuildingExecutor(this);
+            EnhancedBuilder = new EnhancedBuildingExecutor(this);
+
+            // 初始化知识库管理器
+            KnowledgeBaseManager.Instance.Initialize();
 
             // 日志信息
-            Logger.Info("AI建筑模组已加载");
+            Logger.Info("AI建筑模组已加载 (Agent模式)");
             Logger.Info("使用 /aibuild help 查看帮助");
             Logger.Info("按 P 键打开AI建筑UI");
+            Logger.Info($"知识库状态: 方块{KnowledgeBaseManager.Instance.Tiles.TileCount}个, 风格{KnowledgeBaseManager.Instance.Styles.StyleCount}种");
         }
 
         public override void Unload()
         {
             Instance = null;
             Builder = null;
+            EnhancedBuilder = null;
         }
 
         /// <summary>
