@@ -5,12 +5,12 @@
 
 	<!-- General -->
 	<PropertyGroup>
-		
+		<!-- CS1701 警告来自 tModLoader 框架，模组层面无法抑制 -->
 	</PropertyGroup>
 
 	<!-- References -->
 	<ItemGroup>
-		
+
 	</ItemGroup>
 
 </Project>

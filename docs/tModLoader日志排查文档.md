@@ -338,13 +338,41 @@ AIBuildingConfig.cs 多处: TooltipAttribute 已过时
 - 使用 `TooltipKeyAttribute` 替代
 - 或直接在本地化文件中定义 tooltip
 
-### 2. Newtonsoft.Json 版本匹配警告 (CS1701)
+### 2. Newtonsoft.Json 版本匹配警告 (CS1701) - **tModLoader 框架问题**
 
 ```
-Newtonsoft.Json 引用的 System.Runtime 版本 6.0.0.0 匹配到 8.0.0.0
+warning CS1701: 假定"Newtonsoft.Json"使用的程序集引用"System.Runtime, Version=6.0.0.0"与"System.Runtime"的标识"System.Runtime, Version=8.0.0.0"匹配
 ```
 
-**影响：** 仅警告，不影响运行，可以忽略
+**根本原因：**
+- tModLoader 使用 Newtonsoft.Json 13.0.3 (针对 .NET 6.0 编译)
+- 运行环境是 .NET 8.0
+- 编译时 Roslyn 检测到版本绑定差异并发出警告
+
+**问题性质：**
+- 这是 **tModLoader 框架本身的问题**，不是模组代码问题
+- 所有使用 tModLoader 2026.03 版本的模组都会遇到
+- 警告重复出现 24+ 次是因为编译器多次加载程序集
+
+**影响：** 仅警告，不影响编译和运行
+
+**解决方案（按优先级）：**
+
+1. **等待 tModLoader 更新** - 最根本的解决方案
+   - tModLoader 需要更新 Newtonsoft.Json 到 .NET 8.0 兼容版本
+   - 可向 tModLoader 提交 issue: https://github.com/tModLoader/tModLoader/issues
+
+2. **日志过滤** - 实用方案
+   ```bash
+   # 过滤掉 CS1701 警告查看日志
+   grep -v "CS1701" client.log | less
+   ```
+
+3. **runtimeconfig.json** - 尝试运行时绑定重定向（效果有限）
+   - 在模组目录创建 `modname.runtimeconfig.json`
+   - 配置 System.Runtime 绑定到 8.0.0.0
+
+**注意：** 模组的 `NoWarn` 配置无法抑制此警告，因为警告来自 tModLoader 的内部编译器 (BuildHost)，不是模组的编译流程。
 
 ---
 

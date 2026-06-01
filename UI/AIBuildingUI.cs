@@ -61,7 +61,6 @@ namespace trab.UI
                     if (Visible && !Main.playerInventory)
                         ui.Draw(Main.spriteBatch, new GameTime());
 
-                    // 绘制选区预览
                     if (Visible && panel != null)
                         panel.DrawAreaPreview();
 
@@ -78,31 +77,42 @@ namespace trab.UI
 
     public class AIBuildingPanel : UIState
     {
-        private UIPanel bg;
+        // 主容器
+        private UIPanel mainPanel;
+
+        // 四个模块容器
+        private UIPanel styleModule;      // 风格模块
+        private UIPanel sizeModule;       // 大小模块
+        private UIPanel functionModule;   // 功能模块
+        private UIPanel logModule;        // 日志模块
+
+        // 日志
+        private float logScrollOffset = 0f;    // 日志滚动偏移
+        private float logLineHeight = 16f;     // 每行日志高度
+        private float logMaxScroll = 0f;       // 最大滚动量
         private UIText logText;
-        private UIText statusText;
         private StringBuilder log = new StringBuilder();
         private List<string> logLines = new List<string>();
         private string lastResp = "";
         private bool busy = false;
-        private int maxLogLines = 12;
-        private Texture2D whitePixel;  // 用于绘制的单像素纹理
+        private Texture2D whitePixel;
 
-        // Agent模式状态
-        public bool useAgentMode = true;  // 默认使用Agent模式
-        private string agentProgress = "";
-        private List<string> toolCallLog = new List<string>();
+        // Agent模式
+        public bool useAgentMode = true;
+        private UITextPanel<string> agentBtn;
+        private UITextPanel<string>[] styleButtons;
+        private UITextPanel<string>[] sizeButtons;
 
         public BuildingStyle currentStyle = BuildingStyle.Simple;
         public int currentSizeIndex = 0;
 
-        // 选区状态
-        public bool isSelectingArea = false;      // 是否正在选区
-        public bool isDragging = false;           // 是否正在拖拽
-        public Point? dragStart = null;           // 拖拽起点
-        public Point? dragEnd = null;             // 拖拽终点
-        public Point? confirmedAreaStart = null;  // 确认的选区起点
-        public Point? confirmedAreaEnd = null;    // 确认的选区终点
+        // 选区
+        public bool isSelectingArea = false;
+        public bool isDragging = false;
+        public Point? dragStart = null;
+        public Point? dragEnd = null;
+        public Point? confirmedAreaStart = null;
+        public Point? confirmedAreaEnd = null;
 
         private int[] sizeWidths = { 10, 20, 35 };
         private int[] sizeHeights = { 8, 15, 25 };
@@ -110,190 +120,250 @@ namespace trab.UI
         private string[] sizeNames = { "小", "中", "大" };
 
         private bool wasMouseLeftPressed = false;
+        private int lastScrollValue = 0;  // 上一次滚轮值
+
+        // UI尺寸常量
+        private const float PANEL_WIDTH = 320f;
+        private const float PANEL_HEIGHT = 400f;
+        private const float MODULE_MARGIN = 8f;
+        private const float MODULE_PADDING = 6f;
+        private const float MODULE_TOP_MARGIN = 10f;    // 模块上边距
+        private const float MODULE_HEIGHT_STYLE = 44f;
+        private const float MODULE_HEIGHT_SIZE = 44f;
+        private const float MODULE_HEIGHT_FUNC = 48f;
+        private const float MODULE_HEIGHT_LOG = 140f;
+        private const float BUTTON_HEIGHT = 24f;
+        private const float BUTTON_VPADDING = 5f;
 
         public override void OnInitialize()
         {
-            bg = new UIPanel();
-            bg.SetPadding(8);
-            bg.Width.Set(400f, 0f);
-            bg.Height.Set(280f, 0f);
-            bg.Left.Set(Main.screenWidth - 420f, 0f);
-            bg.Top.Set(80f, 0f);
-            bg.BackgroundColor = new Color(25, 25, 45, 230);
-            Append(bg);
+            mainPanel = new UIPanel();
+            mainPanel.SetPadding(10);
+            mainPanel.Width.Set(PANEL_WIDTH, 0f);
+            mainPanel.Height.Set(PANEL_HEIGHT, 0f);
+            mainPanel.Left.Set(Main.screenWidth - PANEL_WIDTH - 20f, 0f);
+            mainPanel.Top.Set(80f, 0f);
+            mainPanel.BackgroundColor = new Color(20, 20, 35, 240);
+            mainPanel.BorderColor = new Color(60, 60, 80);
+            Append(mainPanel);
 
-            // 标题
-            var title = new UIText("AI建筑助手 (P关闭)", 1.0f);
-            title.Left.Set(10f, 0f);
-            title.Top.Set(5f, 0f);
-            bg.Append(title);
+            float startY = MODULE_TOP_MARGIN;
 
-            // 日志区域 - 使用UIText，手动控制换行
-            logText = new UIText("", 0.85f);
-            logText.Width.Set(380f, 0f);
-            logText.Height.Set(120f, 0f);
-            logText.Left.Set(10f, 0f);
-            logText.Top.Set(25f, 0f);
-            logText.IsWrapped = true;
-            bg.Append(logText);
+            // ─────────────────────────────────────────
+            // 模块1: 风格选择
+            // ─────────────────────────────────────────
+            styleModule = new UIPanel();
+            styleModule.SetPadding(MODULE_PADDING);
+            styleModule.Width.Set(-MODULE_MARGIN * 2, 1f);
+            styleModule.Height.Set(MODULE_HEIGHT_STYLE, 0f);
+            styleModule.Left.Set(MODULE_MARGIN, 0f);
+            styleModule.Top.Set(startY, 0f);
+            styleModule.BackgroundColor = new Color(35, 35, 55, 200);
+            styleModule.BorderColor = new Color(70, 70, 90);
+            mainPanel.Append(styleModule);
 
-            // 风格按钮行
+            var styleLabel = new UIText("风格", 0.9f);
+            styleLabel.Left.Set(2f, 0f);
+            styleLabel.Top.Set(8f, 0f);
+            styleLabel.TextColor = Color.LightGray;
+            styleModule.Append(styleLabel);
+
+            // 风格按钮组 - 7个按钮，宽度32f防止超出
+            // 内容宽度292f，标签约45f，剩余247f，7按钮+6间距=230f，安全
+            styleButtons = new UITextPanel<string>[styleNames.Length];
+            float btnW = 32f;
+            float btnGap = 1f;
+            float startX = 46f;
             for (int i = 0; i < styleNames.Length; i++)
             {
-                var btn = new UITextPanel<string>(styleNames[i], 0.7f);
-                btn.Width.Set(52f, 0f);
-                btn.Height.Set(18f, 0f);
-                btn.Left.Set(5f + i * 54f, 0f);
-                btn.Top.Set(155f, 0f);
-                btn.BackgroundColor = i == 0 ? new Color(50, 100, 50) : new Color(40, 40, 60);
+                styleButtons[i] = new UITextPanel<string>(styleNames[i], 0.55f);
+                styleButtons[i].Width.Set(btnW, 0f);
+                styleButtons[i].Height.Set(BUTTON_HEIGHT, 0f);
+                styleButtons[i].Left.Set(startX + i * (btnW + btnGap), 0f);
+                styleButtons[i].Top.Set(10f, 0f);
+                styleButtons[i].SetPadding(BUTTON_VPADDING);
+                styleButtons[i].BackgroundColor = i == 0 ? new Color(50, 100, 50) : new Color(45, 45, 65);
                 int idx = i;
-                btn.OnLeftClick += (evt, elem) => SelectStyle(idx);
-                bg.Append(btn);
+                styleButtons[i].OnLeftClick += (evt, elem) => SelectStyle(idx);
+                styleModule.Append(styleButtons[i]);
             }
 
-            // 尺寸按钮行
+            startY += MODULE_HEIGHT_STYLE + MODULE_MARGIN;
+
+            // ─────────────────────────────────────────
+            // 模块2: 尺寸选择
+            // ─────────────────────────────────────────
+            sizeModule = new UIPanel();
+            sizeModule.SetPadding(MODULE_PADDING);
+            sizeModule.Width.Set(-MODULE_MARGIN * 2, 1f);
+            sizeModule.Height.Set(MODULE_HEIGHT_SIZE, 0f);
+            sizeModule.Left.Set(MODULE_MARGIN, 0f);
+            sizeModule.Top.Set(startY, 0f);
+            sizeModule.BackgroundColor = new Color(35, 35, 55, 200);
+            sizeModule.BorderColor = new Color(70, 70, 90);
+            mainPanel.Append(sizeModule);
+
+            var sizeLabel = new UIText("尺寸", 0.9f);
+            sizeLabel.Left.Set(2f, 0f);
+            sizeLabel.Top.Set(8f, 0f);
+            sizeLabel.TextColor = Color.LightGray;
+            sizeModule.Append(sizeLabel);
+
+            sizeButtons = new UITextPanel<string>[sizeNames.Length];
+            float sBtnW = 48f;
+            float sBtnGap = 3f;
+            float sStartX = 46f;
             for (int i = 0; i < sizeNames.Length; i++)
             {
-                var btn = new UITextPanel<string>(sizeNames[i], 0.7f);
-                btn.Width.Set(55f, 0f);
-                btn.Height.Set(18f, 0f);
-                btn.Left.Set(5f + i * 58f, 0f);
-                btn.Top.Set(178f, 0f);
-                btn.BackgroundColor = i == 0 ? new Color(50, 100, 50) : new Color(40, 40, 60);
+                sizeButtons[i] = new UITextPanel<string>(sizeNames[i], 0.7f);
+                sizeButtons[i].Width.Set(sBtnW, 0f);
+                sizeButtons[i].Height.Set(BUTTON_HEIGHT, 0f);
+                sizeButtons[i].Left.Set(sStartX + i * (sBtnW + sBtnGap), 0f);
+                sizeButtons[i].Top.Set(10f, 0f);
+                sizeButtons[i].SetPadding(BUTTON_VPADDING);
+                sizeButtons[i].BackgroundColor = i == 0 ? new Color(50, 100, 50) : new Color(45, 45, 65);
                 int idx = i;
-                btn.OnLeftClick += (evt, elem) => SelectSize(idx);
-                bg.Append(btn);
+                sizeButtons[i].OnLeftClick += (evt, elem) => SelectSize(idx);
+                sizeModule.Append(sizeButtons[i]);
             }
 
-            // 功能按钮行
-            var genBtn = new UITextPanel<string>("生成(G)", 0.8f);
-            genBtn.Width.Set(75f, 0f);
-            genBtn.Height.Set(22f, 0f);
-            genBtn.Left.Set(5f, 0f);
-            genBtn.Top.Set(202f, 0f);
+            // 尺寸详情
+            var sizeDetail = new UIText("10x8", 0.75f);
+            sizeDetail.Left.Set(210f, 0f);
+            sizeDetail.Top.Set(12f, 0f);
+            sizeDetail.TextColor = Color.Cyan;
+            sizeModule.Append(sizeDetail);
+
+            startY += MODULE_HEIGHT_SIZE + MODULE_MARGIN;
+
+            // ─────────────────────────────────────────
+            // 模块3: 功能操作
+            // ─────────────────────────────────────────
+            functionModule = new UIPanel();
+            functionModule.SetPadding(MODULE_PADDING);
+            functionModule.Width.Set(-MODULE_MARGIN * 2, 1f);
+            functionModule.Height.Set(MODULE_HEIGHT_FUNC, 0f);
+            functionModule.Left.Set(MODULE_MARGIN, 0f);
+            functionModule.Top.Set(startY, 0f);
+            functionModule.BackgroundColor = new Color(35, 35, 55, 200);
+            functionModule.BorderColor = new Color(70, 70, 90);
+            mainPanel.Append(functionModule);
+
+            var funcLabel = new UIText("操作", 0.9f);
+            funcLabel.Left.Set(2f, 0f);
+            funcLabel.Top.Set(8f, 0f);
+            funcLabel.TextColor = Color.LightGray;
+            functionModule.Append(funcLabel);
+
+            // 功能按钮 - 4个按钮
+            float fBtnW = 56f;
+            float fBtnGap = 3f;
+            float fStartX = 40f;
+
+            var genBtn = new UITextPanel<string>("生成", 0.75f);
+            genBtn.Width.Set(fBtnW, 0f);
+            genBtn.Height.Set(BUTTON_HEIGHT, 0f);
+            genBtn.Left.Set(fStartX, 0f);
+            genBtn.Top.Set(10f, 0f);
+            genBtn.SetPadding(BUTTON_VPADDING);
             genBtn.BackgroundColor = new Color(60, 100, 60);
             genBtn.OnLeftClick += (evt, elem) => DoGenerate();
-            bg.Append(genBtn);
+            functionModule.Append(genBtn);
 
-            var placeBtn = new UITextPanel<string>("放置(B)", 0.8f);
-            placeBtn.Width.Set(75f, 0f);
-            placeBtn.Height.Set(22f, 0f);
-            placeBtn.Left.Set(82f, 0f);
-            placeBtn.Top.Set(202f, 0f);
+            var placeBtn = new UITextPanel<string>("放置", 0.75f);
+            placeBtn.Width.Set(fBtnW, 0f);
+            placeBtn.Height.Set(BUTTON_HEIGHT, 0f);
+            placeBtn.Left.Set(fStartX + fBtnW + fBtnGap, 0f);
+            placeBtn.Top.Set(10f, 0f);
+            placeBtn.SetPadding(BUTTON_VPADDING);
             placeBtn.BackgroundColor = new Color(70, 70, 100);
             placeBtn.OnLeftClick += (evt, elem) => DoPlaceAtMouse();
-            bg.Append(placeBtn);
+            functionModule.Append(placeBtn);
 
-            var areaBtn = new UITextPanel<string>("选区(M)", 0.8f);
-            areaBtn.Width.Set(75f, 0f);
-            areaBtn.Height.Set(22f, 0f);
-            areaBtn.Left.Set(159f, 0f);
-            areaBtn.Top.Set(202f, 0f);
-            areaBtn.BackgroundColor = isSelectingArea ? new Color(100, 80, 50) : new Color(80, 60, 40);
+            var areaBtn = new UITextPanel<string>("选区", 0.75f);
+            areaBtn.Width.Set(fBtnW, 0f);
+            areaBtn.Height.Set(BUTTON_HEIGHT, 0f);
+            areaBtn.Left.Set(fStartX + 2 * (fBtnW + fBtnGap), 0f);
+            areaBtn.Top.Set(10f, 0f);
+            areaBtn.SetPadding(BUTTON_VPADDING);
+            areaBtn.BackgroundColor = new Color(80, 60, 40);
             areaBtn.OnLeftClick += (evt, elem) => ToggleAreaMode();
-            bg.Append(areaBtn);
+            functionModule.Append(areaBtn);
 
-            var clearBtn = new UITextPanel<string>("清屏", 0.8f);
-            clearBtn.Width.Set(55f, 0f);
-            clearBtn.Height.Set(22f, 0f);
-            clearBtn.Left.Set(236f, 0f);
-            clearBtn.Top.Set(202f, 0f);
-            clearBtn.BackgroundColor = new Color(80, 50, 50);
-            clearBtn.OnLeftClick += (evt, elem) => ClearLog();
-            bg.Append(clearBtn);
-
-            // Agent模式切换按钮
-            var agentBtn = new UITextPanel<string>("Agent", 0.8f);
-            agentBtn.Width.Set(60f, 0f);
-            agentBtn.Height.Set(22f, 0f);
-            agentBtn.Left.Set(295f, 0f);
-            agentBtn.Top.Set(202f, 0f);
-            agentBtn.BackgroundColor = useAgentMode ? new Color(60, 120, 60) : new Color(60, 60, 60);
+            agentBtn = new UITextPanel<string>("Agent", 0.75f);
+            agentBtn.Width.Set(48f, 0f);
+            agentBtn.Height.Set(BUTTON_HEIGHT, 0f);
+            agentBtn.Left.Set(fStartX + 3 * (fBtnW + fBtnGap), 0f);
+            agentBtn.Top.Set(10f, 0f);
+            agentBtn.SetPadding(BUTTON_VPADDING);
+            agentBtn.BackgroundColor = useAgentMode ? new Color(60, 120, 60) : new Color(50, 50, 50);
             agentBtn.OnLeftClick += (evt, elem) => ToggleAgentMode();
-            bg.Append(agentBtn);
+            functionModule.Append(agentBtn);
 
-            // 状态信息
-            statusText = new UIText("风格:简单 尺寸:小 选区:无 Agent:开", 0.8f);
-            statusText.Left.Set(5f, 0f);
-            statusText.Top.Set(230f, 0f);
-            statusText.TextColor = Color.LightGray;
-            bg.Append(statusText);
+            startY += MODULE_HEIGHT_FUNC + MODULE_MARGIN;
 
-            // 提示
-            var hint = new UIText("按住鼠标拖拽选区 | 松开确认 | G生成匹配大小建筑", 0.7f);
-            hint.Left.Set(5f, 0f);
-            hint.Top.Set(250f, 0f);
-            hint.TextColor = Color.Gray;
-            bg.Append(hint);
+            // ─────────────────────────────────────────
+            // 模块4: 日志显示（支持滚动）
+            // ─────────────────────────────────────────
+            logModule = new UIPanel();
+            logModule.SetPadding(MODULE_PADDING);
+            logModule.Width.Set(-MODULE_MARGIN * 2, 1f);
+            logModule.Height.Set(MODULE_HEIGHT_LOG, 0f);
+            logModule.Left.Set(MODULE_MARGIN, 0f);
+            logModule.Top.Set(startY, 0f);
+            logModule.BackgroundColor = new Color(25, 25, 40, 220);
+            logModule.BorderColor = new Color(60, 60, 80);
+            mainPanel.Append(logModule);
 
-            // 初始消息
-            AddMessage("欢迎使用AI建筑助手!");
-            AddMessage("M开启选区模式,拖拽选择区域");
-            AddMessage("G生成建筑(匹配选区或预设尺寸)");
-            AddMessage("B在鼠标位置放置建筑");
+            var logLabel = new UIText("日志", 0.85f);
+            logLabel.Left.Set(2f, 0f);
+            logLabel.Top.Set(4f, 0f);
+            logLabel.TextColor = Color.Gray;
+            logModule.Append(logLabel);
+
+            // 日志文本 - 放在logModule内，通过Top偏移实现滚动
+            logText = new UIText("", 0.8f);
+            logText.Width.Set(-MODULE_PADDING * 2, 1f);
+            logText.Left.Set(MODULE_PADDING, 0f);
+            logText.Top.Set(20f, 0f);  // 标签下方
+            logText.IsWrapped = true;
+            logModule.Append(logText);
+
+            // 清屏按钮
+            var clearBtn = new UITextPanel<string>("×", 0.8f);
+            clearBtn.Width.Set(18f, 0f);
+            clearBtn.Height.Set(16f, 0f);
+            clearBtn.Left.Set(-22f, 1f);
+            clearBtn.Top.Set(2f, 0f);
+            clearBtn.SetPadding(3f);
+            clearBtn.BackgroundColor = new Color(70, 50, 50);
+            clearBtn.OnLeftClick += (evt, elem) => ClearLog();
+            logModule.Append(clearBtn);
+
+            AddMessage("AI建筑助手已启动");
+            AddMessage("P关闭 | M选区 | 滚轮翻日志");
         }
 
         private void SelectStyle(int idx)
         {
             currentStyle = (BuildingStyle)idx;
             AddMessage($"风格: {styleNames[idx]}");
-            UpdateStatus();
+            for (int i = 0; i < styleButtons.Length; i++)
+                styleButtons[i].BackgroundColor = i == idx ? new Color(50, 100, 50) : new Color(45, 45, 65);
         }
 
         private void SelectSize(int idx)
         {
             currentSizeIndex = idx;
-            AddMessage($"尺寸: {sizeNames[idx]} ({sizeWidths[idx]}x{sizeHeights[idx]})");
-            UpdateStatus();
-        }
+            AddMessage($"尺寸: {sizeWidths[idx]}x{sizeHeights[idx]}");
+            for (int i = 0; i < sizeButtons.Length; i++)
+                sizeButtons[i].BackgroundColor = i == idx ? new Color(50, 100, 50) : new Color(45, 45, 65);
 
-        private void UpdateStatus()
-        {
-            string areaStr = "无";
-            if (confirmedAreaStart.HasValue && confirmedAreaEnd.HasValue)
+            foreach (var elem in sizeModule.Children)
             {
-                int w = Math.Abs(confirmedAreaEnd.Value.X - confirmedAreaStart.Value.X) + 1;
-                int h = Math.Abs(confirmedAreaEnd.Value.Y - confirmedAreaStart.Value.Y) + 1;
-                areaStr = $"{w}x{h}";
+                if (elem is UIText t && t.TextColor == Color.Cyan)
+                    t.SetText($"{sizeWidths[idx]}x{sizeHeights[idx]}");
             }
-            else if (isSelectingArea)
-            {
-                areaStr = "选择中";
-            }
-
-            string agentStr = useAgentMode ? "开" : "关";
-            statusText.SetText($"风格:{styleNames[(int)currentStyle]} 尺寸:{sizeNames[currentSizeIndex]} 选区:{areaStr} Agent:{agentStr}");
-        }
-
-        /// <summary>
-        /// 切换Agent模式
-        /// </summary>
-        public void ToggleAgentMode()
-        {
-            useAgentMode = !useAgentMode;
-            AddMessage($"Agent模式: {(useAgentMode ? "开启" : "关闭")}");
-
-            if (useAgentMode)
-            {
-                AddMessage("Agent模式将检索知识库生成更精美的建筑");
-            }
-            else
-            {
-                AddMessage("传统模式直接生成简单建筑");
-            }
-            UpdateStatus();
-
-            // 更新按钮颜色
-            // 需要重新创建按钮或更新颜色
-        }
-
-        /// <summary>
-        /// 更新Agent进度显示
-        /// </summary>
-        public void UpdateProgress(string progress)
-        {
-            agentProgress = progress;
-            AddMessage($"[Agent] {progress}");
         }
 
         public void ToggleAreaMode()
@@ -305,16 +375,34 @@ namespace trab.UI
 
             if (isSelectingArea)
             {
-                AddMessage("[选区模式] 按住鼠标拖拽选择区域");
-                AddMessage("选完后按G生成匹配大小建筑");
+                AddMessage("[选区] 拖拽选择区域");
+                AddMessage("松开确认 | G生成");
             }
             else
             {
-                AddMessage("[选区模式] 已关闭");
+                AddMessage("[选区] 关闭");
                 confirmedAreaStart = null;
                 confirmedAreaEnd = null;
             }
-            UpdateStatus();
+        }
+
+        public void UpdateProgress(string progress)
+        {
+            AddMessage($"[Agent] {progress}");
+        }
+
+        public void ToggleAgentMode()
+        {
+            useAgentMode = !useAgentMode;
+            AddMessage($"Agent模式: {(useAgentMode ? "开启" : "关闭")}");
+
+            if (useAgentMode)
+                AddMessage("Agent将检索知识库生成精美建筑");
+            else
+                AddMessage("传统模式直接生成简单建筑");
+
+            if (agentBtn != null)
+                agentBtn.BackgroundColor = useAgentMode ? new Color(60, 120, 60) : new Color(50, 50, 50);
         }
 
         private string GetStylePrompt(BuildingStyle style, int w, int h)
@@ -334,16 +422,15 @@ namespace trab.UI
 
         public void DoGenerate()
         {
-            if (busy) { AddMessage("请等待生成完成..."); return; }
+            if (busy) { AddMessage("等待中..."); return; }
 
             var cfg = ModContent.GetInstance<AIBuildingConfig>();
             if (string.IsNullOrEmpty(cfg.ApiKey))
             {
-                AddMessage("[错误] 请先设置API密钥!");
+                AddMessage("[错误] 请设置API密钥");
                 return;
             }
 
-            // 根据选区或预设尺寸确定大小
             int w, h;
             if (confirmedAreaStart.HasValue && confirmedAreaEnd.HasValue)
             {
@@ -351,34 +438,29 @@ namespace trab.UI
                 h = Math.Abs(confirmedAreaEnd.Value.Y - confirmedAreaStart.Value.Y) + 1;
                 w = Math.Min(w, cfg.MaxBuildingSize);
                 h = Math.Min(h, cfg.MaxBuildingSize);
-                AddMessage($"根据选区生成: {w}x{h}");
+                AddMessage($"选区: {w}x{h}");
             }
             else
             {
                 w = sizeWidths[currentSizeIndex];
                 h = sizeHeights[currentSizeIndex];
-                AddMessage($"根据预设生成: {w}x{h}");
             }
 
             string prompt = GetStylePrompt(currentStyle, w, h);
+            AddMessage($"生成: {styleNames[(int)currentStyle]}");
 
-            // 根据模式选择生成方式
             if (useAgentMode)
             {
-                // Agent模式生成
-                AddMessage($"[Agent] 启动智能生成...");
-                AddMessage($"[Agent] 知识库: {GetKBStatus()}");
+                AddMessage("[Agent] 启动智能生成...");
                 busy = true;
-                toolCallLog.Clear();
 
                 var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();
                 player.RequestBuildingDesignAgent(prompt);
             }
             else
             {
-                // 传统API模式生成
-                prompt += "，返回JSON格式建筑设计";
-                AddMessage($"正在请求AI...");
+                prompt += "，返回JSON格式";
+                AddMessage("请求API...");
 
                 busy = true;
                 Task.Run(async () =>
@@ -392,15 +474,15 @@ namespace trab.UI
                             lastResp = r ?? "";
                             if (!string.IsNullOrEmpty(r))
                             {
-                                AddMessage("[成功] 建筑已生成!");
+                                AddMessage("[成功] 已生成");
                                 string j = AIApiService.ExtractJsonFromResponse(r);
                                 if (j != null)
                                 {
                                     var d = new BuildingExecutor(trab.Instance).ParseDesign(j);
                                     if (d != null)
-                                        AddMessage($"{d.Name}: {d.Width}x{d.Height}");
+                                        AddMessage($"{d.Name} ({d.Width}x{d.Height})");
                                 }
-                                AddMessage("按B在鼠标位置放置");
+                                AddMessage("B键放置");
                             }
                             else
                                 AddMessage("[失败] 空响应");
@@ -419,135 +501,160 @@ namespace trab.UI
             }
         }
 
-        private string GetKBStatus()
-        {
-            var kb = KnowledgeBaseManager.Instance;
-            if (!kb.IsInitialized) return "未初始化";
-            return $"{kb.Tiles.TileCount}方块 {kb.Styles.StyleCount}风格";
-        }
-
-        /// <summary>
-        /// 在鼠标位置放置建筑
-        /// </summary>
         public void DoPlaceAtMouse()
         {
             var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();
             var lastDesign = player.LastDesign;
 
-            if (lastDesign == null)
+            if (lastDesign == null && string.IsNullOrEmpty(lastResp))
             {
-                if (!string.IsNullOrEmpty(lastResp))
-                {
-                    // 传统模式的数据
-                    string j = AIApiService.ExtractJsonFromResponse(lastResp);
-                    if (j == null) { AddMessage("[错误] JSON解析失败"); return; }
-
-                    var e = new BuildingExecutor(trab.Instance);
-                    var d = e.ParseDesign(j);
-                    if (d == null) { AddMessage("[错误] 无效建筑数据"); return; }
-                    lastDesign = d;
-                }
-                else
-                {
-                    AddMessage("[提示] 先按G生成建筑");
-                    return;
-                }
+                AddMessage("[提示] 先G生成");
+                return;
             }
 
-            // 使用鼠标位置
+            if (lastDesign == null && !string.IsNullOrEmpty(lastResp))
+            {
+                string j = AIApiService.ExtractJsonFromResponse(lastResp);
+                if (j == null) { AddMessage("[错误] 解析失败"); return; }
+
+                var e = new BuildingExecutor(trab.Instance);
+                var d = e.ParseDesign(j);
+                if (d == null) { AddMessage("[错误] 无效数据"); return; }
+                lastDesign = d;
+            }
+
             int x = (int)(Main.MouseWorld.X / 16);
             int y = (int)(Main.MouseWorld.Y / 16);
 
-            // 如果有选区，使用选区的左上角
             if (confirmedAreaStart.HasValue && confirmedAreaEnd.HasValue)
             {
                 x = Math.Min(confirmedAreaStart.Value.X, confirmedAreaEnd.Value.X);
                 y = Math.Min(confirmedAreaStart.Value.Y, confirmedAreaEnd.Value.Y);
-                AddMessage($"放置到选区位置");
+                AddMessage("放置到选区");
             }
             else
             {
-                AddMessage($"放置到鼠标位置: ({x}, {y})");
+                AddMessage($"放置: ({x},{y})");
             }
 
-            // 使用增强版执行器（支持油漆、斜坡、阴影）
             var executor = trab.Instance.EnhancedBuilder;
             executor.BuildAtLocationEnhanced(lastDesign, x, y, Main.LocalPlayer);
-            AddMessage($"建筑 '{lastDesign.Name}' 已放置!");
+            AddMessage($"'{lastDesign.Name}' 完成");
 
-            // 清除选区
             confirmedAreaStart = null;
             confirmedAreaEnd = null;
             isSelectingArea = false;
-            UpdateStatus();
         }
 
         private void AddMessage(string msg)
         {
             logLines.Add(msg);
 
-            // 限制行数
-            while (logLines.Count > maxLogLines)
-            {
-                logLines.RemoveAt(0);
-            }
-
-            // 重建显示文本
+            // 不限制行数，通过滚动查看
             log.Clear();
             foreach (var line in logLines)
-            {
                 log.AppendLine(line);
-            }
             logText.SetText(log.ToString());
+
+            // 计算滚动范围
+            float totalHeight = logLines.Count * logLineHeight;
+            float visibleHeight = MODULE_HEIGHT_LOG - 28f;  // 减去标签和padding
+            logMaxScroll = Math.Max(0, totalHeight - visibleHeight);
+
+            // 自动滚动到底部
+            logScrollOffset = logMaxScroll;
+            UpdateLogPosition();
+        }
+
+        private void UpdateLogPosition()
+        {
+            // 更新日志文本位置实现滚动
+            float newTop = 20f - logScrollOffset;
+            logText.Top.Set(newTop, 0f);
         }
 
         private void ClearLog()
         {
             logLines.Clear();
             log.Clear();
-            AddMessage("日志已清空");
+            logScrollOffset = 0f;
+            logMaxScroll = 0f;
+            UpdateLogPosition();
+            AddMessage("已清空");
         }
 
         public override void Update(GameTime gt)
         {
             base.Update(gt);
-            bg.Left.Set(Main.screenWidth - 420f, 0f);
+            mainPanel.Left.Set(Main.screenWidth - PANEL_WIDTH - 20f, 0f);
 
-            // 判断鼠标是否在UI面板内（使用精确的矩形检测）
+            // 同步busy状态
+            var player = Main.LocalPlayer.GetModPlayer<AIBuildingPlayer>();
+            if (busy && !player.IsGenerating)
+            {
+                busy = false;
+                if (player.LastDesign != null)
+                    AddMessage("[完成] 可按B放置");
+                else
+                    AddMessage("[失败] 请重试");
+            }
+
+            // UI面板区域
             Rectangle panelRect = new Rectangle(
-                (int)(Main.screenWidth - 420f),
+                (int)(Main.screenWidth - PANEL_WIDTH - 20f),
                 80,
-                400,
-                280
+                (int)PANEL_WIDTH,
+                (int)PANEL_HEIGHT
             );
             bool mouseInUI = panelRect.Contains((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y);
 
             if (mouseInUI)
                 Main.LocalPlayer.mouseInterface = true;
 
-            // 处理选区拖拽（选区模式下且鼠标不在UI内）
+            // 日志区域检测（用于滚动）
+            Rectangle logRect = new Rectangle(
+                (int)(Main.screenWidth - PANEL_WIDTH - 20f + MODULE_MARGIN + MODULE_PADDING),
+                (int)(80 + mainPanel.Top.Pixels + logModule.Top.Pixels + 20f),
+                (int)(PANEL_WIDTH - MODULE_MARGIN * 2 - MODULE_PADDING * 2),
+                (int)(MODULE_HEIGHT_LOG - 28f)
+            );
+            bool mouseInLog = logRect.Contains((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y);
+
+            // 鼠标滚轮滚动日志 - 使用Mouse.GetState()
+            if (mouseInLog && logMaxScroll > 0)
+            {
+                var mouseState = Mouse.GetState();
+                int scrollDelta = mouseState.ScrollWheelValue - lastScrollValue;
+                if (scrollDelta != 0 && lastScrollValue != 0)
+                {
+                    logScrollOffset += scrollDelta * 0.5f;  // 滚轮值需要转换
+                    logScrollOffset = Math.Max(0, Math.Min(logScrollOffset, logMaxScroll));
+                    UpdateLogPosition();
+                }
+                lastScrollValue = mouseState.ScrollWheelValue;
+            }
+            else
+            {
+                lastScrollValue = 0;  // 重置以便下次进入时正确计算
+            }
+
+            // 选区拖拽
             if (isSelectingArea && !mouseInUI)
             {
                 int tx = (int)(Main.MouseWorld.X / 16);
                 int ty = (int)(Main.MouseWorld.Y / 16);
 
-                // 检测鼠标按下开始拖拽
                 if (Main.mouseLeft && !wasMouseLeftPressed)
                 {
                     isDragging = true;
                     dragStart = new Point(tx, ty);
                     dragEnd = new Point(tx, ty);
-                    AddMessage($"开始选区: ({tx}, {ty})");
-                    UpdateStatus();
+                    AddMessage($"起点: ({tx},{ty})");
                 }
 
-                // 拖拽中更新终点
                 if (isDragging && Main.mouseLeft)
-                {
                     dragEnd = new Point(tx, ty);
-                }
 
-                // 鼠标释放，确认选区
                 if (!Main.mouseLeft && wasMouseLeftPressed && isDragging)
                 {
                     isDragging = false;
@@ -557,21 +664,17 @@ namespace trab.UI
                         confirmedAreaEnd = dragEnd;
                         int w = Math.Abs(dragEnd.Value.X - dragStart.Value.X) + 1;
                         int h = Math.Abs(dragEnd.Value.Y - dragStart.Value.Y) + 1;
-                        AddMessage($"选区确认: {w}x{h}");
-                        AddMessage("按G生成匹配大小建筑");
+                        AddMessage($"选区: {w}x{h}");
+                        AddMessage("G生成匹配建筑");
                     }
                     dragStart = null;
                     dragEnd = null;
-                    UpdateStatus();
                 }
             }
 
             wasMouseLeftPressed = Main.mouseLeft;
         }
 
-        /// <summary>
-        /// 绘制选区预览（在世界渲染时调用）
-        /// </summary>
         public void DrawAreaPreview()
         {
             if (!isSelectingArea) return;
@@ -586,7 +689,6 @@ namespace trab.UI
                 int x2 = Math.Max(start.Value.X, end.Value.X);
                 int y2 = Math.Max(start.Value.Y, end.Value.Y);
 
-                // 绘制选区边框
                 for (int x = x1; x <= x2; x++)
                 {
                     DrawTileHighlight(x, y1, Color.Yellow);
@@ -604,7 +706,6 @@ namespace trab.UI
         {
             if (!WorldGen.InWorld(tileX, tileY)) return;
 
-            // 初始化纹理（如果需要）
             if (whitePixel == null)
             {
                 whitePixel = new Texture2D(Main.graphics.GraphicsDevice, 1, 1);
@@ -613,10 +714,7 @@ namespace trab.UI
 
             Vector2 pos = new Vector2(tileX * 16 - Main.screenPosition.X, tileY * 16 - Main.screenPosition.Y);
 
-            // 绘制半透明填充
-            Main.spriteBatch.Draw(whitePixel, new Rectangle((int)pos.X, (int)pos.Y, 16, 16), color * 0.3f);
-
-            // 绘制边框线条
+            Main.spriteBatch.Draw(whitePixel, new Rectangle((int)pos.X, (int)pos.Y, 16, 16), color * 0.25f);
             Main.spriteBatch.Draw(whitePixel, new Rectangle((int)pos.X, (int)pos.Y, 16, 2), color);
             Main.spriteBatch.Draw(whitePixel, new Rectangle((int)pos.X, (int)pos.Y + 14, 16, 2), color);
             Main.spriteBatch.Draw(whitePixel, new Rectangle((int)pos.X, (int)pos.Y, 2, 16), color);
