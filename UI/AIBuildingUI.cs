@@ -361,28 +361,29 @@ namespace trab.UI
             AddMessage("P关闭 | M选区 | 自定义风格在聊天输入");
 
             // ─────────────────────────────────────────
-            // 自定义风格弹窗
+            // 自定义风格弹窗 - 居中显示
             // ─────────────────────────────────────────
             customStylePopup = new UIPanel();
-            customStylePopup.SetPadding(10);
-            customStylePopup.Width.Set(280f, 0f);
-            customStylePopup.Height.Set(80f, 0f);
-            customStylePopup.Left.Set(PANEL_WIDTH / 2 - 140f, 0f);
-            customStylePopup.Top.Set(PANEL_HEIGHT / 2 - 40f, 0f);
-            customStylePopup.BackgroundColor = new Color(40, 40, 60, 240);
-            customStylePopup.BorderColor = new Color(100, 100, 140);
-            mainPanel.Append(customStylePopup);
+            customStylePopup.SetPadding(15);
+            customStylePopup.Width.Set(300f, 0f);
+            customStylePopup.Height.Set(120f, 0f);
+            customStylePopup.Left.Set(Main.screenWidth / 2 - 150f, 0f);  // 屏幕居中
+            customStylePopup.Top.Set(Main.screenHeight / 2 - 60f, 0f);   // 屏幕居中
+            customStylePopup.BackgroundColor = new Color(30, 30, 50, 250);
+            customStylePopup.BorderColor = new Color(100, 150, 200);
+            Append(customStylePopup);  // 直接添加到UIState，不在mainPanel内
 
-            var popupTitle = new UIText("自定义风格", 1.0f);
-            popupTitle.Left.Set(10f, 0f);
-            popupTitle.Top.Set(5f, 0f);
+            var popupTitle = new UIText("自定义建筑风格", 1.1f);
+            popupTitle.HAlign = 0.5f;  // 标题居中
+            popupTitle.Top.Set(10f, 0f);
             popupTitle.TextColor = Color.Cyan;
             customStylePopup.Append(popupTitle);
 
-            customStyleHint = new UIText("在聊天框输入风格描述\n按Enter确认，按Esc取消", 0.85f);
-            customStyleHint.Left.Set(10f, 0f);
-            customStyleHint.Top.Set(30f, 0f);
+            customStyleHint = new UIText("请在聊天框输入风格描述\n例如: 生成一个带有花园的木质别墅\n按Enter确认 | 按Esc取消", 0.85f);
+            customStyleHint.HAlign = 0.5f;  // 内容居中
+            customStyleHint.Top.Set(45f, 0f);
             customStyleHint.TextColor = Color.LightGray;
+            customStyleHint.IsWrapped = true;
             customStylePopup.Append(customStyleHint);
 
             customStylePopup.Remove();  // 初始隐藏
@@ -653,8 +654,12 @@ namespace trab.UI
             // 处理自定义风格弹窗显示
             if (showCustomPopup)
             {
-                if (!mainPanel.HasChild(customStylePopup))
-                    mainPanel.Append(customStylePopup);
+                if (!HasChild(customStylePopup))
+                    Append(customStylePopup);
+
+                // 更新弹窗位置保持居中
+                customStylePopup.Left.Set(Main.screenWidth / 2 - 150f, 0f);
+                customStylePopup.Top.Set(Main.screenHeight / 2 - 60f, 0f);
 
                 // 检测聊天输入
                 if (Main.drawingPlayerChat)

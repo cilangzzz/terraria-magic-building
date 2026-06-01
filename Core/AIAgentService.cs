@@ -28,6 +28,34 @@ namespace trab.Core
 
         private const int MAX_AGENT_ROUNDS = 10;  // 增加轮数限制，让AI有足够时间思考
 
+        // 规划Agent系统提示 - 用于区域划分
+        private const string PLANNER_SYSTEM_PROMPT = @"建筑区域规划Agent。根据用户需求划分建筑区域，输出紧凑JSON。
+
+## 输出格式
+{
+  ""building_type"": ""two_story"",
+  ""width"": 12,
+  ""height"": 14,
+  ""style"": ""medieval"",
+  ""regions"": [
+    {""name"":""roof"", ""type"":""gable"", ""y_range"": [0,3]},
+    {""name"":""floor1"", ""y_range"": [4,9]},
+    {""name"":""floor2"", ""y_range"": [10,14]},
+    {""name"":""walls"", ""thickness"":1},
+    {""name"":""windows"", ""positions"": [{""x"":3,""y"":6,""width"":2,""height"":2},{""x"":9,""y"":6}]},
+    {""name"":""furniture"", ""furnitures"": [{""x"":5,""y"":12,""type"":""workbench"", ""floor"":1}]}
+  ]
+}
+
+## 规划规则
+- 建筑类型: house(单层), two_story(双层), tower(塔楼), castle(城堡)
+- 尺寸限制: width<=20, height<=16（避免JSON过长）
+- 屋顶类型: gable(人字形), flat(平顶), dome(圆顶), pagoda(宝塔)
+- 窗户对称布局: 每层左右各1个
+- 家具每层必备: 工作台+桌子+椅子
+
+只输出区域划分JSON，不生成具体方块。";
+
         private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。生成有设计感的建筑JSON。
 
 ## 推荐流程（按顺序调用工具）
@@ -125,25 +153,179 @@ namespace trab.Core
 
                 // 初始化知识库
                 KnowledgeBaseManager.Instance.Initialize();
-                var kb = KnowledgeBaseManager.Instance;
 
-                // 工具调用记录
-                var toolCallRecords = new List<ToolCallRecord>();
-
-                if (_useOpenAIFormat)
-                {
-                    return await RunOpenAIAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
-                }
-                else
-                {
-                    return await RunAnthropicAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
-                }
+                // 使用多Agent协作模式
+                return await GenerateBuildingMultiAgentAsync(userPrompt, progressCallback, ct);
             }
             catch (Exception ex)
             {
                 progressCallback?.Invoke($"错误: {ex.Message}", 0);
                 trab.Instance?.Logger.Error($"Agent错误: {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// 多Agent协作模式 - 规划 + 模块生成 + 合并
+        /// </summary>
+        public async Task<BuildingDesign> GenerateBuildingMultiAgentAsync(
+            string userPrompt,
+            Action<string, int> progressCallback = null,
+            CancellationToken ct = default)
+        {
+            progressCallback?.Invoke("[阶段1]规划建筑区域...", 1);
+
+            // 阶段1：规划Agent - 划分区域
+            var plan = await PlanBuildingAsync(userPrompt, ct);
+            if (plan == null)
+            {
+                progressCallback?.Invoke("规划失败，使用默认方案", 0);
+                plan = CreateDefaultPlan(userPrompt);
+            }
+
+            progressCallback?.Invoke($"规划完成: {plan.BuildingType}, {plan.Width}x{plan.Height}", 1);
+
+            // 阶段2：模块生成Agent（并行）
+            progressCallback?.Invoke("[阶段2]生成各模块...", 2);
+            var moduleAgents = new ModuleAgents(_apiKey, _serviceType, _modelName);
+
+            var tasks = new List<Task<ModuleResult>>();
+
+            // 并行生成5个模块
+            tasks.Add(moduleAgents.GenerateRoofAsync(plan, s => progressCallback?.Invoke(s, 2), ct));
+            tasks.Add(moduleAgents.GenerateWallsAsync(plan, s => progressCallback?.Invoke(s, 2), ct));
+            tasks.Add(moduleAgents.GenerateFloorsAsync(plan, s => progressCallback?.Invoke(s, 2), ct));
+            tasks.Add(moduleAgents.GenerateWindowsAsync(plan, s => progressCallback?.Invoke(s, 2), ct));
+            tasks.Add(moduleAgents.GenerateFurnitureAsync(plan, s => progressCallback?.Invoke(s, 2), ct));
+
+            var results = await Task.WhenAll(tasks);
+            var modules = results.ToList();
+
+            progressCallback?.Invoke($"模块生成完成: {modules.Count(m => !m.IsError)}/{modules.Count}成功", 2);
+
+            // 阶段3：合并
+            progressCallback?.Invoke("[阶段3]合并模块...", 3);
+            var merger = new BuildingMerger();
+            var design = merger.Merge(plan, modules);
+
+            progressCallback?.Invoke($"完成: {design?.Tiles?.Count ?? 0}方块", 0);
+            return design;
+        }
+
+        /// <summary>
+        /// 规划Agent - 划分建筑区域
+        /// </summary>
+        private async Task<BuildingPlan> PlanBuildingAsync(string userPrompt, CancellationToken ct)
+        {
+            var requestBody = new
+            {
+                model = _modelName,
+                messages = new[]
+                {
+                    new { role = "system", content = PLANNER_SYSTEM_PROMPT },
+                    new { role = "user", content = userPrompt }
+                },
+                max_tokens = 1024  // 规划JSON很小
+            };
+
+            string json = JsonConvert.SerializeObject(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync(_apiEndpoint, content, ct);
+            string responseJson = await response.Content.ReadAsStringAsync(ct);
+
+            trab.Instance?.Logger.Info($"规划Agent响应: {responseJson}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                trab.Instance?.Logger.Error($"规划API错误: {responseJson}");
+                return null;
+            }
+
+            var apiResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseJson);
+            var messageContent = apiResponse.choices?[0]?.message?.content;
+
+            if (string.IsNullOrEmpty(messageContent))
+                return null;
+
+            return ParseBuildingPlan(messageContent);
+        }
+
+        /// <summary>
+        /// 解析区域规划JSON
+        /// </summary>
+        private BuildingPlan ParseBuildingPlan(string content)
+        {
+            string json = ExtractJson(content);
+            if (json == null) return null;
+
+            try
+            {
+                var plan = JsonConvert.DeserializeObject<BuildingPlan>(json);
+                // 验证并修正尺寸
+                if (plan.Width > 20) plan.Width = 20;
+                if (plan.Height > 16) plan.Height = 16;
+                if (plan.Width < 6) plan.Width = 10;
+                if (plan.Height < 6) plan.Height = 8;
+
+                trab.Instance?.Logger.Info($"规划解析成功: {plan.BuildingType}, {plan.Width}x{plan.Height}, {plan.Regions?.Count ?? 0}区域");
+                return plan;
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"规划解析失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 创建默认规划方案
+        /// </summary>
+        private BuildingPlan CreateDefaultPlan(string userPrompt)
+        {
+            var plan = new BuildingPlan
+            {
+                BuildingType = "house",
+                Width = 10,
+                Height = 8,
+                Style = "medieval"
+            };
+
+            plan.Regions = new List<Region>
+            {
+                new Region { Name = "roof", Type = "gable", YRange = new[] { 0, 2 } },
+                new Region { Name = "floor1", YRange = new[] { 3, 7 } },
+                new Region { Name = "walls", Thickness = 1 },
+                new Region { Name = "windows", Windows = new List<WindowPosition>
+                {
+                    new WindowPosition { X = 3, Y = 5, Width = 2, Height = 2 },
+                    new WindowPosition { X = 7, Y = 5, Width = 2, Height = 2 }
+                }},
+                new Region { Name = "furniture", Furnitures = new List<FurniturePosition>
+                {
+                    new FurniturePosition { X = 4, Y = 6, Type = "workbench", Floor = 1 },
+                    new FurniturePosition { X = 6, Y = 6, Type = "table", Floor = 1 }
+                }}
+            };
+
+            return plan;
+        }
+
+        // 保留原有单Agent流程作为备选
+        public async Task<BuildingDesign> GenerateBuildingSingleAgentAsync(
+            string userPrompt,
+            Action<string, int> progressCallback = null,
+            CancellationToken ct = default)
+        {
+            var kb = KnowledgeBaseManager.Instance;
+            var toolCallRecords = new List<ToolCallRecord>();
+
+            if (_useOpenAIFormat)
+            {
+                return await RunOpenAIAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
+            }
+            else
+            {
+                return await RunAnthropicAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
             }
         }
 
@@ -256,7 +438,7 @@ namespace trab.Core
                 messages = messages,
                 tools = GetOpenAIToolDefinitions(),
                 tool_choice = "auto",
-                max_tokens = 8192  // 增加限制避免截断
+                max_tokens = 32768  // DeepSeek支持最大384K，设置32K足够大型建筑
             };
         }
 
@@ -336,6 +518,65 @@ namespace trab.Core
                                 style = new { type = "string", description = "风格名称" },
                                 theme = new { type = "string", description = "主题: warm, cold, dark, bright" }
                             }
+                        }
+                    }
+                },
+                // 建筑构件工具
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "get_roof_template",
+                        description = "获取屋顶设计模板，返回形状描述和推荐方块。用于设计建筑屋顶结构。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                roof_type = new { type = "string", description = "屋顶类型: gable(人字形), flat(平顶), dome(圆顶), pagoda(宝塔), stepped(阶梯)" },
+                                style = new { type = "string", description = "建筑风格: medieval, fantasy, natural..." },
+                                width = new { type = "integer", description = "建筑宽度，用于计算屋顶高度" }
+                            },
+                            required = new[] { "roof_type", "width" }
+                        }
+                    }
+                },
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "get_window_template",
+                        description = "获取窗户设计模板，返回尺寸和方块ID。用于设计窗户布局。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                window_type = new { type = "string", description = "窗户类型: single(单窗), double(双窗), arched(拱窗), bay(凸窗)" },
+                                style = new { type = "string", description = "建筑风格" }
+                            },
+                            required = new[] { "window_type" }
+                        }
+                    }
+                },
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "get_floor_structure",
+                        description = "获取楼层结构模板，返回楼层数、高度、墙壁厚度。用于设计建筑骨架。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                structure_type = new { type = "string", description = "结构类型: single_story(单层), two_story(双层), tower(塔楼), castle(城堡)" },
+                                style = new { type = "string", description = "建筑风格" }
+                            },
+                            required = new[] { "structure_type" }
                         }
                     }
                 }
@@ -526,6 +767,53 @@ namespace trab.Core
                             theme = new { type = "string" }
                         }
                     }
+                },
+                // 建筑构件工具
+                new
+                {
+                    name = "get_roof_template",
+                    description = "获取屋顶设计模板，返回形状描述和推荐方块。",
+                    input_schema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            roof_type = new { type = "string" },
+                            style = new { type = "string" },
+                            width = new { type = "integer" }
+                        },
+                        required = new[] { "roof_type", "width" }
+                    }
+                },
+                new
+                {
+                    name = "get_window_template",
+                    description = "获取窗户设计模板，返回尺寸和方块ID。",
+                    input_schema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            window_type = new { type = "string" },
+                            style = new { type = "string" }
+                        },
+                        required = new[] { "window_type" }
+                    }
+                },
+                new
+                {
+                    name = "get_floor_structure",
+                    description = "获取楼层结构模板，返回楼层数、高度、墙壁厚度。",
+                    input_schema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            structure_type = new { type = "string" },
+                            style = new { type = "string" }
+                        },
+                        required = new[] { "structure_type" }
+                    }
                 }
             };
         }
@@ -579,6 +867,13 @@ namespace trab.Core
                         return SearchFurniture(input["room_type"]?.ToString(), input["npc_type"]?.ToString(), kb);
                     case "get_paint_scheme":
                         return GetPaintScheme(input["style"]?.ToString(), input["theme"]?.ToString(), kb);
+                    // 建筑构件工具
+                    case "get_roof_template":
+                        return GetRoofTemplate(input["roof_type"]?.ToString(), input["style"]?.ToString(), input["width"]?.Value<int>() ?? 10, kb);
+                    case "get_window_template":
+                        return GetWindowTemplate(input["window_type"]?.ToString(), input["style"]?.ToString(), kb);
+                    case "get_floor_structure":
+                        return GetFloorStructure(input["structure_type"]?.ToString(), input["style"]?.ToString(), kb);
                     default:
                         return new ToolResult { IsError = true, Content = "{\"error\": \"未知工具\"}" };
                 }
@@ -656,6 +951,116 @@ namespace trab.Core
                 paints = paints.Select(p => new { id = p.id, name = p.name })
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        // 建筑构件工具执行方法
+        private ToolResult GetRoofTemplate(string roofType, string style, int width, KnowledgeBaseManager kb)
+        {
+            var template = kb.Roofs.GetTemplate(roofType);
+            if (template == null)
+                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到屋顶模板: " + roofType + "\"}" };
+
+            // 计算屋顶高度（人字形屋顶高度约为宽度的一半）
+            int roofHeight = CalculateRoofHeight(roofType, width);
+
+            // 生成放置提示
+            string placementHint = GenerateRoofPlacementHint(roofType, width, roofHeight);
+
+            var result = new
+            {
+                roof_type = roofType,
+                display_name = template.display_name,
+                shape_pattern = template.shape_pattern,
+                calculated_height = roofHeight,
+                edge_tiles = template.edge_tiles,
+                fill_tiles = template.fill_tiles,
+                placement_hint = placementHint,
+                description = template.description
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        private ToolResult GetWindowTemplate(string windowType, string style, KnowledgeBaseManager kb)
+        {
+            var template = kb.Windows.GetTemplate(windowType);
+            if (template == null)
+                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到窗户模板: " + windowType + "\"}" };
+
+            var result = new
+            {
+                window_type = windowType,
+                display_name = template.display_name,
+                width = template.width,
+                height = template.height,
+                frame_tile_id = template.frame_tile_id,
+                glass_tile_id = template.glass_tile_id,
+                description = template.description
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        private ToolResult GetFloorStructure(string structureType, string style, KnowledgeBaseManager kb)
+        {
+            var template = kb.Floors.GetTemplate(structureType);
+            if (template == null)
+                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到楼层结构模板: " + structureType + "\"}" };
+
+            // 计算总高度
+            int totalHeight = template.floor_count * template.floor_height;
+
+            var result = new
+            {
+                structure_type = structureType,
+                display_name = template.display_name,
+                floor_count = template.floor_count,
+                floor_height = template.floor_height,
+                total_height = totalHeight,
+                wall_thickness = template.wall_thickness,
+                floor_tiles = template.floor_tiles,
+                wall_tiles = template.wall_tiles,
+                description = template.description
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        // 辅助方法：计算屋顶高度
+        private int CalculateRoofHeight(string roofType, int width)
+        {
+            switch (roofType?.ToLower())
+            {
+                case "gable":    // 人字形：高度约为宽度的1/3
+                    return Math.Max(2, width / 3);
+                case "flat":     // 平顶：1层
+                    return 1;
+                case "dome":     // 圆顶：高度约为宽度的1/4
+                    return Math.Max(2, width / 4);
+                case "pagoda":   // 宝塔：多层，每层高度递减
+                    return Math.Max(3, width / 2);
+                case "stepped":  // 阶梯：每层缩进，高度约宽度的1/3
+                    return Math.Max(2, width / 3);
+                default:
+                    return Math.Max(2, width / 4);
+            }
+        }
+
+        // 辅助方法：生成屋顶放置提示
+        private string GenerateRoofPlacementHint(string roofType, int width, int height)
+        {
+            switch (roofType?.ToLower())
+            {
+                case "gable":
+                    return $"从y=0开始，中心x={width/2}最高，向两侧对称下降。使用slope方块实现斜坡。每层高度={height}";
+                case "flat":
+                    return $"在顶层平铺一层方块，边缘可加装饰方块。";
+                case "dome":
+                    return $"从中心向外扩展，形成弧形。最顶层为单方块，逐层扩大。";
+                case "pagoda":
+                    return $"多层结构，每层向外延伸1-2格，形成阶梯状。";
+                case "stepped":
+                    return $"阶梯状上升，每层缩进1格，形成金字塔形状。";
+                default:
+                    return "根据形状描述放置方块。";
+            }
         }
 
         #endregion

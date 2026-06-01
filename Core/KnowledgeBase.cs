@@ -52,6 +52,18 @@ namespace trab.Core
         }
 
         public bool IsInitialized => _initialized;
+
+        /// <summary>
+        /// 重置知识库（用于模组重新加载）
+        /// </summary>
+        public void Reset()
+        {
+            _initialized = false;
+            Tiles = null;
+            Styles = null;
+            Furniture = null;
+            Vectors = null;
+        }
     }
 
     /// <summary>
