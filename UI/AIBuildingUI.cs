@@ -87,14 +87,13 @@ namespace trab.UI
         private UIPanel logModule;        // 日志模块
 
         // 日志
-        private float logScrollOffset = 0f;    // 日志滚动偏移
-        private float logLineHeight = 16f;     // 每行日志高度
-        private float logMaxScroll = 0f;       // 最大滚动量
+        private UIPanel logContainer;      // 日志裁剪容器
         private UIText logText;
         private StringBuilder log = new StringBuilder();
         private List<string> logLines = new List<string>();
         private string lastResp = "";
         private bool busy = false;
+        private int maxLogLines = 10;       // 限制日志行数防止超出
         private Texture2D whitePixel;
 
         // Agent模式
@@ -120,18 +119,17 @@ namespace trab.UI
         private string[] sizeNames = { "小", "中", "大" };
 
         private bool wasMouseLeftPressed = false;
-        private int lastScrollValue = 0;  // 上一次滚轮值
 
         // UI尺寸常量
         private const float PANEL_WIDTH = 320f;
-        private const float PANEL_HEIGHT = 400f;
+        private const float PANEL_HEIGHT = 420f;
         private const float MODULE_MARGIN = 8f;
         private const float MODULE_PADDING = 6f;
         private const float MODULE_TOP_MARGIN = 10f;    // 模块上边距
         private const float MODULE_HEIGHT_STYLE = 44f;
         private const float MODULE_HEIGHT_SIZE = 44f;
         private const float MODULE_HEIGHT_FUNC = 48f;
-        private const float MODULE_HEIGHT_LOG = 140f;
+        private const float MODULE_HEIGHT_LOG = 180f;   // 增大日志框高度
         private const float BUTTON_HEIGHT = 24f;
         private const float BUTTON_VPADDING = 5f;
 
@@ -303,7 +301,7 @@ namespace trab.UI
             startY += MODULE_HEIGHT_FUNC + MODULE_MARGIN;
 
             // ─────────────────────────────────────────
-            // 模块4: 日志显示（支持滚动）
+            // 模块4: 日志显示（带裁剪容器）
             // ─────────────────────────────────────────
             logModule = new UIPanel();
             logModule.SetPadding(MODULE_PADDING);
@@ -321,13 +319,24 @@ namespace trab.UI
             logLabel.TextColor = Color.Gray;
             logModule.Append(logLabel);
 
-            // 日志文本 - 放在logModule内，通过Top偏移实现滚动
+            // 日志裁剪容器 - 防止日志超出
+            logContainer = new UIPanel();
+            logContainer.SetPadding(0f);
+            logContainer.Width.Set(-MODULE_PADDING * 2, 1f);
+            logContainer.Height.Set(MODULE_HEIGHT_LOG - 28f, 0f);  // 减去标签高度和padding
+            logContainer.Left.Set(MODULE_PADDING, 0f);
+            logContainer.Top.Set(18f, 0f);
+            logContainer.BackgroundColor = Color.Transparent;
+            logContainer.BorderColor = Color.Transparent;
+            logModule.Append(logContainer);
+
+            // 日志文本放在裁剪容器内
             logText = new UIText("", 0.8f);
-            logText.Width.Set(-MODULE_PADDING * 2, 1f);
-            logText.Left.Set(MODULE_PADDING, 0f);
-            logText.Top.Set(20f, 0f);  // 标签下方
-            logText.IsWrapped = true;
-            logModule.Append(logText);
+            logText.Width.Set(0f, 1f);
+            logText.Left.Set(2f, 0f);
+            logText.Top.Set(0f, 0f);
+            logText.IsWrapped = false;  // 不换行，每行独立显示
+            logContainer.Append(logText);
 
             // 清屏按钮
             var clearBtn = new UITextPanel<string>("×", 0.8f);
@@ -386,9 +395,11 @@ namespace trab.UI
             }
         }
 
-        public void UpdateProgress(string progress)
+        public void UpdateProgress(string progress, int round = 0)
         {
-            AddMessage($"[Agent] {progress}");
+            // 根据内容选择颜色前缀
+            string prefix = round > 0 ? $"[R{round}] " : "";
+            AddMessage($"{prefix}{progress}");
         }
 
         public void ToggleAgentMode()
@@ -550,36 +561,20 @@ namespace trab.UI
         {
             logLines.Add(msg);
 
-            // 不限制行数，通过滚动查看
+            // 限制行数防止超出容器
+            while (logLines.Count > maxLogLines)
+                logLines.RemoveAt(0);
+
             log.Clear();
             foreach (var line in logLines)
                 log.AppendLine(line);
             logText.SetText(log.ToString());
-
-            // 计算滚动范围
-            float totalHeight = logLines.Count * logLineHeight;
-            float visibleHeight = MODULE_HEIGHT_LOG - 28f;  // 减去标签和padding
-            logMaxScroll = Math.Max(0, totalHeight - visibleHeight);
-
-            // 自动滚动到底部
-            logScrollOffset = logMaxScroll;
-            UpdateLogPosition();
-        }
-
-        private void UpdateLogPosition()
-        {
-            // 更新日志文本位置实现滚动
-            float newTop = 20f - logScrollOffset;
-            logText.Top.Set(newTop, 0f);
         }
 
         private void ClearLog()
         {
             logLines.Clear();
             log.Clear();
-            logScrollOffset = 0f;
-            logMaxScroll = 0f;
-            UpdateLogPosition();
             AddMessage("已清空");
         }
 
@@ -610,33 +605,6 @@ namespace trab.UI
 
             if (mouseInUI)
                 Main.LocalPlayer.mouseInterface = true;
-
-            // 日志区域检测（用于滚动）
-            Rectangle logRect = new Rectangle(
-                (int)(Main.screenWidth - PANEL_WIDTH - 20f + MODULE_MARGIN + MODULE_PADDING),
-                (int)(80 + mainPanel.Top.Pixels + logModule.Top.Pixels + 20f),
-                (int)(PANEL_WIDTH - MODULE_MARGIN * 2 - MODULE_PADDING * 2),
-                (int)(MODULE_HEIGHT_LOG - 28f)
-            );
-            bool mouseInLog = logRect.Contains((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y);
-
-            // 鼠标滚轮滚动日志 - 使用Mouse.GetState()
-            if (mouseInLog && logMaxScroll > 0)
-            {
-                var mouseState = Mouse.GetState();
-                int scrollDelta = mouseState.ScrollWheelValue - lastScrollValue;
-                if (scrollDelta != 0 && lastScrollValue != 0)
-                {
-                    logScrollOffset += scrollDelta * 0.5f;  // 滚轮值需要转换
-                    logScrollOffset = Math.Max(0, Math.Min(logScrollOffset, logMaxScroll));
-                    UpdateLogPosition();
-                }
-                lastScrollValue = mouseState.ScrollWheelValue;
-            }
-            else
-            {
-                lastScrollValue = 0;  // 重置以便下次进入时正确计算
-            }
 
             // 选区拖拽
             if (isSelectingArea && !mouseInUI)

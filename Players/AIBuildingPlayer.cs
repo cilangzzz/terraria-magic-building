@@ -157,22 +157,24 @@ namespace trab.Players
                 {
                     var design = await _agentService.GenerateBuildingAsync(
                         prompt,
-                        (progress) =>
+                        (progress, round) =>
                         {
                             Main.QueueMainThreadAction(() =>
                             {
                                 AgentProgress = progress;
                                 ToolCallHistory.Add(progress);
 
-                                // 显示进度
+                                // 显示进度（带轮次信息）
                                 var uiSys = ModContent.GetInstance<AIBuildingUISystem>();
                                 if (uiSys.Visible && uiSys.panel != null)
                                 {
-                                    uiSys.panel.UpdateProgress(progress);
+                                    uiSys.panel.UpdateProgress(progress, round);
                                 }
                                 else
                                 {
-                                    Main.NewText($"[Agent] {progress}", Color.LightBlue);
+                                    // 根据轮次选择颜色
+                                    Color msgColor = round > 0 ? Color.LightBlue : Color.Green;
+                                    Main.NewText($"[Agent] {progress}", msgColor);
                                 }
                             });
                         },

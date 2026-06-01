@@ -62,34 +62,56 @@ namespace trab.Core
         {
             _tiles = new List<TileInfo>
             {
-                new TileInfo { id = 1, name = "Stone", styles = new List<string> { "medieval", "natural" } },
-                new TileInfo { id = 4, name = "GrayBrick", styles = new List<string> { "medieval", "castle" } },
-                new TileInfo { id = 5, name = "Wood", styles = new List<string> { "natural", "medieval" } },
-                new TileInfo { id = 13, name = "Glass", styles = new List<string> { "modern" } },
-                new TileInfo { id = 41, name = "GoldBrick", styles = new List<string> { "luxury" } },
-                new TileInfo { id = 57, name = "Marble", styles = new List<string> { "greek" } },
-                new TileInfo { id = 143, name = "StoneSlab", styles = new List<string> { "medieval" } }
+                new TileInfo { id = 1, name = "Stone", display_name = "石头", category = "basic", styles = new List<string> { "medieval", "natural" }, biome_match = new List<string> { "forest", "underground" }, paint_compatible = true, slope_compatible = true },
+                new TileInfo { id = 4, name = "GrayBrick", display_name = "灰砖", category = "brick", styles = new List<string> { "medieval", "castle" }, biome_match = new List<string> { "forest" }, paint_compatible = true, slope_compatible = false },
+                new TileInfo { id = 5, name = "Wood", display_name = "木材", category = "wood", styles = new List<string> { "natural", "medieval" }, biome_match = new List<string> { "forest" }, paint_compatible = true, slope_compatible = true },
+                new TileInfo { id = 13, name = "Glass", display_name = "玻璃", category = "transparent", styles = new List<string> { "modern" }, biome_match = new List<string> { "any" }, paint_compatible = true },
+                new TileInfo { id = 41, name = "GoldBrick", display_name = "金砖", category = "luxury", styles = new List<string> { "luxury" }, biome_match = new List<string> { "any" }, paint_compatible = true },
+                new TileInfo { id = 57, name = "Marble", display_name = "大理石", category = "luxury", styles = new List<string> { "greek" }, biome_match = new List<string> { "underground" }, paint_compatible = true, slope_compatible = true },
+                new TileInfo { id = 143, name = "StoneSlab", display_name = "石板", category = "slab", styles = new List<string> { "medieval" }, biome_match = new List<string> { "forest", "underground" }, paint_compatible = true },
+                new TileInfo { id = 17, name = "WorkBench", display_name = "工作台", category = "furniture", styles = new List<string> { "any" }, biome_match = new List<string> { "any" }, paint_compatible = true },
+                new TileInfo { id = 87, name = "Tables", display_name = "桌子", category = "furniture", styles = new List<string> { "any" }, biome_match = new List<string> { "any" }, paint_compatible = true },
+                new TileInfo { id = 88, name = "Chairs", display_name = "椅子", category = "furniture", styles = new List<string> { "any" }, biome_match = new List<string> { "any" }, paint_compatible = true },
+                new TileInfo { id = 4, name = "Torches", display_name = "火把", category = "light", styles = new List<string> { "any" }, biome_match = new List<string> { "any" } },
+                new TileInfo { id = 11, name = "ClosedDoor", display_name = "门", category = "door", styles = new List<string> { "any" }, biome_match = new List<string> { "any" }, paint_compatible = true }
             };
 
             _paints = new List<PaintInfo>
             {
-                new PaintInfo { id = 0, name = "None" },
-                new PaintInfo { id = 28, name = "Shadow" },
-                new PaintInfo { id = 30, name = "White" }
+                new PaintInfo { id = 0, name = "None", display_name = "无" },
+                new PaintInfo { id = 1, name = "Red", display_name = "红色" },
+                new PaintInfo { id = 2, name = "Orange", display_name = "橙色" },
+                new PaintInfo { id = 3, name = "Yellow", display_name = "黄色" },
+                new PaintInfo { id = 28, name = "Shadow", display_name = "阴影" },
+                new PaintInfo { id = 29, name = "Negative", display_name = "反转" },
+                new PaintInfo { id = 30, name = "White", display_name = "白色" },
+                new PaintInfo { id = 31, name = "Black", display_name = "黑色" }
             };
 
             _walls = new List<WallInfo>
             {
-                new WallInfo { id = 1, name = "StoneWall" },
-                new WallInfo { id = 4, name = "WoodWall" },
-                new WallInfo { id = 6, name = "GrayBrickWall" }
+                new WallInfo { id = 1, name = "StoneWall", display_name = "石墙" },
+                new WallInfo { id = 4, name = "WoodWall", display_name = "木墙" },
+                new WallInfo { id = 6, name = "GrayBrickWall", display_name = "灰砖墙" }
             };
         }
 
         public List<TileInfo> SearchTiles(string style, string category = null, string biome = null)
         {
-            return _tiles.Where(t => t.styles != null && t.styles.Contains(style)).ToList();
+            return _tiles.Where(t =>
+                t.styles != null &&
+                // "any" 是通配符，匹配所有风格
+                (style == null || t.styles.Contains("any") || t.styles.Contains(style)) &&
+                (category == null || t.category == category) &&
+                (biome == null || t.biome_match == null || t.biome_match.Contains("any") || t.biome_match.Contains(biome))
+            ).ToList();
         }
+
+        public List<PaintInfo> GetAllPaints() => _paints;
+
+        public List<TileInfo> GetAllTiles() => _tiles;
+
+        public List<WallInfo> GetAllWalls() => _walls;
 
         public TileInfo GetTileByName(string name)
         {
@@ -129,9 +151,51 @@ namespace trab.Core
         {
             _styles = new Dictionary<string, StyleTemplate>
             {
-                ["medieval"] = new StyleTemplate { name = "中世纪风格", display_name = "Medieval" },
-                ["fantasy"] = new StyleTemplate { name = "奇幻风格", display_name = "Fantasy" },
-                ["natural"] = new StyleTemplate { name = "自然风格", display_name = "Natural" }
+                ["medieval"] = new StyleTemplate {
+                    name = "中世纪风格",
+                    display_name = "Medieval",
+                    description = "经典欧洲中世纪建筑风格，适合城堡、村庄和堡垒。使用灰砖作为主要材料。"
+                },
+                ["fantasy"] = new StyleTemplate {
+                    name = "奇幻风格",
+                    display_name = "Fantasy",
+                    description = "魔法与幻想风格，适合精灵建筑、魔法塔。使用珍珠石和玻璃。"
+                },
+                ["natural"] = new StyleTemplate {
+                    name = "自然风格",
+                    display_name = "Natural",
+                    description = "与自然融合的建筑风格，适合树屋、田园小屋。使用木材和泥土。"
+                },
+                ["steampunk"] = new StyleTemplate {
+                    name = "蒸汽朋克风格",
+                    display_name = "Steampunk",
+                    description = "工业革命风格，适合工厂、机械建筑。使用铜砖和铁砖。"
+                },
+                ["asian"] = new StyleTemplate {
+                    name = "东方风格",
+                    display_name = "Asian",
+                    description = "中日式建筑风格，适合茶室、寺庙。使用王朝木。"
+                },
+                ["snow"] = new StyleTemplate {
+                    name = "冰雪风格",
+                    display_name = "Snow",
+                    description = "冬季风格，适合雪屋、冰堡。使用雪块和冰块。"
+                },
+                ["desert"] = new StyleTemplate {
+                    name = "沙漠风格",
+                    display_name = "Desert",
+                    description = "沙漠和古埃及风格，适合金字塔。使用砂岩。"
+                },
+                ["modern"] = new StyleTemplate {
+                    name = "现代风格",
+                    display_name = "Modern",
+                    description = "现代简约风格，适合现代住宅。使用花岗岩和大理石。"
+                },
+                ["dark"] = new StyleTemplate {
+                    name = "黑暗风格",
+                    display_name = "Dark",
+                    description = "腐化/猩红/地狱风格，适合邪恶建筑。使用黑檀石和黑曜石。"
+                }
             };
         }
 
@@ -184,20 +248,27 @@ namespace trab.Core
     {
         public int id { get; set; }
         public string name { get; set; }
+        public string display_name { get; set; }
+        public string category { get; set; }
         public List<string> styles { get; set; }
+        public List<string> biome_match { get; set; }
         public bool paint_compatible { get; set; }
+        public bool slope_compatible { get; set; }
+        public string description { get; set; }
     }
 
     public class PaintInfo
     {
         public int id { get; set; }
         public string name { get; set; }
+        public string display_name { get; set; }
     }
 
     public class WallInfo
     {
         public int id { get; set; }
         public string name { get; set; }
+        public string display_name { get; set; }
     }
 
     public class StyleTemplate

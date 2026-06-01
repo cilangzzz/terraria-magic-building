@@ -23,7 +23,7 @@ import requests
 
 # 配置
 BASE_URL = "https://terraria.wiki.gg"
-API_URL = f"{BASE_URL}/w/api.php"
+API_URL = f"{BASE_URL}/api.php"  # 正确的API路径
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "crawled")
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "terraria_kb.db")
 HEADERS = {
@@ -107,31 +107,60 @@ class TerrariaWikiCrawler:
             return []
 
         tiles = []
-        # 解析wikitable格式
-        # 格式通常是: | ID || Name || ...
+        seen_ids = set()  # 防止重复ID
 
+        # 表格格式: | ID || Sub ID || Picture || Item/Entity || Internal Name
         lines = content.split("\n")
         for line in lines:
-            # 查找表格行 {| 或 |-
-            if line.startswith("|") and not line.startswith("|-") and not line.startswith("|}"):
-                # 解析单元格
+            # 查找表格行，跳过表头和特殊行
+            if line.startswith("| ") and not line.startswith("|-") and not line.startswith("|}"):
+                # 解析单元格，使用 || 分隔
                 cells = [c.strip() for c in line.split("||")]
-                if len(cells) >= 2:
-                    # 第一个单元格是ID
+                if len(cells) >= 5:
+                    # 第1列: ID
                     id_text = cells[0].replace("|", "").strip()
                     try:
                         tile_id = int(id_text)
                     except ValueError:
                         continue
 
-                    # 第二个单元格是名称（可能包含链接）
-                    name_cell = cells[1]
-                    # 提取链接文字 [[Name]]
-                    name_match = re.search(r"\[\[([^\]|]+)", name_cell)
-                    if name_match:
-                        name = name_match.group(1)
+                    # 跳过已处理的ID（由于有Sub ID变体，同一个ID可能出现多次）
+                    if tile_id in seen_ids:
+                        continue
+                    seen_ids.add(tile_id)
+
+                    # 第4列: Item/Entity，提取名称
+                    item_cell = cells[3]
+                    # 解析 {{item|Name}} 或 {{eil|Name}} 或 [[Name]]
+                    name = None
+
+                    # {{item|Name}} 格式
+                    item_match = re.search(r"\{\{item\|([^}|]+)", item_cell)
+                    if item_match:
+                        name = item_match.group(1)
+
+                    # {{eil|Name}} 格式 (entity item link)
+                    if not name:
+                        eil_match = re.search(r"\{\{eil\|([^}|]+)", item_cell)
+                        if eil_match:
+                            name = eil_match.group(1)
+
+                    # [[Name]] 格式
+                    if not name:
+                        link_match = re.search(r"\[\[([^\]|]+)", item_cell)
+                        if link_match:
+                            name = link_match.group(1)
+
+                    # 第5列: Internal Name，格式 <code>Name</code>
+                    internal_cell = cells[4]
+                    internal_match = re.search(r"<code>([^<]+)</code>", internal_cell)
+                    if internal_match:
+                        internal_name = internal_match.group(1)
                     else:
-                        name = name_cell
+                        internal_name = name or f"Tile_{tile_id}"
+
+                    if not name:
+                        name = internal_name
 
                     # 清理名称
                     name = self.clean_name(name)
@@ -140,61 +169,135 @@ class TerrariaWikiCrawler:
                         "id": tile_id,
                         "name": name,
                         "display_name": name,
+                        "internal_name": internal_name,
+                        "category": self.guess_category_from_name(name),
                         "source": "wiki_api"
                     })
 
         return tiles
 
+    def guess_category_from_name(self, name):
+        """根据名称猜测分类"""
+        name_lower = name.lower()
+        if any(x in name_lower for x in ["brick", "wall", "stone", "slab", "plate"]):
+            return "brick"
+        elif any(x in name_lower for x in ["wood", "plank", "log", "tree"]):
+            return "wood"
+        elif any(x in name_lower for x in ["platform", "bridge"]):
+            return "platform"
+        elif any(x in name_lower for x in ["torch", "lamp", "candle", "chandelier", "lantern", "light"]):
+            return "light"
+        elif any(x in name_lower for x in ["door", "gate", "trapdoor"]):
+            return "door"
+        elif any(x in name_lower for x in ["table", "chair", "bed", "bench", "sofa", "dresser", "piano", "bathtub"]):
+            return "furniture"
+        elif any(x in name_lower for x in ["chest", "safe", "vault"]):
+            return "storage"
+        elif any(x in name_lower for x in ["grass", "dirt", "sand", "clay", "mud", "snow", "ice"]):
+            return "natural"
+        elif any(x in name_lower for x in ["corrupt", "crimson", "hallow", "ebon", "crim", "pearl"]):
+            return "special"
+        elif any(x in name_lower for x in ["glass", "gem", "crystal"]):
+            return "transparent"
+        elif any(x in name_lower for x in ["gold", "silver", "copper", "iron", "platinum", "obsidian"]):
+            return "luxury"
+        return "basic"
+
     def crawl_tiles_from_page(self):
         """从Tile IDs页面爬取方块数据"""
         print("\n=== 爬取方块ID数据 ===")
 
-        # 方法1: 直接获取页面内容
-        content = self.get_page_content("Tile_IDs")
-        if content:
-            tiles = self.parse_tile_ids_table(content)
-            print(f"  从页面内容解析到 {len(tiles)} 个方块")
-            self.tiles.extend(tiles)
+        # Tile IDs页面使用分页结构，需要获取子页面
+        # Part1: 0-30, Part2: 31-90, ..., Part9: 693-752
+        parts = ["Tile IDs/Part1", "Tile IDs/Part2", "Tile IDs/Part3", "Tile IDs/Part4",
+                 "Tile IDs/Part5", "Tile IDs/Part6", "Tile IDs/Part7", "Tile IDs/Part8", "Tile IDs/Part9"]
 
-        # 方法2: 如果上面失败，尝试查询分类
+        for part in parts:
+            content = self.get_page_content(part)
+            if content:
+                tiles = self.parse_tile_ids_table(content)
+                print(f"  {part}: {len(tiles)} 个方块")
+                self.tiles.extend(tiles)
+            time.sleep(DELAY)
+
+        print(f"  总计: {len(self.tiles)} 个方块")
+
+        # 如果分页获取失败，尝试获取主页面并解析表格
         if len(self.tiles) == 0:
-            print("  尝试通过分类查询...")
-            members = self.query_category("Tiles")
-            for member in members[:100]:  # 限制数量
-                name = member.get("title", "")
-                if name.startswith("Category:"):
+            print("  分页获取失败，尝试解析主页面...")
+            content = self.get_page_content("Tile IDs")
+            if content:
+                tiles = self.parse_tile_ids_table(content)
+                self.tiles.extend(tiles)
+                print(f"  从主页获取到 {len(tiles)} 个方块")
+
+        # 如果仍然失败，尝试获取解析后的HTML页面
+        if len(self.tiles) == 0:
+            print("  尝试获取解析后的HTML...")
+            for part in parts[:3]:  # 只尝试前3页
+                html = self.get_parsed_page(part)
+                if html:
+                    tiles = self.parse_html_table(html)
+                    print(f"  {part} (HTML): {len(tiles)} 个方块")
+                    self.tiles.extend(tiles)
+                time.sleep(DELAY)
+
+    def parse_html_table(self, html):
+        """解析HTML格式的表格"""
+        tiles = []
+        if not html:
+            return tiles
+
+        # 使用正则表达式解析HTML表格
+        # 查找表格行 <tr>...</tr>
+        tr_pattern = r'<tr[^>]*>(.*?)</tr>'
+        td_pattern = r'<td[^>]*>(.*?)</td>'
+
+        for tr_match in re.finditer(tr_pattern, html, re.DOTALL):
+            tr_content = tr_match.group(1)
+            tds = re.findall(td_pattern, tr_content, re.DOTALL)
+
+            if len(tds) >= 2:
+                # 第一个td是ID
+                id_text = re.sub(r'<[^>]+>', '', tds[0]).strip()
+                try:
+                    tile_id = int(id_text)
+                except ValueError:
                     continue
-                self.tiles.append({
-                    "id": 0,  # ID需要从页面解析
-                    "name": self.clean_name(name),
+
+                # 第二个td是名称
+                name_cell = re.sub(r'<[^>]+>', '', tds[1]).strip()
+                name = self.clean_name(name_cell)
+
+                tiles.append({
+                    "id": tile_id,
+                    "name": name,
                     "display_name": name,
-                    "source": "wiki_category"
+                    "source": "wiki_html"
                 })
-            print(f"  从分类获取到 {len(self.tiles)} 个方块")
+
+        return tiles
 
     def crawl_walls_from_page(self):
         """从Wall IDs页面爬取墙壁数据"""
         print("\n=== 爬取墙壁ID数据 ===")
 
-        content = self.get_page_content("Wall_IDs")
-        if content:
-            walls = self.parse_wall_ids_table(content)
-            print(f"  从页面内容解析到 {len(walls)} 个墙壁")
+        # Wall IDs页面使用动态模板，需要获取解析后的HTML
+        html = self.get_parsed_page("Wall_IDs")
+        if html:
+            walls = self.parse_html_table(html)
+            print(f"  从HTML解析到 {len(walls)} 个墙壁")
             self.walls.extend(walls)
 
+        # 如果HTML解析失败，尝试获取原始内容
         if len(self.walls) == 0:
-            print("  尝试通过分类查询...")
-            members = self.query_category("Walls")
-            for member in members[:50]:
-                name = member.get("title", "")
-                if name.startswith("Category:"):
-                    continue
-                self.walls.append({
-                    "id": 0,
-                    "name": self.clean_name(name),
-                    "display_name": name,
-                    "source": "wiki_category"
-                })
+            content = self.get_page_content("Wall_IDs")
+            if content:
+                walls = self.parse_wall_ids_table(content)
+                print(f"  从原始内容解析到 {len(walls)} 个墙壁")
+                self.walls.extend(walls)
+
+        print(f"  总计: {len(self.walls)} 个墙壁")
 
     def parse_wall_ids_table(self, content):
         """解析Wall IDs表格"""
