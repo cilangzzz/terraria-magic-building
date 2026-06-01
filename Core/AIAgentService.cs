@@ -26,7 +26,7 @@ namespace trab.Core
         private string _modelName;
         private bool _useOpenAIFormat;  // 是否使用OpenAI格式
 
-        private const int MAX_AGENT_ROUNDS = 5;
+        private const int MAX_AGENT_ROUNDS = 10;  // 增加轮数限制，让AI有足够时间思考
 
         private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。简洁生成建筑JSON。
 
@@ -153,8 +153,10 @@ namespace trab.Core
                 new { role = "user", content = userPrompt }
             };
 
-            for (int round = 1; round <= MAX_AGENT_ROUNDS; round++)
+            int round = 0;
+            while (true)  // 无限循环，直到AI输出结果或出错
             {
+                round++;
                 progressCallback?.Invoke($"[轮次{round}]思考中...", round);
 
                 var requestBody = BuildOpenAIRequest(messages);
@@ -226,40 +228,14 @@ namespace trab.Core
                 {
                     progressCallback?.Invoke($"[轮次{round}]生成完成", round);
                     var design = ParseBuildingDesign(message.content, toolCallRecords);
-                    int totalToolCalls = toolCallRecords.Count;
-                    progressCallback?.Invoke($"完成({round}轮,{totalToolCalls}次工具调用)", 0);
+                    progressCallback?.Invoke($"完成({round}轮,{toolCallRecords.Count}次工具调用)", 0);
                     return design;
                 }
 
-                // 达到最大轮数，强制生成（不发送工具定义）
-                if (round >= MAX_AGENT_ROUNDS)
-                {
-                    progressCallback?.Invoke($"[强制]要求生成...", 0);
-                    messages.Add(new { role = "user", content = "已收集足够信息，现在直接输出JSON建筑设计。只输出JSON，不要调用任何工具。" });
-
-                    // 强制生成请求 - 不包含工具定义，AI只能输出文本
-                    var forceRequest = new
-                    {
-                        model = _modelName,
-                        messages = messages,
-                        max_tokens = 4096
-                    };
-
-                    var forceResponse = await SendOpenAIRequestAsync(forceRequest, ct);
-
-                    if (forceResponse?.choices?[0]?.message?.content != null)
-                    {
-                        var design = ParseBuildingDesign(forceResponse.choices[0].message.content, toolCallRecords);
-                        progressCallback?.Invoke($"强制生成完成", 0);
-                        return design;
-                    }
-                }
-
-                break;
+                // content为空但没有工具调用，可能是API异常
+                progressCallback?.Invoke($"[轮次{round}]响应异常，继续...", round);
+                // 继续下一轮尝试
             }
-
-            progressCallback?.Invoke("超过最大轮数限制", 0);
-            return null;
         }
 
         private object BuildOpenAIRequest(List<object> messages)

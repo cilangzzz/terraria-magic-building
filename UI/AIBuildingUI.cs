@@ -122,14 +122,14 @@ namespace trab.UI
 
         // UI尺寸常量
         private const float PANEL_WIDTH = 320f;
-        private const float PANEL_HEIGHT = 420f;
+        private const float PANEL_HEIGHT = 450f;
         private const float MODULE_MARGIN = 8f;
         private const float MODULE_PADDING = 6f;
         private const float MODULE_TOP_MARGIN = 10f;    // 模块上边距
         private const float MODULE_HEIGHT_STYLE = 44f;
         private const float MODULE_HEIGHT_SIZE = 44f;
         private const float MODULE_HEIGHT_FUNC = 48f;
-        private const float MODULE_HEIGHT_LOG = 180f;   // 增大日志框高度
+        private const float MODULE_HEIGHT_LOG = 200f;   // 日志框高度增大
         private const float BUTTON_HEIGHT = 24f;
         private const float BUTTON_VPADDING = 5f;
 
@@ -323,9 +323,9 @@ namespace trab.UI
             logContainer = new UIPanel();
             logContainer.SetPadding(0f);
             logContainer.Width.Set(-MODULE_PADDING * 2, 1f);
-            logContainer.Height.Set(MODULE_HEIGHT_LOG - 28f, 0f);  // 减去标签高度和padding
+            logContainer.Height.Set(MODULE_HEIGHT_LOG - 12f, 0f);  // 拉长容器高度，大胆增加
             logContainer.Left.Set(MODULE_PADDING, 0f);
-            logContainer.Top.Set(18f, 0f);
+            logContainer.Top.Set(20f, 0f);  // 容器位置
             logContainer.BackgroundColor = Color.Transparent;
             logContainer.BorderColor = Color.Transparent;
             logModule.Append(logContainer);
@@ -334,7 +334,7 @@ namespace trab.UI
             logText = new UIText("", 0.8f);
             logText.Width.Set(0f, 1f);
             logText.Left.Set(2f, 0f);
-            logText.Top.Set(0f, 0f);
+            logText.Top.Set(6f, 0f);  // 文本往下一点
             logText.IsWrapped = false;  // 不换行，每行独立显示
             logContainer.Append(logText);
 
