@@ -24,76 +24,85 @@ namespace trab.Core
         private string _modelName;
 
         // 模块生成系统提示（每个模块不同）
-        private const string ROOF_MODULE_PROMPT = @"屋顶模块生成。输出紧凑JSON。
+        private const string ROOF_MODULE_PROMPT = @"你是屋顶模块生成器。根据以下参数生成屋顶方块JSON。
 
-输入格式：宽度={width}, 屋顶类型={roof_type}, Y范围={y_start}-{y_end}, 风格={style}
+参数：宽度{width}, 屋顶类型{roof_type}, Y范围{y_start}-{y_end}, 方块ID{tile_id}
 
-输出格式：
-{""tiles"": [{""x"":0,""y"":0,""tile_id"":4,""slope"":1}]}
-
-规则：
-- 人字形(gable): 中心最高，两侧斜坡下降，slope=1左斜,slope=2右斜
-- 平顶(flat): 水平一层
-- 圆顶(dome): 弧形上升
-- 宝塔(pagoda): 多层阶梯
-
-常用ID: 灰砖4|木材5|石板143";
-
-        private const string WALL_MODULE_PROMPT = @"墙壁模块生成。输出紧凑JSON。
-
-输入格式：宽度={width}, 高度={height}, 墙厚={thickness}, 风格={style}
-
-输出格式：
-{""tiles"": [{""x"":0,""y"":0,""tile_id"":4}], ""wallRanges"": [{""x1"":2,""y1"":1,""x2"":10,""y2"":8,""wall_id"":4}]}
+任务：生成屋顶tiles数组。
 
 规则：
-- 外墙用厚砖块
-- 内部填充墙背景
-- 预留门窗位置
+- 人字形(gable): 中心x={center}最高(y={y_start}), 向两侧斜坡下降
+- 左侧(x<{center})用slope=2(右斜), 右侧(x>{center})用slope=1(左斜)
+- 中心点slope=0
 
-常用ID: 灰砖4|石头1|木墙4|石墙1";
+输出示例：
+{""tiles"": [{""x"":0,""y"":{y_start},""tile_id"":{tile_id},""slope"":2},{""x"":1,""y"":{y_start},""tile_id"":{tile_id},""slope"":2}]}
 
-        private const string FLOOR_MODULE_PROMPT = @"楼层模块生成。输出紧凑JSON。
+立即输出JSON，不要解释。";
 
-输入格式：宽度={width}, Y范围={y_start}-{y_end}, 楼层号={floor_num}, 风格={style}
+        private const string WALL_MODULE_PROMPT = @"你是墙壁模块生成器。根据以下参数生成墙壁方块JSON。
 
-输出格式：
-{""tiles"": [{""x"":2,""y"":5,""tile_id"":5}], ""wallRanges"": [{""x1"":2,""y1"":5,""x2"":10,""y2"":8,""wall_id"":4}]}
+参数：宽度{width}, 高度{height}, 墙厚{thickness}, 风格{style}
+
+任务：生成外墙tiles和内部wallRanges。
 
 规则：
-- 地板用木材或石板
-- 天花板用不同方块区分楼层
-- 预留楼梯位置
+- 左墙: x=0, y从0到{height}-1
+- 右墙: x={width}-1, y从0到{height}-1
+- 内部墙背景: wallRanges填充
+- 使用灰砖(tile_id=4), 木墙(wall_id=4)
 
-常用ID: 木材5|石板143|灰砖4";
+输出示例：
+{""tiles"": [{""x"":0,""y"":0,""tile_id"":4}], ""wallRanges"": [{""x1"":1,""y1"":1,""x2"":{width}-2,""y2"":{height}-2,""wall_id"":4}]}
 
-        private const string WINDOW_MODULE_PROMPT = @"窗户模块生成。输出紧凑JSON。
+立即输出JSON，不要解释。";
 
-输入格式：窗户位置列表={positions}, 窗户类型={window_type}, 风格={style}
+        private const string FLOOR_MODULE_PROMPT = @"你是楼层模块生成器。根据以下参数生成楼层方块JSON。
 
-输出格式：
-{""tiles"": [{""x"":3,""y"":6,""tile_id"":13},{""x"":4,""y"":6,""tile_id"":13}]}
+参数：宽度{width}, Y范围{y_start}-{y_end}, 楼层号{floor_num}, 风格{style}
+
+任务：生成地板tiles和墙背景。
+
+规则：
+- 地板在y={y_end}位置，x从1到{width}-2
+- 天花板在y={y_start}位置
+- 使用木材(tile_id=5)做地板, 木墙(wall_id=4)
+
+输出示例：
+{""tiles"": [{""x"":1,""y"":{y_end},""tile_id"":5}], ""wallRanges"": [{""x1"":1,""y1"":{y_start},""x2"":{width}-2,""y2"":{y_end},""wall_id"":4}]}
+
+立即输出JSON，不要解释。";
+
+        private const string WINDOW_MODULE_PROMPT = @"你是窗户模块生成器。根据以下参数生成窗户方块JSON。
+
+参数：窗户位置{positions}, 窗户类型{window_type}, 风格{style}
+
+任务：在每个窗户位置生成玻璃方块。
 
 规则：
 - 玻璃(tile_id=13)
-- 窗框用砖块包围
-- 2x2双窗，1x2单窗
+- 窗户宽2高2，生成4个玻璃方块
 
-常用ID: 玻璃13|灰砖4";
+输出示例：
+{""tiles"": [{""x"":3,""y"":6,""tile_id"":13},{""x"":4,""y"":6,""tile_id"":13},{""x"":3,""y"":7,""tile_id"":13},{""x"":4,""y"":7,""tile_id"":13}]}
 
-        private const string FURNITURE_MODULE_PROMPT = @"家具模块生成。输出紧凑JSON。
+立即输出JSON，不要解释。";
 
-输入格式：家具位置列表={positions}, 风格={style}
+        private const string FURNITURE_MODULE_PROMPT = @"你是家具模块生成器。根据以下参数生成家具JSON。
 
-输出格式：
-{""furniture"": [{""x"":5,""y"":8,""tile_id"":17}], ""doors"": [{""x"":3,""y"":1,""tile_id"":10}], ""lightSources"": [{""x"":2,""y"":3,""tile_id"":4}]}
+参数：家具位置{positions}, 风格{style}
+
+任务：生成furniture、doors、lightSources数组。
 
 规则：
-- 工作台(17)桌子(87)椅子(88)成套摆放
-- 门放地面层
-- 火把放墙边
+- 工作台(tile_id=17)、桌子(tile_id=87)、椅子(tile_id=88)
+- 门(tile_id=10)放在底部中心
+- 火把(tile_id=4)放墙边
 
-常用ID: 工作台17|桌子87|椅子88|门10|火把4|宝箱21";
+输出示例：
+{""furniture"": [{""x"":3,""y"":6,""tile_id"":17}], ""doors"": [{""x"":5,""y"":7,""tile_id"":10}], ""lightSources"": [{""x"":1,""y"":3,""tile_id"":4}]}
+
+立即输出JSON，不要解释。";
 
         public ModuleAgents(string apiKey, AIServiceType serviceType, string modelName)
         {
@@ -131,11 +140,24 @@ namespace trab.Core
 
             progressCallback?.Invoke("生成屋顶模块...");
 
+            // 检索向量库获取屋顶材料
+            var kb = KnowledgeBaseManager.Instance;
+            kb.Initialize();
+            var roofTiles = kb.Tiles.SearchTiles(plan.Style, "brick");
+            int roofTileId = roofTiles.FirstOrDefault()?.id ?? 4;  // 默认灰砖
+            int roofWallId = kb.Tiles.GetAllWalls().FirstOrDefault()?.id ?? 4;  // 默认木墙
+
+            int yStart = roofRegion.YRange?[0] ?? 0;
+            int yEnd = roofRegion.YRange?[1] ?? 2;
+            int center = plan.Width / 2;
+
             string prompt = ROOF_MODULE_PROMPT
                 .Replace("{width}", plan.Width.ToString())
                 .Replace("{roof_type}", roofRegion.Type ?? "gable")
-                .Replace("{y_start}", (roofRegion.YRange?[0] ?? 0).ToString())
-                .Replace("{y_end}", (roofRegion.YRange?[1] ?? 3).ToString())
+                .Replace("{y_start}", yStart.ToString())
+                .Replace("{y_end}", yEnd.ToString())
+                .Replace("{center}", center.ToString())
+                .Replace("{tile_id}", roofTileId.ToString())  // 检索到的方块ID
                 .Replace("{style}", plan.Style);
 
             try
@@ -293,7 +315,7 @@ namespace trab.Core
                 {
                     new { role = "user", content = prompt }
                 },
-                max_tokens = 2048  // 模块JSON小，不需要太大
+                max_tokens = 2048
             };
 
             string json = JsonConvert.SerializeObject(requestBody);
@@ -307,7 +329,16 @@ namespace trab.Core
                 throw new Exception($"API错误: {responseJson}");
 
             var apiResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseJson);
-            var messageContent = apiResponse.choices?[0]?.message?.content;
+            var message = apiResponse.choices?[0]?.message;
+
+            // 处理DeepSeek的reasoning_content（当content为空时使用）
+            string messageContent = message?.content;
+            if (string.IsNullOrEmpty(messageContent) && !string.IsNullOrEmpty(message?.reasoning_content))
+            {
+                // 从reasoning_content中提取JSON（通常在末尾）
+                messageContent = ExtractJsonFromReasoning(message.reasoning_content);
+                trab.Instance?.Logger.Info($"[{moduleName}] 使用reasoning_content提取JSON");
+            }
 
             if (string.IsNullOrEmpty(messageContent))
                 throw new Exception("API返回空内容");
@@ -523,6 +554,20 @@ namespace trab.Core
             int braceEnd = content.LastIndexOf('}');
             if (braceStart >= 0 && braceEnd > braceStart)
                 return content.Substring(braceStart, braceEnd - braceStart + 1);
+
+            return null;
+        }
+
+        /// <summary>
+        /// 从reasoning_content中提取JSON（通常在末尾）
+        /// </summary>
+        private string ExtractJsonFromReasoning(string reasoning)
+        {
+            // reasoning_content通常是思考过程，JSON可能在末尾
+            int braceStart = reasoning.LastIndexOf('{');
+            int braceEnd = reasoning.LastIndexOf('}');
+            if (braceStart >= 0 && braceEnd > braceStart)
+                return reasoning.Substring(braceStart, braceEnd - braceStart + 1);
 
             return null;
         }

@@ -28,33 +28,21 @@ namespace trab.Core
 
         private const int MAX_AGENT_ROUNDS = 10;  // 增加轮数限制，让AI有足够时间思考
 
-        // 规划Agent系统提示 - 用于区域划分
-        private const string PLANNER_SYSTEM_PROMPT = @"建筑区域规划Agent。根据用户需求划分建筑区域，输出紧凑JSON。
+        // 规划Agent系统提示 - 用于区域划分（简洁格式避免截断）
+        private const string PLANNER_SYSTEM_PROMPT = @"建筑区域规划Agent。输出紧凑JSON，只包含必要信息。
 
-## 输出格式
-{
-  ""building_type"": ""two_story"",
-  ""width"": 12,
-  ""height"": 14,
-  ""style"": ""medieval"",
-  ""regions"": [
-    {""name"":""roof"", ""type"":""gable"", ""y_range"": [0,3]},
-    {""name"":""floor1"", ""y_range"": [4,9]},
-    {""name"":""floor2"", ""y_range"": [10,14]},
-    {""name"":""walls"", ""thickness"":1},
-    {""name"":""windows"", ""positions"": [{""x"":3,""y"":6,""width"":2,""height"":2},{""x"":9,""y"":6}]},
-    {""name"":""furniture"", ""furnitures"": [{""x"":5,""y"":12,""type"":""workbench"", ""floor"":1}]}
-  ]
-}
+## 输出格式（极简）
+{""type"":""two_story"", ""w"":12, ""h"":14, ""style"":""medieval"", ""roof"":""gable"", ""floors"":2}
 
-## 规划规则
-- 建筑类型: house(单层), two_story(双层), tower(塔楼), castle(城堡)
-- 尺寸限制: width<=20, height<=16（避免JSON过长）
-- 屋顶类型: gable(人字形), flat(平顶), dome(圆顶), pagoda(宝塔)
-- 窗户对称布局: 每层左右各1个
-- 家具每层必备: 工作台+桌子+椅子
+## 参数说明
+- type: house/two_story/tower/castle
+- w: 宽度(6-20)
+- h: 高度(6-16)
+- style: medieval/fantasy/natural/modern
+- roof: gable/flat/dome/pagoda
+- floors: 楼层数(1-4)
 
-只输出区域划分JSON，不生成具体方块。";
+只输出一行JSON，无解释。";
 
         private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。生成有设计感的建筑JSON。
 
@@ -251,7 +239,7 @@ namespace trab.Core
         }
 
         /// <summary>
-        /// 解析区域规划JSON
+        /// 解析区域规划JSON（简化格式）
         /// </summary>
         private BuildingPlan ParseBuildingPlan(string content)
         {
@@ -260,12 +248,21 @@ namespace trab.Core
 
             try
             {
-                var plan = JsonConvert.DeserializeObject<BuildingPlan>(json);
-                // 验证并修正尺寸
-                if (plan.Width > 20) plan.Width = 20;
-                if (plan.Height > 16) plan.Height = 16;
-                if (plan.Width < 6) plan.Width = 10;
-                if (plan.Height < 6) plan.Height = 8;
+                // 解析简化格式
+                var simplePlan = JsonConvert.DeserializeObject<SimpleBuildingPlan>(json);
+                if (simplePlan == null) return null;
+
+                // 转换为完整BuildingPlan
+                var plan = new BuildingPlan
+                {
+                    BuildingType = simplePlan.Type ?? "house",
+                    Width = Math.Clamp(simplePlan.W ?? 10, 6, 20),
+                    Height = Math.Clamp(simplePlan.H ?? 8, 6, 16),
+                    Style = simplePlan.Style ?? "medieval"
+                };
+
+                // 根据楼层数自动生成区域划分
+                GenerateDefaultRegions(plan, simplePlan.Roof ?? "gable", simplePlan.Floors ?? 1);
 
                 trab.Instance?.Logger.Info($"规划解析成功: {plan.BuildingType}, {plan.Width}x{plan.Height}, {plan.Regions?.Count ?? 0}区域");
                 return plan;
@@ -275,6 +272,72 @@ namespace trab.Core
                 trab.Instance?.Logger.Error($"规划解析失败: {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 根据规划生成默认区域划分
+        /// </summary>
+        private void GenerateDefaultRegions(BuildingPlan plan, string roofType, int floors)
+        {
+            plan.Regions = new List<Region>();
+
+            // 计算楼层高度分配
+            int roofHeight = 2;
+            int floorHeight = (plan.Height - roofHeight) / Math.Max(1, floors);
+
+            // 屋顶区域
+            plan.Regions.Add(new Region
+            {
+                Name = "roof",
+                Type = roofType,
+                YRange = new[] { 0, roofHeight - 1 }
+            });
+
+            // 楼层区域
+            for (int i = 1; i <= floors; i++)
+            {
+                int yStart = roofHeight + (i - 1) * floorHeight;
+                int yEnd = yStart + floorHeight - 1;
+                if (i == floors) yEnd = plan.Height - 1;  // 最后一层到底部
+
+                plan.Regions.Add(new Region
+                {
+                    Name = $"floor{i}",
+                    YRange = new[] { yStart, yEnd }
+                });
+
+                // 每层添加窗户（对称布局）
+                int windowY = yStart + floorHeight / 2;
+                plan.Regions.Add(new Region
+                {
+                    Name = "windows",
+                    Windows = new List<WindowPosition>
+                    {
+                        new WindowPosition { X = 2, Y = windowY, Width = 2, Height = 2, Type = "double" },
+                        new WindowPosition { X = plan.Width - 4, Y = windowY, Width = 2, Height = 2, Type = "double" }
+                    }
+                });
+
+                // 每层添加家具
+                plan.Regions.Add(new Region
+                {
+                    Name = "furniture",
+                    Furnitures = new List<FurniturePosition>
+                    {
+                        new FurniturePosition { X = 3, Y = yEnd, Type = "workbench", Floor = i },
+                        new FurniturePosition { X = 5, Y = yEnd, Type = "table", Floor = i },
+                        new FurniturePosition { X = 6, Y = yEnd, Type = "chair", Floor = i },
+                        new FurniturePosition { X = plan.Width / 2, Y = yEnd, Type = "torch", Floor = i }
+                    }
+                });
+            }
+
+            // 墙壁区域
+            plan.Regions.Add(new Region
+            {
+                Name = "walls",
+                Thickness = plan.BuildingType == "castle" ? 2 : 1
+            });
         }
 
         /// <summary>
@@ -290,24 +353,19 @@ namespace trab.Core
                 Style = "medieval"
             };
 
-            plan.Regions = new List<Region>
-            {
-                new Region { Name = "roof", Type = "gable", YRange = new[] { 0, 2 } },
-                new Region { Name = "floor1", YRange = new[] { 3, 7 } },
-                new Region { Name = "walls", Thickness = 1 },
-                new Region { Name = "windows", Windows = new List<WindowPosition>
-                {
-                    new WindowPosition { X = 3, Y = 5, Width = 2, Height = 2 },
-                    new WindowPosition { X = 7, Y = 5, Width = 2, Height = 2 }
-                }},
-                new Region { Name = "furniture", Furnitures = new List<FurniturePosition>
-                {
-                    new FurniturePosition { X = 4, Y = 6, Type = "workbench", Floor = 1 },
-                    new FurniturePosition { X = 6, Y = 6, Type = "table", Floor = 1 }
-                }}
-            };
-
+            GenerateDefaultRegions(plan, "gable", 1);
             return plan;
+        }
+
+        // 简化规划格式数据结构
+        private class SimpleBuildingPlan
+        {
+            public string Type { get; set; }
+            public int? W { get; set; }
+            public int? H { get; set; }
+            public string Style { get; set; }
+            public string Roof { get; set; }
+            public int? Floors { get; set; }
         }
 
         // 保留原有单Agent流程作为备选
@@ -1125,6 +1183,7 @@ namespace trab.Core
     {
         public string role { get; set; }
         public string content { get; set; }
+        public string reasoning_content { get; set; }  // DeepSeek的思考内容
         public OpenAIToolCall[] tool_calls { get; set; }
     }
 
