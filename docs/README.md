@@ -1,0 +1,96 @@
+# 项目文档索引
+
+本文档按类型整理了 trab 项目的所有技术文档。
+
+---
+
+## 目录结构
+
+```
+docs/
+├── tutorial/              # 开发教程
+├── terraria-systems/      # 泰拉瑞亚系统
+├── ai-integration/        # AI 集成
+├── database/              # 数据库与数据
+├── project/               # 项目概览与分析
+└── README.md              # 本索引文件
+```
+
+---
+
+## 1. 开发教程 (`tutorial/`)
+
+tModLoader 开发相关的基础教程和工具文档。
+
+| 文档 | 描述 |
+|------|------|
+| [tModLoader_模组开发基础教程.md](tutorial/tModLoader_模组开发基础教程.md) | tModLoader 安装配置、项目结构、Mod类使用、自定义物品、UI界面开发 |
+| [tModLoader模组编译文档.md](tutorial/tModLoader模组编译文档.md) | 游戏内编译与命令行编译方式详解，CI/CD 自动化编译 |
+| [tModLoader日志排查文档.md](tutorial/tModLoader日志排查文档.md) | 日志排查方法、命令行编译参数、常见问题解决 |
+
+---
+
+## 2. 泰拉瑞亚系统 (`terraria-systems/`)
+
+泰拉瑞亚核心系统的技术文档。
+
+| 文档 | 描述 |
+|------|------|
+| [泰拉瑞亚Tile系统开发文档.md](terraria-systems/泰拉瑞亚Tile系统开发文档.md) | Tile 基本概念、ID分类、放置/移除、属性、多Tile结构、多人同步 |
+| [WorldGen系统文档.md](terraria-systems/WorldGen系统文档.md) | WorldGen 类概述、主要方法、程序化生成建筑、结构保护机制、房屋检测算法 |
+
+---
+
+## 3. AI 集成 (`ai-integration/`)
+
+AI 功能集成的技术方案和实现文档。
+
+| 文档 | 描述 |
+|------|------|
+| [AI集成技术方案.md](ai-integration/AI集成技术方案.md) | HTTP请求调用AI API、游戏内聊天界面、结构化数据处理、流式输出、安全性 |
+| [AI_Agent升级方案.md](ai-integration/AI_Agent升级方案.md) | 真Agent vs 伪Agent对比、工具调用改造、多轮循环实现、自主决策架构 |
+
+---
+
+## 4. 数据库与数据 (`database/`)
+
+数据存储和检索相关文档。
+
+| 文档 | 描述 |
+|------|------|
+| [SQLite数据库设计方案.md](database/SQLite数据库设计方案.md) | 数据库架构、核心表Schema（tiles/walls/paints/furniture等）、索引设计 |
+| [数据检索文档.md](database/数据检索文档.md) | 混合检索架构、SQL精确查询+向量语义匹配、Agent工具调用接口 |
+
+---
+
+## 5. 项目概览与分析 (`project/`)
+
+项目整体结构和相关分析文档。
+
+| 文档 | 描述 |
+|------|------|
+| [项目结构文档.md](project/项目结构文档.md) | 项目目录结构、模块划分、核心文件说明 |
+| [建筑生成模组分析文档.md](project/建筑生成模组分析文档.md) | 主流建筑模组分析（CheatSheet/HEROsMod/StructureHelper）、代码模式、实现思路 |
+
+---
+
+## 快速导航
+
+### 按开发阶段
+
+```
+入门 → [模组开发基础教程](tutorial/tModLoader_模组开发基础教程.md) → [项目结构文档](project/项目结构文档.md)
+开发 → [Tile系统文档](terraria-systems/泰拉瑞亚Tile系统开发文档.md) → [WorldGen系统文档](terraria-systems/WorldGen系统文档.md)
+AI   → [AI集成技术方案](ai-integration/AI集成技术方案.md) → [AI_Agent升级方案](ai-integration/AI_Agent升级方案.md)
+数据 → [SQLite数据库设计](database/SQLite数据库设计方案.md) → [数据检索文档](database/数据检索文档.md)
+部署 → [模组编译文档](tutorial/tModLoader模组编译文档.md) → [日志排查文档](tutorial/tModLoader日志排查文档.md)
+```
+
+### 按技术领域
+
+| 领域 | 文档 |
+|------|------|
+| 前端/UI | [模组开发基础教程 § UI界面](tutorial/tModLoader_模组开发基础教程.md) |
+| 世界生成 | [WorldGen系统文档](terraria-systems/WorldGen系统文档.md) |
+| AI/Agent | [AI集成技术方案](ai-integration/AI集成技术方案.md) · [AI_Agent升级方案](ai-integration/AI_Agent升级方案.md) |
+| 数据库 | [SQLite数据库设计方案](database/SQLite数据库设计方案.md) · [数据检索文档](database/数据检索文档.md) |

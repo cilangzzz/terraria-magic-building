@@ -542,17 +542,12 @@ class TerrariaWikiCrawler:
         print(f"  生成: {json_path}")
 
     def import_to_database(self):
-        """直接导入到SQLite数据库"""
+        """直接导入到SQLite数据库（不创建表，使用现有表结构）"""
         print("\n=== 导入SQLite数据库 ===")
 
         db_path = DB_PATH
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
-
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-
-        # 创建表结构
-        self.create_tables(cursor)
 
         # 导入tiles
         for tile in self.tiles:
@@ -568,37 +563,11 @@ class TerrariaWikiCrawler:
                 VALUES (?, ?, ?, ?, ?)
             """, (wall['id'], wall['name'], wall['display_name'], wall.get('category', 'basic'), 'wiki_api'))
 
-        # 导入furniture
-        for furn in self.furniture:
-            npc_func = json.dumps(furn.get('npc_function')) if furn.get('npc_function') else None
-            variants = json.dumps(furn.get('variants', []))
-            cursor.execute("""
-                INSERT OR IGNORE INTO furniture (id, name, display_name, category, width, height, npc_function, paint_compatible, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (furn['id'], furn['name'], furn['display_name'], furn['category'],
-                  furn.get('width', 1), furn.get('height', 1), npc_func, 1, 'wiki_api'))
-
-        # 导入light_sources
-        for light in self.light_sources:
-            cursor.execute("""
-                INSERT OR IGNORE INTO light_sources (id, name, display_name, category, light_radius, npc_function, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (light['id'], light['name'], light['display_name'], light['category'],
-                  light.get('light_radius', 10), 'light_source', 'wiki_api'))
-
-        # 导入doors
-        for door in self.doors:
-            cursor.execute("""
-                INSERT OR IGNORE INTO doors (id, name, display_name, category, width, height, npc_function, paint_compatible, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (door['id'], door['name'], door['display_name'], 'door',
-                  door.get('width', 1), door.get('height', 3), 'door', 1, 'wiki_api'))
-
         conn.commit()
         conn.close()
 
         print(f"  数据库: {db_path}")
-        print(f"  导入: {len(self.tiles)} tiles, {len(self.walls)} walls, {len(self.furniture)} furniture")
+        print(f"  导入: {len(self.tiles)} tiles, {len(self.walls)} walls")
 
     def create_tables(self, cursor):
         """创建数据库表"""

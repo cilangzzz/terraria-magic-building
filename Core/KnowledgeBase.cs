@@ -19,6 +19,7 @@ namespace trab.Core
         public TileKnowledgeBase Tiles { get; private set; }
         public StyleTemplateBase Styles { get; private set; }
         public FurnitureRuleBase Furniture { get; private set; }
+        public VectorKnowledgeBase Vectors { get; private set; }  // 新增向量检索
 
         private bool _initialized = false;
 
@@ -31,9 +32,12 @@ namespace trab.Core
                 Tiles = new TileKnowledgeBase();
                 Styles = new StyleTemplateBase();
                 Furniture = new FurnitureRuleBase();
+                Vectors = new VectorKnowledgeBase();  // 初始化向量库
+                Vectors.Initialize();  // 加载向量数据
+
                 _initialized = true;
 
-                trab.Instance?.Logger.Info("知识库初始化完成");
+                trab.Instance?.Logger.Info($"知识库初始化完成: Tiles={Tiles.TileCount}, Styles={Styles.StyleCount}, Vectors={Vectors.TileVectorCount}");
             }
             catch (Exception ex)
             {

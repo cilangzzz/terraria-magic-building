@@ -129,7 +129,7 @@ namespace trab.UI
         private const float MODULE_HEIGHT_STYLE = 44f;
         private const float MODULE_HEIGHT_SIZE = 44f;
         private const float MODULE_HEIGHT_FUNC = 48f;
-        private const float MODULE_HEIGHT_LOG = 200f;   // 日志框高度增大
+        private const float MODULE_HEIGHT_LOG = 225f;   // 日志框高度增大
         private const float BUTTON_HEIGHT = 24f;
         private const float BUTTON_VPADDING = 5f;
 

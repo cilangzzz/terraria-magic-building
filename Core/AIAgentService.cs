@@ -581,12 +581,25 @@ namespace trab.Core
 
         private ToolResult SearchTiles(string style, string category, string biome, KnowledgeBaseManager kb)
         {
-            var tiles = kb.Tiles.SearchTiles(style, category, biome).Take(20).ToList();
+            // Step1: SQL精确过滤 (category, biome)
+            var candidates = kb.Tiles.SearchTiles(null, category, biome).ToList();
+
+            // Step2: 向量语义排序 (style)
+            if (!string.IsNullOrEmpty(style) && kb.Vectors.IsInitialized)
+            {
+                candidates = kb.Vectors.SearchTilesSemantic(candidates, style, 20);
+            }
+            else
+            {
+                candidates = candidates.Take(20).ToList();
+            }
+
             var result = new
             {
-                tiles = tiles.Select(t => new { id = t.id, name = t.name, display_name = t.display_name, category = t.category }),
-                total_count = tiles.Count,
-                search_criteria = new { style, category, biome }
+                tiles = candidates.Select(t => new { id = t.id, name = t.name, display_name = t.display_name, category = t.category }),
+                total_count = candidates.Count,
+                search_criteria = new { style, category, biome },
+                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(style)
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
         }
