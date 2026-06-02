@@ -88,17 +88,17 @@ namespace trab.Core
 
         private const string FURNITURE_MODULE_PROMPT = @"你是家具模块生成器。根据以下参数生成家具JSON。
 
-参数：家具位置{positions}, 风格{style}
+参数：位置{positions}, 工作台ID{workbench_id}, 桌子ID{table_id}, 椅子ID{chair_id}, 门ID{door_id}
 
 任务：生成furniture、doors、lightSources数组。
 
 规则：
-- 工作台(tile_id=17)、桌子(tile_id=87)、椅子(tile_id=88)
-- 门(tile_id=10)放在底部中心
-- 火把(tile_id=4)放墙边
+- 工作台放角落，桌子椅子成套摆放
+- 门放底部中心
+- 火把(tile_id=4)放墙边两侧
 
 输出示例：
-{""furniture"": [{""x"":3,""y"":6,""tile_id"":17}], ""doors"": [{""x"":5,""y"":7,""tile_id"":10}], ""lightSources"": [{""x"":1,""y"":3,""tile_id"":4}]}
+{""furniture"": [{""x"":3,""y"":6,""tile_id"":{workbench_id},{""x"":5,""y"":6,""tile_id"":{table_id},{""x"":6,""y"":6,""tile_id"":{chair_id}], ""doors"": [{""x"":5,""y"":7,""tile_id"":{door_id}], ""lightSources"": [{""x"":1,""y"":3,""tile_id"":4},{""x"":9,""y"":3,""tile_id"":4}]}
 
 立即输出JSON，不要解释。";
 
@@ -185,13 +185,18 @@ namespace trab.Core
             // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
-            var candidates = kb.Tiles.SearchTiles(null, "basic");  // 本地过滤basic类（石头等）
-            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);
-            int wallTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 4;
-            var walls = kb.Tiles.GetAllWalls();
-            int wallId = walls.FirstOrDefault()?.id ?? 4;
 
-            trab.Instance?.Logger.Info($"墙壁检索: 本地{candidates.Count}个, 向量排序后{semanticResults.Count}个, 最终ID={wallTileId}");
+            // 方块检索
+            var tileCandidates = kb.Tiles.SearchTiles(null, "basic");
+            var tileResults = kb.Vectors.SearchTilesSemantic(tileCandidates, plan.Style, 10);
+            int wallTileId = tileResults.FirstOrDefault()?.id ?? tileCandidates.FirstOrDefault()?.id ?? 4;
+
+            // 墙壁检索（使用SearchWallsSemantic）
+            var wallCandidates = kb.Tiles.GetAllWalls();
+            var wallResults = kb.Vectors.SearchWallsSemantic(wallCandidates, plan.Style, 10);
+            int wallId = wallResults.FirstOrDefault()?.id ?? wallCandidates.FirstOrDefault()?.id ?? 4;
+
+            trab.Instance?.Logger.Info($"墙壁检索: 方块ID={wallTileId}, 墙壁ID={wallId}");
 
             string prompt = WALL_MODULE_PROMPT
                 .Replace("{width}", plan.Width.ToString())
@@ -319,6 +324,20 @@ namespace trab.Core
         {
             progressCallback?.Invoke("生成家具模块...");
 
+            // Step1: 本地过滤 + Step2: 向量语义排序
+            var kb = KnowledgeBaseManager.Instance;
+            kb.Initialize();
+
+            // 家具检索（使用SearchFurnitureSemantic）
+            var furnitureCandidates = kb.Furniture.SearchFurniture(null, null);
+            var furnitureResults = kb.Vectors.SearchFurnitureSemantic(furnitureCandidates, plan.Style, 10);
+            int workbenchId = furnitureResults.FirstOrDefault(f => f.Key.Contains("WorkBench")).Value?.tile_id ?? 17;
+            int tableId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Table")).Value?.tile_id ?? 87;
+            int chairId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Chair")).Value?.tile_id ?? 88;
+            int doorId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Door")).Value?.tile_id ?? 10;
+
+            trab.Instance?.Logger.Info($"家具检索: 工作台={workbenchId}, 桌子={tableId}, 椅子={chairId}, 门={doorId}");
+
             var positions = plan.FurniturePositions;
             string positionsStr = positions.Count > 0
                 ? positions.Select(p => $"{p.Type}@({p.X},{p.Y})").Aggregate((a, b) => a + "," + b)
@@ -326,6 +345,10 @@ namespace trab.Core
 
             string prompt = FURNITURE_MODULE_PROMPT
                 .Replace("{positions}", positionsStr)
+                .Replace("{workbench_id}", workbenchId.ToString())
+                .Replace("{table_id}", tableId.ToString())
+                .Replace("{chair_id}", chairId.ToString())
+                .Replace("{door_id}", doorId.ToString())
                 .Replace("{style}", plan.Style);
 
             try

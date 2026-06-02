@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -83,18 +84,50 @@ namespace trab.Core
 
             trab.Instance?.Logger.Info($"加载Tile向量: {foundPath}");
             string json = File.ReadAllText(foundPath);
-            var entries = JsonConvert.DeserializeObject<List<TileEmbeddingEntry>>(json);
 
-            if (entries == null) return;
-
-            foreach (var entry in entries)
+            // 支持两种JSON格式
+            try
             {
-                if (entry.tile_id >= 0 && entry.embedding != null && entry.embedding.Length > 0)
+                var jobj = JObject.Parse(json);
+
+                // 新格式: { "embeddings": {"1": [...], "2": [...]} }
+                if (jobj["embeddings"] != null)
                 {
-                    _tileEmbeddings[entry.tile_id] = entry.embedding;
-                    _tileEntries[entry.tile_id] = entry;
-                    _dimension = entry.embedding.Length;
+                    var embeddingsObj = jobj["embeddings"] as JObject;
+                    foreach (var kvp in embeddingsObj)
+                    {
+                        int tileId = int.Parse(kvp.Key);
+                        var embArray = kvp.Value as JArray;
+                        if (embArray != null)
+                        {
+                            float[] embedding = embArray.Select(v => (float)v).ToArray();
+                            _tileEmbeddings[tileId] = embedding;
+                            _tileEntries[tileId] = new TileEmbeddingEntry { tile_id = tileId, embedding = embedding };
+                            _dimension = embedding.Length;
+                        }
+                    }
                 }
+                // 旧格式: [ {"tile_id": 1, "embedding": [...]} ]
+                else if (jobj["tile_id"] == null && jobj.Count == 0)
+                {
+                    var entries = JsonConvert.DeserializeObject<List<TileEmbeddingEntry>>(json);
+                    if (entries != null)
+                    {
+                        foreach (var entry in entries)
+                        {
+                            if (entry.tile_id >= 0 && entry.embedding != null && entry.embedding.Length > 0)
+                            {
+                                _tileEmbeddings[entry.tile_id] = entry.embedding;
+                                _tileEntries[entry.tile_id] = entry;
+                                _dimension = entry.embedding.Length;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"解析Tile向量失败: {ex.Message}");
             }
         }
 
@@ -122,16 +155,46 @@ namespace trab.Core
 
             trab.Instance?.Logger.Info($"加载Style向量: {foundPath}");
             string json = File.ReadAllText(foundPath);
-            var entries = JsonConvert.DeserializeObject<List<StyleEmbeddingEntry>>(json);
 
-            if (entries == null) return;
-
-            foreach (var entry in entries)
+            try
             {
-                if (!string.IsNullOrEmpty(entry.style) && entry.embedding != null)
+                var jobj = JObject.Parse(json);
+
+                // 新格式: { "embeddings": {"medieval": [...], "fantasy": [...]} }
+                if (jobj["embeddings"] != null)
                 {
-                    _styleEmbeddings[entry.style.ToLower()] = entry.embedding;
+                    var embeddingsObj = jobj["embeddings"] as JObject;
+                    foreach (var kvp in embeddingsObj)
+                    {
+                        string style = kvp.Key.ToLower();
+                        var embArray = kvp.Value as JArray;
+                        if (embArray != null)
+                        {
+                            float[] embedding = embArray.Select(v => (float)v).ToArray();
+                            _styleEmbeddings[style] = embedding;
+                            _dimension = embedding.Length;
+                        }
+                    }
                 }
+                // 旧格式: [ {"style": "medieval", "embedding": [...]} ]
+                else
+                {
+                    var entries = JsonConvert.DeserializeObject<List<StyleEmbeddingEntry>>(json);
+                    if (entries != null)
+                    {
+                        foreach (var entry in entries)
+                        {
+                            if (!string.IsNullOrEmpty(entry.style) && entry.embedding != null)
+                            {
+                                _styleEmbeddings[entry.style.ToLower()] = entry.embedding;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"解析Style向量失败: {ex.Message}");
             }
         }
 
@@ -151,17 +214,49 @@ namespace trab.Core
 
             trab.Instance?.Logger.Info($"加载Wall向量: {foundPath}");
             string json = File.ReadAllText(foundPath);
-            var entries = JsonConvert.DeserializeObject<List<WallEmbeddingEntry>>(json);
 
-            if (entries == null) return;
-
-            foreach (var entry in entries)
+            try
             {
-                if (entry.wall_id >= 0 && entry.embedding != null && entry.embedding.Length > 0)
+                var jobj = JObject.Parse(json);
+
+                // 新格式: { "embeddings": {"1": [...], "4": [...]} }
+                if (jobj["embeddings"] != null)
                 {
-                    _wallEmbeddings[entry.wall_id] = entry.embedding;
-                    _wallEntries[entry.wall_id] = entry;
+                    var embeddingsObj = jobj["embeddings"] as JObject;
+                    foreach (var kvp in embeddingsObj)
+                    {
+                        if (int.TryParse(kvp.Key, out int wallId))
+                        {
+                            var embArray = kvp.Value as JArray;
+                            if (embArray != null)
+                            {
+                                float[] embedding = embArray.Select(v => (float)v).ToArray();
+                                _wallEmbeddings[wallId] = embedding;
+                                _wallEntries[wallId] = new WallEmbeddingEntry { wall_id = wallId, embedding = embedding };
+                            }
+                        }
+                    }
                 }
+                // 旧格式
+                else
+                {
+                    var entries = JsonConvert.DeserializeObject<List<WallEmbeddingEntry>>(json);
+                    if (entries != null)
+                    {
+                        foreach (var entry in entries)
+                        {
+                            if (entry.wall_id >= 0 && entry.embedding != null && entry.embedding.Length > 0)
+                            {
+                                _wallEmbeddings[entry.wall_id] = entry.embedding;
+                                _wallEntries[entry.wall_id] = entry;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"解析Wall向量失败: {ex.Message}");
             }
         }
 
@@ -182,23 +277,60 @@ namespace trab.Core
 
             trab.Instance?.Logger.Info($"加载Furniture向量: {foundPath}");
             string json = File.ReadAllText(foundPath);
-            var entries = JsonConvert.DeserializeObject<List<FurnitureEmbeddingEntry>>(json);
 
-            if (entries == null) return;
-
-            foreach (var entry in entries)
+            try
             {
-                // 家具条目
-                if (entry.furniture_id >= 0 && entry.embedding != null)
+                var jobj = JObject.Parse(json);
+
+                // 新格式: { "embeddings": {"17": [...], "light": [...]} }
+                if (jobj["embeddings"] != null)
                 {
-                    _furnitureEmbeddings[entry.furniture_id] = entry.embedding;
-                    _furnitureEntries[entry.furniture_id] = entry;
+                    var embeddingsObj = jobj["embeddings"] as JObject;
+                    foreach (var kvp in embeddingsObj)
+                    {
+                        var embArray = kvp.Value as JArray;
+                        if (embArray != null)
+                        {
+                            float[] embedding = embArray.Select(v => (float)v).ToArray();
+
+                            // 判断是家具ID还是类别
+                            if (int.TryParse(kvp.Key, out int furnitureId))
+                            {
+                                _furnitureEmbeddings[furnitureId] = embedding;
+                                _furnitureEntries[furnitureId] = new FurnitureEmbeddingEntry { furniture_id = furnitureId, embedding = embedding };
+                            }
+                            else
+                            {
+                                _furnitureCategoryEmbeddings[kvp.Key.ToLower()] = embedding;
+                            }
+                            _dimension = embedding.Length;
+                        }
+                    }
                 }
-                // 家具类别条目
-                if (!string.IsNullOrEmpty(entry.furniture_category) && entry.embedding != null)
+                // 旧格式
+                else
                 {
-                    _furnitureCategoryEmbeddings[entry.furniture_category.ToLower()] = entry.embedding;
+                    var entries = JsonConvert.DeserializeObject<List<FurnitureEmbeddingEntry>>(json);
+                    if (entries != null)
+                    {
+                        foreach (var entry in entries)
+                        {
+                            if (entry.furniture_id >= 0 && entry.embedding != null)
+                            {
+                                _furnitureEmbeddings[entry.furniture_id] = entry.embedding;
+                                _furnitureEntries[entry.furniture_id] = entry;
+                            }
+                            if (!string.IsNullOrEmpty(entry.furniture_category) && entry.embedding != null)
+                            {
+                                _furnitureCategoryEmbeddings[entry.furniture_category.ToLower()] = entry.embedding;
+                            }
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"解析Furniture向量失败: {ex.Message}");
             }
         }
 

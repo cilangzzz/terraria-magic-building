@@ -4,6 +4,21 @@ using trab.Core;
 
 namespace trab.Config
 {
+    /// <summary>
+    /// Agent生成模式
+    /// </summary>
+    public enum AgentMode
+    {
+        /// <summary>
+        /// 单Agent模式 - 一次API调用生成完整建筑（默认，更稳定）
+        /// </summary>
+        SingleAgent,
+        /// <summary>
+        /// 多Agent协作模式 - 规划Agent + 5个模块Agent并行生成（更快，但可能出错）
+        /// </summary>
+        MultiAgent
+    }
+
     public class AIBuildingConfig : ModConfig
     {
         public override ConfigScope Mode => ConfigScope.ClientSide;
@@ -19,6 +34,11 @@ namespace trab.Config
 
         [DefaultValue("deepseek-v4-flash")]
         public string ModelName { get; set; } = "deepseek-v4-flash";
+
+        [DefaultValue(AgentMode.SingleAgent)]
+        [Label("Agent生成模式")]
+        [Tooltip("SingleAgent: 单次API调用，稳定可靠\nMultiAgent: 多Agent协作，模块化生成")]
+        public AgentMode AgentGenerationMode { get; set; } = AgentMode.SingleAgent;
 
         [DefaultValue(5)]
         [Range(0, 50)]

@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
+using trab.Config;
 using trab.Data;
 
 namespace trab.Core
@@ -128,7 +129,7 @@ namespace trab.Core
         }
 
         /// <summary>
-        /// Agent主入口
+        /// Agent主入口 - 根据配置选择SingleAgent或MultiAgent模式
         /// </summary>
         public async Task<BuildingDesign> GenerateBuildingAsync(
             string userPrompt,
@@ -142,8 +143,18 @@ namespace trab.Core
                 // 初始化知识库
                 KnowledgeBaseManager.Instance.Initialize();
 
-                // 使用多Agent协作模式
-                return await GenerateBuildingMultiAgentAsync(userPrompt, progressCallback, ct);
+                // 根据配置选择生成模式
+                var config = ModContent.GetInstance<AIBuildingConfig>();
+                if (config.AgentGenerationMode == AgentMode.SingleAgent)
+                {
+                    trab.Instance?.Logger.Info("使用SingleAgent模式生成建筑");
+                    return await GenerateBuildingSingleAgentAsync(userPrompt, progressCallback, ct);
+                }
+                else
+                {
+                    trab.Instance?.Logger.Info("使用MultiAgent协作模式生成建筑");
+                    return await GenerateBuildingMultiAgentAsync(userPrompt, progressCallback, ct);
+                }
             }
             catch (Exception ex)
             {
