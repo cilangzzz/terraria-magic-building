@@ -33,7 +33,7 @@ namespace trab.Core
         private const string PLANNER_SYSTEM_PROMPT = @"建筑区域规划Agent。输出紧凑JSON，只包含必要信息。
 
 ## 输出格式（极简）
-{""type"":""two_story"", ""w"":12, ""h"":14, ""style"":""medieval"", ""roof"":""gable"", ""floors"":2}
+{""type"":""two_story"", ""w"":12, ""h"":14, ""style"":""medieval"", ""roof"":""gable"", ""floors"":2, ""main_block"":""brick"", ""roof_block"":""slab"", ""floor_block"":""wood""}
 
 ## 参数说明
 - type: house/two_story/tower/castle
@@ -42,45 +42,47 @@ namespace trab.Core
 - style: medieval/fantasy/natural/modern
 - roof: gable/flat/dome/pagoda
 - floors: 楼层数(1-4)
+- main_block: 主要方块类别(brick/wood/slab/luxury)
+- roof_block: 屋顶方块类别(slab/brick)
+- floor_block: 地板方块类别(wood/brick)
 
 只输出一行JSON，无解释。";
 
         private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。生成有设计感的建筑JSON。
 
-## 推荐流程（按顺序调用工具）
-1. get_floor_structure - 获取楼层结构（单层/双层/塔楼）
-2. get_roof_template - 获取屋顶设计（人字形/平顶/圆顶）
-3. get_window_template - 获取窗户样式（单窗/双窗/拱窗）
-4. search_tiles - 选择建筑材料
-5. 输出完整JSON
+## 推荐流程（必须按顺序执行）
+1. analyze_requirement - 分析用户需求，确定建筑类型、风格、材料类别
+2. search_tiles(search_tiles/style=风格,category=main_block) - 检索主要方块候选
+3. search_tiles(style=风格,category=roof_block) - 检索屋顶方块候选
+4. search_tiles(style=风格,category=floor_block) - 检索地板方块候选
+5. search_walls(style=风格) - 检索墙壁候选
+6. search_furniture(room_type=light/surface/comfort/door) - 检索家具候选
+7. select_materials - 从候选中选择最合适的材料ID（必须调用！）
+8. 输出完整JSON（必须使用select_materials返回的ID！）
 
-## 设计要点
-- 屋顶要有形状：人字形(gable)最常用，用斜坡方块实现三角上升
-- 窗户对称布局：每层左右各1-2个窗户
-- 楼层区分：不同楼层使用不同方块或油漆
-- 墙壁厚度：城堡类建筑墙壁厚度=2
+## 重要规则
+- select_materials返回的ID是最终使用的材料，JSON中的tile_id必须使用这些ID
+- 不要使用默认ID（如石头1、灰砖4），必须使用select_materials选定的ID
+- 示例：如果select_materials返回main_block_id=38，则tiles中使用tile_id=38
 
-## JSON格式（必须完整输出）
+## JSON格式（必须完整输出，使用选定的材料ID）
 {
 ""name"": ""中世纪双层小屋"",
 ""width"": 12,
 ""height"": 14,
 ""style"": ""medieval"",
-""tiles"": [{""x"":0,""y"":0,""tile_id"":4,""slope"":0}],
-""wallRanges"": [{""x1"":1,""y1"":1,""x2"":11,""y2"":13,""wall_id"":4}],
-""furniture"": [{""x"":3,""y"":6,""tile_id"":17}],
-""doors"": [{""x"":5,""y"":1,""tile_id"":10}],
-""lightSources"": [{""x"":2,""y"":3,""tile_id"":4},{""x"":10,""y"":3,""tile_id"":4}]
+""tiles"": [{""x"":0,""y"":0,""tile_id"":【main_block_id】,""slope"":0}],
+""wallRanges"": [{""x1"":1,""y1"":1,""x2"":11,""y2"":13,""wall_id"":【main_wall_id】}],
+""furniture"": [{""x"":3,""y"":6,""tile_id"":【surface_id】}],
+""doors"": [{""x"":5,""y"":1,""tile_id"":【door_id】}],
+""lightSources"": [{""x"":2,""y"":3,""tile_id"":【light_id】}]
 }
 
-## 常用ID
-木材5|石头1|灰砖4|石板143|玻璃13|大理石57|木墙4|石墙1|门10|火把4|工作台17|桌子87|椅子88
-
-## 规则
-- 输出完整JSON，不要截断
-- tiles数组包含所有方块位置
-- 窗户位置放入tiles（玻璃+窗框）
-- 屋顶用斜坡方块(slope=1-4)实现形状";
+## 设计要点
+- 屋顶要有形状：人字形(gable)用斜坡方块实现三角上升
+- 窗户对称布局：每层左右各1-2个窗户
+- 楼层区分：不同楼层使用不同方块或油漆
+- 墙壁厚度：城堡类建筑墙壁厚度=2";
 
         public AIAgentService(string apiKey, AIServiceType serviceType = AIServiceType.DeepSeek, string modelName = "deepseek-chat")
         {
@@ -145,6 +147,15 @@ namespace trab.Core
 
                 // 根据配置选择生成模式
                 var config = ModContent.GetInstance<AIBuildingConfig>();
+
+                // Pipeline模式：使用新的4阶段流程（需求分析→材料检索→材料选择→设计生成）
+                if (config.UsePipelineMode)
+                {
+                    trab.Instance?.Logger.Info("使用Pipeline模式生成建筑（4阶段流程）");
+                    progressCallback?.Invoke("Pipeline模式启动...", 0);
+                    return await GenerateBuildingSingleAgentAsync(userPrompt, progressCallback, ct);
+                }
+
                 if (config.AgentGenerationMode == AgentMode.SingleAgent)
                 {
                     trab.Instance?.Logger.Info("使用SingleAgent模式生成建筑");
@@ -667,6 +678,66 @@ namespace trab.Core
                             required = new[] { "structure_type" }
                         }
                     }
+                },
+                // 新增：需求分析工具
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "analyze_requirement",
+                        description = "分析用户建筑需求，提取建筑类型、风格、材料类别等关键信息。这是建筑生成的第一步。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                building_type = new { type = "string", description = "建筑类型: house, tower, castle, shop, temple" },
+                                style = new { type = "string", description = "风格: medieval, fantasy, natural, steampunk, asian, snow, desert, modern, dark" },
+                                biome = new { type = "string", description = "生物群落: forest, desert, snow, jungle, ocean, underground" },
+                                floor_count = new { type = "integer", description = "楼层数(1-4)" },
+                                width = new { type = "integer", description = "建筑宽度(6-20)" },
+                                height = new { type = "integer", description = "建筑高度(6-16)" },
+                                main_block_category = new { type = "string", description = "主要方块类别: basic, wood, brick, slab, luxury" },
+                                roof_block_category = new { type = "string", description = "屋顶方块类别: slab, brick" },
+                                floor_block_category = new { type = "string", description = "地板方块类别: wood, brick" },
+                                main_wall_category = new { type = "string", description = "主要墙壁类别: natural, wood, brick" },
+                                need_npc_house = new { type = "boolean", description = "是否需要NPC房屋功能" },
+                                reasoning = new { type = "string", description = "分析推理说明" }
+                            },
+                            required = new[] { "building_type", "style" }
+                        }
+                    }
+                },
+                // 新增：材料选择工具
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
+                        name = "select_materials",
+                        description = "从检索到的材料候选中选择最合适的材料ID。需要考虑风格一致性、材料搭配协调度。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                main_block_id = new { type = "integer", description = "主要方块ID" },
+                                secondary_block_id = new { type = "integer", description = "次要方块ID（可选）" },
+                                roof_block_id = new { type = "integer", description = "屋顶方块ID" },
+                                floor_block_id = new { type = "integer", description = "地板方块ID" },
+                                main_wall_id = new { type = "integer", description = "主要墙壁ID" },
+                                light_id = new { type = "integer", description = "光源家具ID" },
+                                surface_id = new { type = "integer", description = "桌面家具ID" },
+                                comfort_id = new { type = "integer", description = "舒适家具ID（椅子等）" },
+                                door_id = new { type = "integer", description = "门家具ID" },
+                                primary_paint = new { type = "integer", description = "主色调油漆ID(0-31)" },
+                                shadow_paint = new { type = "integer", description = "阴影油漆ID(默认28)" },
+                                reasoning = new { type = "string", description = "选择理由说明" }
+                            },
+                            required = new[] { "main_block_id", "roof_block_id", "floor_block_id", "main_wall_id" }
+                        }
+                    }
                 }
             };
         }
@@ -979,6 +1050,11 @@ namespace trab.Core
                         return GetWindowTemplate(input["window_type"]?.ToString(), input["style"]?.ToString(), kb);
                     case "get_floor_structure":
                         return GetFloorStructure(input["structure_type"]?.ToString(), input["style"]?.ToString(), kb);
+                    // 新增：需求分析和材料选择工具
+                    case "analyze_requirement":
+                        return AnalyzeRequirement(input, kb);
+                    case "select_materials":
+                        return SelectMaterials(input, kb);
                     default:
                         return new ToolResult { IsError = true, Content = "{\"error\": \"未知工具\"}" };
                 }
@@ -1206,6 +1282,129 @@ namespace trab.Core
                     return $"阶梯状上升，每层缩进1格，形成金字塔形状。";
                 default:
                     return "根据形状描述放置方块。";
+            }
+        }
+
+        // 新增：需求分析工具执行
+        private ToolResult AnalyzeRequirement(JObject input, KnowledgeBaseManager kb)
+        {
+            try
+            {
+                string style = input["style"]?.ToString()?.ToLower() ?? "medieval";
+
+                // 验证风格是否有效
+                var validStyles = kb.Styles.GetAllStyleNames();
+                if (!validStyles.Contains(style))
+                {
+                    style = "medieval";
+                }
+
+                var requirement = new BuildingRequirement
+                {
+                    BuildingType = input["building_type"]?.ToString() ?? "house",
+                    Style = style,
+                    Biome = input["biome"]?.ToString() ?? "forest",
+                    FloorCount = input["floor_count"]?.Value<int>() ?? 1,
+                    PreferredWidth = input["width"]?.Value<int>(),
+                    PreferredHeight = input["height"]?.Value<int>(),
+                    Materials = new MaterialCategoryRequirement
+                    {
+                        MainBlockCategory = input["main_block_category"]?.ToString() ?? "brick",
+                        RoofBlockCategory = input["roof_block_category"]?.ToString() ?? "slab",
+                        FloorBlockCategory = input["floor_block_category"]?.ToString() ?? "wood",
+                        MainWallCategory = input["main_wall_category"]?.ToString() ?? "brick",
+                        RequiredFurnitureCategories = new List<string> { "light", "surface", "comfort", "door" }
+                    },
+                    NeedNpcHouse = input["need_npc_house"]?.Value<bool>() ?? true,
+                    AnalysisReasoning = input["reasoning"]?.ToString()
+                };
+
+                // 返回分析结果和建议的材料类别
+                var result = new
+                {
+                    requirement = requirement,
+                    valid_styles = validStyles,
+                    style_description = kb.Styles.GetTemplate(style)?.description,
+                    suggested_searches = new List<object>
+                    {
+                        new { tool = "search_tiles", category = requirement.Materials.MainBlockCategory, style = style },
+                        new { tool = "search_tiles", category = requirement.Materials.RoofBlockCategory, style = style },
+                        new { tool = "search_tiles", category = requirement.Materials.FloorBlockCategory, style = style },
+                        new { tool = "search_walls", category = requirement.Materials.MainWallCategory, style = style },
+                        new { tool = "search_furniture", room_type = "light" },
+                        new { tool = "search_furniture", room_type = "surface" },
+                        new { tool = "search_furniture", room_type = "comfort" },
+                        new { tool = "search_furniture", room_type = "door" }
+                    },
+                    message = "需求分析完成。请按建议的搜索顺序调用工具获取材料候选，然后调用select_materials选择最终材料。"
+                };
+
+                trab.Instance?.Logger.Info($"需求分析: {requirement.BuildingType}, {requirement.Style}, {requirement.FloorCount}层");
+
+                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+            }
+            catch (Exception ex)
+            {
+                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
+            }
+        }
+
+        // 新增：材料选择工具执行
+        private ToolResult SelectMaterials(JObject input, KnowledgeBaseManager kb)
+        {
+            try
+            {
+                var selected = new SelectedMaterials
+                {
+                    MainBlockId = input["main_block_id"]?.Value<int>() ?? 4,
+                    SecondaryBlockId = input["secondary_block_id"]?.Value<int>(),
+                    RoofBlockId = input["roof_block_id"]?.Value<int>() ?? 143,
+                    FloorBlockId = input["floor_block_id"]?.Value<int>() ?? 5,
+                    MainWallId = input["main_wall_id"]?.Value<int>() ?? 6,
+                    PrimaryPaint = input["primary_paint"]?.Value<int>() ?? 0,
+                    ShadowPaint = input["shadow_paint"]?.Value<int>() ?? 28,
+                    SelectionReasoning = input["reasoning"]?.ToString()
+                };
+
+                // 设置家具ID
+                if (input["light_id"] != null)
+                    selected.FurnitureIds["light"] = input["light_id"].Value<int>();
+                if (input["surface_id"] != null)
+                    selected.FurnitureIds["surface"] = input["surface_id"].Value<int>();
+                if (input["comfort_id"] != null)
+                    selected.FurnitureIds["comfort"] = input["comfort_id"].Value<int>();
+                if (input["door_id"] != null)
+                    selected.FurnitureIds["door"] = input["door_id"].Value<int>();
+
+                // 验证选定的方块ID是否有效
+                var tileInfo = kb.Tiles.GetTileById(selected.MainBlockId);
+                if (tileInfo == null)
+                {
+                    trab.Instance?.Logger.Warn($"选定的MainBlockId={selected.MainBlockId}不在知识库中，使用默认值4");
+                    selected.MainBlockId = 4;
+                }
+
+                // 返回选定结果和下一步提示
+                var result = new
+                {
+                    selected_materials = selected,
+                    material_summary = new
+                    {
+                        main_block = kb.Tiles.GetTileById(selected.MainBlockId)?.display_name ?? "灰砖",
+                        roof_block = kb.Tiles.GetTileById(selected.RoofBlockId)?.display_name ?? "石板",
+                        floor_block = kb.Tiles.GetTileById(selected.FloorBlockId)?.display_name ?? "木材",
+                        main_wall = kb.Tiles.GetWallById(selected.MainWallId)?.display_name ?? "灰砖墙"
+                    },
+                    message = "材料选择完成。请使用选定的材料ID生成建筑JSON。"
+                };
+
+                trab.Instance?.Logger.Info($"材料选择: Main={selected.MainBlockId}, Roof={selected.RoofBlockId}, Floor={selected.FloorBlockId}, Wall={selected.MainWallId}");
+
+                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+            }
+            catch (Exception ex)
+            {
+                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
             }
         }
 

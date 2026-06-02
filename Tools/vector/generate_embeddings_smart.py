@@ -221,9 +221,69 @@ def generate_smart_embeddings():
         }, f, indent=2)
     print(f"  生成 {len(style_embeddings)} 个风格向量")
 
+    # 生成墙壁向量
+    print("\n=== 生成墙壁向量 ===")
+    cursor.execute("SELECT id, name, display_name, category, styles, description FROM walls")
+    walls_data = cursor.fetchall()
+
+    wall_embeddings = {}
+    for wall in walls_data:
+        wall_id, name, display_name, category, styles, description = wall
+        text = f"{name} {display_name} {category} {description or ''}"
+        try:
+            styles_list = json.loads(styles) if styles else []
+            styles_str = " ".join(styles_list)
+        except:
+            styles_str = ""
+        vector = vectorizer.vectorize(text, category=category, styles=styles_str)
+        wall_embeddings[wall_id] = vector
+
+    output_path = os.path.join(DATA_DIR, "wall_embeddings.json")
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump({
+            "version": "3.0",
+            "method": "smart_keyword_tfidf",
+            "dimension": VECTOR_DIM,
+            "generated": datetime.now().isoformat(),
+            "count": len(wall_embeddings),
+            "embeddings": {str(k): v for k, v in wall_embeddings.items()}
+        }, f, indent=2)
+    print(f"  生成 {len(wall_embeddings)} 个墙壁向量")
+    print(f"  输出: {output_path}")
+
+    # 生成家具向量
+    print("\n=== 生成家具向量 ===")
+    cursor.execute("SELECT id, name, display_name, category, npc_function, description FROM furniture")
+    furniture_data = cursor.fetchall()
+
+    furniture_embeddings = {}
+    for furniture in furniture_data:
+        furniture_id, name, display_name, category, npc_function, description = furniture
+        text = f"{name} {display_name} {category} {description or ''}"
+        try:
+            npc_list = json.loads(npc_function) if npc_function else []
+            npc_str = " ".join(npc_list)
+        except:
+            npc_str = ""
+        vector = vectorizer.vectorize(text, category=category, styles=npc_str)
+        furniture_embeddings[furniture_id] = vector
+
+    output_path = os.path.join(DATA_DIR, "furniture_embeddings.json")
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump({
+            "version": "3.0",
+            "method": "smart_keyword_tfidf",
+            "dimension": VECTOR_DIM,
+            "generated": datetime.now().isoformat(),
+            "count": len(furniture_embeddings),
+            "embeddings": {str(k): v for k, v in furniture_embeddings.items()}
+        }, f, indent=2)
+    print(f"  生成 {len(furniture_embeddings)} 个家具向量")
+    print(f"  输出: {output_path}")
+
     conn.close()
 
-    return tile_embeddings, style_embeddings
+    return tile_embeddings, style_embeddings, wall_embeddings, furniture_embeddings
 
 
 def test_similarity(tile_embeddings):
@@ -277,7 +337,7 @@ def test_similarity(tile_embeddings):
 
 
 if __name__ == "__main__":
-    tile_embeddings, style_embeddings = generate_smart_embeddings()
+    tile_embeddings, style_embeddings, wall_embeddings, furniture_embeddings = generate_smart_embeddings()
     test_similarity(tile_embeddings)
 
     print("\n" + "=" * 60)

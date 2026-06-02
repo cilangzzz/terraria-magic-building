@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
+using trab.Data;
 
 namespace trab.Core
 {
@@ -348,10 +349,13 @@ namespace trab.Core
             try
             {
                 string basePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                // tModLoader运行目录结构
-                paths.Add(Path.Combine(basePath, "Data", filename));
-                // ModSources相对路径
-                paths.Add(Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab", "Data", filename));
+                if (!string.IsNullOrEmpty(basePath))
+                {
+                    // tModLoader运行目录结构
+                    paths.Add(Path.Combine(basePath, "Data", filename));
+                    // ModSources相对路径
+                    paths.Add(Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab", "Data", filename));
+                }
                 // Terraria数据目录
                 string terrariaPath = Path.Combine(Main.SavePath, "Mods", "trab", "Data", filename);
                 paths.Add(terrariaPath);
@@ -467,6 +471,142 @@ namespace trab.Core
                 .OrderByDescending(s => s.score)
                 .Take(topK)
                 .Select(s => s.tile)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 混合检索：SQL过滤 + 向量排序，返回带分数的候选列表
+        /// </summary>
+        public List<MaterialCandidateItem> SearchTilesWithScore(
+            List<TileInfo> candidates,
+            string style,
+            int topK = 10)
+        {
+            if (candidates == null || candidates.Count == 0)
+                return new List<MaterialCandidateItem>();
+
+            var styleVector = GetStyleVector(style);
+            var scored = new List<(TileInfo tile, float score)>();
+
+            foreach (var tile in candidates)
+            {
+                float sim = 0.1f;
+                if (_initialized && styleVector != null && _tileEmbeddings.TryGetValue(tile.id, out var tileVector))
+                {
+                    sim = CosineSimilarity(tileVector, styleVector);
+                }
+                else if (tile.styles != null && tile.styles.Contains(style))
+                {
+                    sim = 0.5f;  // 关键词匹配给中等分数
+                }
+                scored.Add((tile, sim));
+            }
+
+            return scored
+                .OrderByDescending(s => s.score)
+                .Take(topK)
+                .Select(s => new MaterialCandidateItem
+                {
+                    Id = s.tile.id,
+                    Name = s.tile.name,
+                    DisplayName = s.tile.display_name,
+                    Category = s.tile.category,
+                    SimilarityScore = s.score,
+                    Styles = s.tile.styles,
+                    Description = s.tile.description
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// 墙壁语义检索，返回带分数的候选列表
+        /// </summary>
+        public List<MaterialCandidateItem> SearchWallsWithScore(
+            List<WallInfo> candidates,
+            string style,
+            int topK = 10)
+        {
+            if (candidates == null || candidates.Count == 0)
+                return new List<MaterialCandidateItem>();
+
+            var styleVector = GetStyleVector(style);
+            var scored = new List<(WallInfo wall, float score)>();
+
+            foreach (var wall in candidates)
+            {
+                float sim = 0.1f;
+                if (_initialized && styleVector != null && _wallEmbeddings.TryGetValue(wall.id, out var wallVector))
+                {
+                    sim = CosineSimilarity(wallVector, styleVector);
+                }
+                else if (wall.styles != null && wall.styles.Contains(style))
+                {
+                    sim = 0.5f;
+                }
+                scored.Add((wall, sim));
+            }
+
+            return scored
+                .OrderByDescending(s => s.score)
+                .Take(topK)
+                .Select(s => new MaterialCandidateItem
+                {
+                    Id = s.wall.id,
+                    Name = s.wall.name,
+                    DisplayName = s.wall.display_name,
+                    Category = s.wall.category,
+                    SimilarityScore = s.score,
+                    Styles = s.wall.styles,
+                    Description = ""  // WallInfo没有description属性
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// 家具语义检索，返回带分数的候选列表
+        /// </summary>
+        public List<MaterialCandidateItem> SearchFurnitureWithScore(
+            List<KeyValuePair<string, FurnitureInfo>> candidates,
+            string category,
+            int topK = 10)
+        {
+            if (candidates == null || candidates.Count == 0)
+                return new List<MaterialCandidateItem>();
+
+            float[] categoryVector = null;
+            if (_initialized && !string.IsNullOrEmpty(category))
+            {
+                _furnitureCategoryEmbeddings.TryGetValue(category.ToLower(), out categoryVector);
+            }
+
+            var scored = new List<(KeyValuePair<string, FurnitureInfo> furniture, float score)>();
+
+            foreach (var f in candidates)
+            {
+                float sim = 0.1f;
+                if (categoryVector != null && _furnitureEmbeddings.TryGetValue(f.Value.tile_id, out var furnitureVector))
+                {
+                    sim = CosineSimilarity(furnitureVector, categoryVector);
+                }
+                else if (f.Value.category != null && f.Value.category.ToLower().Contains(category?.ToLower() ?? ""))
+                {
+                    sim = 0.5f;
+                }
+                scored.Add((f, sim));
+            }
+
+            return scored
+                .OrderByDescending(s => s.score)
+                .Take(topK)
+                .Select(s => new MaterialCandidateItem
+                {
+                    Id = s.furniture.Value.tile_id,
+                    Name = s.furniture.Key,
+                    DisplayName = s.furniture.Value.display_name,
+                    Category = s.furniture.Value.category,
+                    SimilarityScore = s.score,
+                    Description = s.furniture.Value.npc_function
+                })
                 .ToList();
         }
 

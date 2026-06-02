@@ -11,6 +11,8 @@
 | terraria_kb.db | SQLite | 140KB | 主数据库（11张表） |
 | terraria_kb_full.sql | SQL | 29KB | 数据库SQL备份 |
 | tile_embeddings.json | JSON | 180KB | 方块向量（35个，384维） |
+| wall_embeddings.json | JSON | 120KB | 墙壁向量（23个，384维） |
+| furniture_embeddings.json | JSON | 56KB | 家具向量（11个，384维） |
 | style_embeddings.json | JSON | 54KB | 风格向量（10个，384维） |
 | biome_embeddings.json | JSON | 68KB | 生物群落向量（13个，384维） |
 

@@ -62,21 +62,26 @@ namespace trab.Core
                         if (WorldGen.InWorld(x, y))
                             Main.tile[x, y].ClearEverything();
 
-                // 墙壁
+                // 墙壁 - 支持wall_id精确ID
                 foreach (var w in d.Walls)
                 {
                     int wx = startX + w.X, wy = startY + w.Y;
                     if (WorldGen.InWorld(wx, wy))
                     {
-                        int wt = GetWall(w.WallType);
-                        if (wt > 0) WorldGen.PlaceWall(wx, wy, (ushort)wt);
+                        int wt = w.WallId > 0 ? w.WallId : GetWall(w.WallType);
+                        if (wt > 0)
+                        {
+                            WorldGen.PlaceWall(wx, wy, (ushort)wt);
+                            if (w.GetPaintId() > 0)
+                                SetWallPaint(wx, wy, w.GetPaintId());
+                        }
                     }
                 }
 
                 // 墙壁范围 - 批量填充墙壁
                 foreach (var wr in d.WallRanges)
                 {
-                    int wallType = GetWall(wr.WallType);
+                    int wallType = wr.WallId > 0 ? wr.WallId : GetWall(wr.WallType);
                     if (wallType > 0)
                     {
                         for (int x = startX + wr.X1; x <= startX + wr.X2; x++)
@@ -86,24 +91,38 @@ namespace trab.Core
                                 if (WorldGen.InWorld(x, y))
                                 {
                                     WorldGen.PlaceWall(x, y, (ushort)wallType);
+                                    if (wr.Paint > 0)
+                                        SetWallPaint(x, y, wr.Paint);
                                 }
                             }
                         }
                     }
                 }
 
-                // 方块
+                // 方块 - 支持tile_id精确ID和slope斜坡
                 foreach (var t in d.Tiles)
                 {
                     int tx = startX + t.X, ty = startY + t.Y;
                     if (WorldGen.InWorld(tx, ty))
                     {
-                        int tt = GetTile(t.TileType);
-                        if (tt > 0) WorldGen.PlaceTile(tx, ty, (ushort)tt);
+                        // 优先使用tile_id（AI生成的精确ID）
+                        int tt = t.TileId > 0 ? t.TileId : GetTile(t.TileType);
+                        if (tt > 0)
+                        {
+                            WorldGen.PlaceTile(tx, ty, (ushort)tt);
+
+                            // 应用斜坡
+                            if (t.Slope > 0 && t.Slope <= 5)
+                                SetTileSlope(tx, ty, t.Slope);
+
+                            // 应用油漆
+                            if (t.GetPaintId() > 0)
+                                SetTilePaint(tx, ty, t.GetPaintId());
+                        }
                     }
                 }
 
-                // 门
+                // 门 - 支持tile_id
                 foreach (var dr in d.Doors)
                 {
                     int dx = startX + dr.X, dy = startY + dr.Y;
@@ -112,27 +131,37 @@ namespace trab.Core
                         for (int y = dy; y < dy + 3; y++)
                             if (WorldGen.InWorld(dx, y))
                                 Main.tile[dx, y].ClearTile();
-                        WorldGen.PlaceDoor(dx, dy, TileID.ClosedDoor);
+
+                        int doorType = dr.TileId > 0 ? dr.TileId : TileID.ClosedDoor;
+                        WorldGen.PlaceDoor(dx, dy, (ushort)doorType);
                     }
                 }
 
-                // 家具
+                // 家具 - 优先使用tile_id
                 foreach (var f in d.Furniture)
                 {
                     int fx = startX + f.X, fy = startY + f.Y;
                     if (WorldGen.InWorld(fx, fy))
                     {
-                        int ft = GetFurniture(f.FurnitureType);
-                        if (ft > 0) WorldGen.PlaceObject(fx, fy, (ushort)ft);
+                        int ft = f.TileId > 0 ? f.TileId : GetFurniture(f.FurnitureType);
+                        if (ft > 0)
+                        {
+                            WorldGen.PlaceObject(fx, fy, (ushort)ft);
+                            if (f.Paint > 0)
+                                SetTilePaint(fx, fy, f.Paint);
+                        }
                     }
                 }
 
-                // 光源
+                // 光源 - 优先使用tile_id
                 foreach (var l in d.LightSources)
                 {
                     int lx = startX + l.X, ly = startY + l.Y;
                     if (WorldGen.InWorld(lx, ly))
-                        WorldGen.PlaceTile(lx, ly, TileID.Torches);
+                    {
+                        int lt = l.TileId > 0 ? l.TileId : TileID.Torches;
+                        WorldGen.PlaceTile(lx, ly, (ushort)lt);
+                    }
                 }
 
                 // 刷新
@@ -144,13 +173,71 @@ namespace trab.Core
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetMessage.SendTileSquare(-1, startX, startY, d.Width, d.Height);
 
-                Main.NewText("建筑 '" + d.Name + "' 完成!", Color.Green);
+                Main.NewText("建筑 '" + d.Name + "' 完成! 方块:" + d.Tiles.Count + " 家具:" + d.Furniture.Count, Color.Green);
                 return true;
             }
             catch (Exception ex)
             {
                 Main.NewText("错误: " + ex.Message, Color.Red);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置方块斜坡 - 使用WorldGen方法
+        /// </summary>
+        private void SetTileSlope(int x, int y, int slope)
+        {
+            if (!WorldGen.InWorld(x, y)) return;
+
+            // SlopeType: 0=none, 1=right(slope down right), 2=left(slope down left), 3=down right, 4=down left
+            SlopeType slopeType = (SlopeType)slope;
+
+            // 使用Tile.SmoothSlope或直接设置
+            var tile = Main.tile[x, y];
+            if (tile.HasTile)
+            {
+                // 尝试平滑斜坡
+                Tile.SmoothSlope(x, y, false);
+                // 如果需要特定斜坡，再次设置
+                if (slope > 0)
+                {
+                    // 通过WorldGen设置斜坡方块
+                    WorldGen.SlopeTile(x, y, (int)slopeType);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 设置方块油漆
+        /// </summary>
+        private void SetTilePaint(int x, int y, int paintId)
+        {
+            if (!WorldGen.InWorld(x, y) || paintId <= 0 || paintId > 31) return;
+
+            var tile = Main.tile[x, y];
+            if (tile.HasTile)
+            {
+                // 使用NetMessage或直接设置
+                tile.TileColor = (byte)paintId;
+                if (Main.netMode != NetmodeID.SinglePlayer)
+                    NetMessage.SendTileSquare(-1, x, y, 1, 1);
+            }
+        }
+
+        /// <summary>
+        /// 设置墙壁油漆
+        /// </summary>
+        private void SetWallPaint(int x, int y, int paintId)
+        {
+            if (!WorldGen.InWorld(x, y) || paintId <= 0 || paintId > 31) return;
+
+            var tile = Main.tile[x, y];
+            if (tile.WallType > 0)
+            {
+                tile.WallColor = (byte)paintId;
+                if (Main.netMode != NetmodeID.SinglePlayer)
+                    NetMessage.SendTileSquare(-1, x, y, 1, 1);
             }
         }
 
@@ -196,9 +283,9 @@ namespace trab.Core
                 {"Granite", TileID.GraniteBlock},
                 {"Obsidian", TileID.Obsidian},
                 {"Platform", TileID.Platforms},
-                // 使用数值ID避免API变更
-                {"Brick", 38}, // Red Brick
-                {"WorkBench", 17}, // Work Bench
+                {"Brick", 38},
+                {"WorkBench", 17},
+                {"BorealWood", 250},  // 寒带木
             };
         }
 
@@ -219,9 +306,9 @@ namespace trab.Core
                 {"GlassWall", WallID.Glass},
                 {"MarbleWall", WallID.MarbleBlock},
                 {"GraniteWall", WallID.GraniteBlock},
-                // 使用数值ID
-                {"SnowWall", 64}, // Snow Wall
-                {"BrickWall", 41}, // Red Brick Wall
+                {"SnowWall", 64},
+                {"BrickWall", 41},
+                {"BorealWoodWall", 216},  // 寒带木墙
             };
         }
 
@@ -229,7 +316,7 @@ namespace trab.Core
         {
             return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
-                {"WorkBench", 17}, // Work Bench tile
+                {"WorkBench", 17},
                 {"Table", TileID.Tables},
                 {"Chair", TileID.Chairs},
                 {"Bed", TileID.Beds},
@@ -239,6 +326,7 @@ namespace trab.Core
                 {"Piano", TileID.Pianos},
                 {"Dresser", TileID.Dressers},
                 {"Bathtub", TileID.Bathtubs},
+                {"Torch", TileID.Torches},
             };
         }
     }

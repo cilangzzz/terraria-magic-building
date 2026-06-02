@@ -40,6 +40,11 @@ namespace trab.Config
         [Tooltip("SingleAgent: 单次API调用，稳定可靠\nMultiAgent: 多Agent协作，模块化生成")]
         public AgentMode AgentGenerationMode { get; set; } = AgentMode.SingleAgent;
 
+        [DefaultValue(false)]
+        [Label("使用Pipeline生成模式")]
+        [Tooltip("启用4阶段生成流程：需求分析→材料检索→材料选择→设计生成。需要配合SingleAgent模式使用。")]
+        public bool UsePipelineMode { get; set; } = false;
+
         [DefaultValue(5)]
         [Range(0, 50)]
         public int BuildOffsetX { get; set; } = 5;

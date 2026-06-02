@@ -152,11 +152,21 @@ namespace trab.Core
             return _tiles.FirstOrDefault(t => t.name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
+        public TileInfo GetTileById(int id)
+        {
+            return _tiles.FirstOrDefault(t => t.id == id);
+        }
+
         public PaintInfo GetPaint(int id) => _paints.FirstOrDefault(p => p.id == id);
 
         public WallInfo GetWallByName(string name)
         {
             return _walls.FirstOrDefault(w => w.name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public WallInfo GetWallById(int id)
+        {
+            return _walls.FirstOrDefault(w => w.id == id);
         }
 
         public PaintSchemeRecommendation GetPaintRecommendation(string style)
