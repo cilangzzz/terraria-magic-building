@@ -14,6 +14,12 @@ docs/
 ├── database/              # 数据库与数据
 ├── project/               # 项目概览与分析
 └── README.md              # 本索引文件
+
+Tools/                     # 数据处理工具 (Python)
+├── database/              # 数据库脚本
+├── crawler/               # Wiki爬取脚本
+├── vector/                # 向量生成脚本
+└── README.md              # 工具文档
 ```
 
 ---
@@ -74,6 +80,19 @@ AI 功能集成的技术方案和实现文档。
 
 ---
 
+## 6. 数据工具 (`../Tools/`)
+
+Python数据处理和向量生成工具。
+
+| 目录/文档 | 描述 |
+|------|------|
+| [Tools README](../Tools/README.md) | 工具目录总览、快速开始 |
+| [database/](../Tools/database/README.md) | 数据库初始化、统计脚本 |
+| [crawler/](../Tools/crawler/README.md) | Wiki数据爬取脚本 |
+| [vector/](../Tools/vector/README.md) | 向量生成脚本（推荐smart方法） |
+
+---
+
 ## 快速导航
 
 ### 按开发阶段
@@ -83,6 +102,7 @@ AI 功能集成的技术方案和实现文档。
 开发 → [Tile系统文档](terraria-systems/泰拉瑞亚Tile系统开发文档.md) → [WorldGen系统文档](terraria-systems/WorldGen系统文档.md)
 AI   → [AI集成技术方案](ai-integration/AI集成技术方案.md) → [AI_Agent升级方案](ai-integration/AI_Agent升级方案.md)
 数据 → [SQLite数据库设计](database/SQLite数据库设计方案.md) → [数据检索文档](database/数据检索文档.md)
+工具 → [Tools README](../Tools/README.md) → [向量生成](../Tools/vector/README.md)
 部署 → [模组编译文档](tutorial/tModLoader模组编译文档.md) → [日志排查文档](tutorial/tModLoader日志排查文档.md)
 ```
 
@@ -94,3 +114,4 @@ AI   → [AI集成技术方案](ai-integration/AI集成技术方案.md) → [AI_
 | 世界生成 | [WorldGen系统文档](terraria-systems/WorldGen系统文档.md) |
 | AI/Agent | [AI集成技术方案](ai-integration/AI集成技术方案.md) · [AI_Agent升级方案](ai-integration/AI_Agent升级方案.md) |
 | 数据库 | [SQLite数据库设计方案](database/SQLite数据库设计方案.md) · [数据检索文档](database/数据检索文档.md) |
+| 数据工具 | [Tools](../Tools/README.md) · [向量生成](../Tools/vector/README.md) |

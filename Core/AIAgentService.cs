@@ -529,6 +529,25 @@ namespace trab.Core
                     type = "function",
                     function = new
                     {
+                        name = "search_walls",
+                        description = "搜索墙壁类型，返回wall_id、名称、属性。用于确定建筑墙壁材料。",
+                        parameters = new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                style = new { type = "string", description = "风格: medieval, fantasy, natural, steampunk, asian, snow, desert, modern, dark" },
+                                category = new { type = "string", description = "类别: natural, wood, brick, luxury, desert, snow" }
+                            },
+                            required = new[] { "style" }
+                        }
+                    }
+                },
+                new
+                {
+                    type = "function",
+                    function = new
+                    {
                         name = "get_style_template",
                         description = "获取建筑风格模板，包含推荐方块、油漆方案、建筑规则。",
                         parameters = new
@@ -549,13 +568,13 @@ namespace trab.Core
                     function = new
                     {
                         name = "search_furniture",
-                        description = "搜索家具及其NPC房屋功能。返回tile_id、尺寸、放置规则。",
+                        description = "搜索家具及其NPC房屋功能。返回tile_id、尺寸、放置规则。支持按类别向量检索。",
                         parameters = new
                         {
                             type = "object",
                             properties = new
                             {
-                                room_type = new { type = "string", description = "房间类型" },
+                                room_type = new { type = "string", description = "房间类型/家具类别: light(光源), surface(桌面), comfort(舒适), storage(存储), door(门), decoration(装饰)" },
                                 npc_type = new { type = "string", description = "目标NPC类型（可选）" }
                             }
                         }
@@ -785,6 +804,21 @@ namespace trab.Core
                 },
                 new
                 {
+                    name = "search_walls",
+                    description = "搜索墙壁类型，返回wall_id、名称、属性。用于确定建筑墙壁材料。",
+                    input_schema = new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            style = new { type = "string" },
+                            category = new { type = "string" }
+                        },
+                        required = new[] { "style" }
+                    }
+                },
+                new
+                {
                     name = "get_style_template",
                     description = "获取建筑风格模板。",
                     input_schema = new
@@ -801,13 +835,13 @@ namespace trab.Core
                 new
                 {
                     name = "search_furniture",
-                    description = "搜索家具及NPC房屋功能。",
+                    description = "搜索家具及NPC房屋功能。支持按类别向量检索。",
                     input_schema = new
                     {
                         type = "object",
                         properties = new
                         {
-                            room_type = new { type = "string" },
+                            room_type = new { type = "string", description = "家具类别: light, surface, comfort, storage, door, decoration" },
                             npc_type = new { type = "string" }
                         }
                     }
@@ -919,6 +953,8 @@ namespace trab.Core
                 {
                     case "search_tiles":
                         return SearchTiles(input["style"]?.ToString(), input["category"]?.ToString(), input["biome"]?.ToString(), kb);
+                    case "search_walls":
+                        return SearchWalls(input["style"]?.ToString(), input["category"]?.ToString(), kb);
                     case "get_style_template":
                         return GetStyleTemplate(input["style"]?.ToString(), input["building_type"]?.ToString(), kb);
                     case "search_furniture":
@@ -967,6 +1003,31 @@ namespace trab.Core
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
         }
 
+        private ToolResult SearchWalls(string style, string category, KnowledgeBaseManager kb)
+        {
+            // Step1: SQL精确过滤 (category)
+            var candidates = kb.Tiles.SearchWalls(null, category).ToList();
+
+            // Step2: 向量语义排序 (style)
+            if (!string.IsNullOrEmpty(style) && kb.Vectors.IsInitialized)
+            {
+                candidates = kb.Vectors.SearchWallsSemantic(candidates, style, 20);
+            }
+            else
+            {
+                candidates = candidates.Take(20).ToList();
+            }
+
+            var result = new
+            {
+                walls = candidates.Select(w => new { id = w.id, name = w.name, display_name = w.display_name, category = w.category }),
+                total_count = candidates.Count,
+                search_criteria = new { style, category },
+                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(style)
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
         private ToolResult GetStyleTemplate(string style, string buildingType, KnowledgeBaseManager kb)
         {
             var template = kb.Styles.GetTemplate(style, buildingType);
@@ -987,10 +1048,26 @@ namespace trab.Core
 
         private ToolResult SearchFurniture(string roomType, string npcType, KnowledgeBaseManager kb)
         {
-            var furniture = kb.Furniture.SearchFurniture(roomType, npcType);
+            // Step1: 获取所有家具候选
+            var candidates = kb.Furniture.SearchFurniture(roomType, npcType);
+
+            // Step2: 向量语义排序 (按类别)
+            string category = roomType?.ToLower();  // room_type可作为类别: light, surface, comfort, storage, door
+            if (!string.IsNullOrEmpty(category) && kb.Vectors.IsInitialized)
+            {
+                candidates = kb.Vectors.SearchFurnitureSemantic(candidates, category, 20);
+            }
+            else
+            {
+                candidates = candidates.Take(20).ToList();
+            }
+
             var result = new
             {
-                furniture = furniture.Select(f => new { name = f.Key, tile_id = f.Value.tile_id, display_name = f.Value.display_name }),
+                furniture = candidates.Select(f => new { name = f.Key, tile_id = f.Value.tile_id, display_name = f.Value.display_name, category = f.Value.category, npc_function = f.Value.npc_function }),
+                total_count = candidates.Count,
+                search_criteria = new { room_type = roomType, npc_type = npcType },
+                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(category),
                 npc_requirements = new { valid_house_requires = new[] { "light_source", "flat_surface", "comfort", "door" } }
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };

@@ -112,9 +112,12 @@ namespace trab.Core
 
             _walls = new List<WallInfo>
             {
-                new WallInfo { id = 1, name = "StoneWall", display_name = "石墙" },
-                new WallInfo { id = 4, name = "WoodWall", display_name = "木墙" },
-                new WallInfo { id = 6, name = "GrayBrickWall", display_name = "灰砖墙" }
+                new WallInfo { id = 1, name = "StoneWall", display_name = "石墙", category = "natural", styles = new List<string> { "medieval", "natural" } },
+                new WallInfo { id = 4, name = "WoodWall", display_name = "木墙", category = "wood", styles = new List<string> { "natural", "medieval" } },
+                new WallInfo { id = 6, name = "GrayBrickWall", display_name = "灰砖墙", category = "brick", styles = new List<string> { "medieval", "castle" } },
+                new WallInfo { id = 15, name = "GoldBrickWall", display_name = "金砖墙", category = "luxury", styles = new List<string> { "luxury" } },
+                new WallInfo { id = 16, name = "SandstoneWall", display_name = "砂岩墙", category = "desert", styles = new List<string> { "desert" } },
+                new WallInfo { id = 17, name = "SnowWall", display_name = "雪墙", category = "snow", styles = new List<string> { "snow" } }
             };
         }
 
@@ -134,6 +137,15 @@ namespace trab.Core
         public List<TileInfo> GetAllTiles() => _tiles;
 
         public List<WallInfo> GetAllWalls() => _walls;
+
+        public List<WallInfo> SearchWalls(string style, string category = null)
+        {
+            return _walls.Where(w =>
+                w.styles != null &&
+                (style == null || w.styles.Contains("any") || w.styles.Contains(style)) &&
+                (category == null || w.category == category)
+            ).ToList();
+        }
 
         public TileInfo GetTileByName(string name)
         {
@@ -249,11 +261,13 @@ namespace trab.Core
         {
             _furniture = new Dictionary<string, FurnitureInfo>
             {
-                ["WorkBench"] = new FurnitureInfo { tile_id = 17, display_name = "工作台", width = 2, height = 1 },
-                ["Tables"] = new FurnitureInfo { tile_id = 87, display_name = "桌子", width = 3, height = 1 },
-                ["Chairs"] = new FurnitureInfo { tile_id = 88, display_name = "椅子", width = 1, height = 2 },
-                ["Beds"] = new FurnitureInfo { tile_id = 89, display_name = "床", width = 4, height = 2 },
-                ["Chests"] = new FurnitureInfo { tile_id = 21, display_name = "宝箱", width = 2, height = 1 }
+                ["WorkBench"] = new FurnitureInfo { tile_id = 17, display_name = "工作台", category = "surface", width = 2, height = 1, npc_function = "crafting" },
+                ["Tables"] = new FurnitureInfo { tile_id = 87, display_name = "桌子", category = "surface", width = 3, height = 1, npc_function = "flat_surface" },
+                ["Chairs"] = new FurnitureInfo { tile_id = 88, display_name = "椅子", category = "comfort", width = 1, height = 2, npc_function = "comfort" },
+                ["Beds"] = new FurnitureInfo { tile_id = 89, display_name = "床", category = "comfort", width = 4, height = 2, npc_function = "comfort" },
+                ["Chests"] = new FurnitureInfo { tile_id = 21, display_name = "宝箱", category = "storage", width = 2, height = 1, npc_function = "storage" },
+                ["Torches"] = new FurnitureInfo { tile_id = 4, display_name = "火把", category = "light", width = 1, height = 1, npc_function = "light_source" },
+                ["ClosedDoor"] = new FurnitureInfo { tile_id = 10, display_name = "门", category = "door", width = 1, height = 3, npc_function = "door" }
             };
         }
 
@@ -291,6 +305,8 @@ namespace trab.Core
         public int id { get; set; }
         public string name { get; set; }
         public string display_name { get; set; }
+        public string category { get; set; }
+        public List<string> styles { get; set; }
     }
 
     public class StyleTemplate
@@ -304,8 +320,10 @@ namespace trab.Core
     {
         public int tile_id { get; set; }
         public string display_name { get; set; }
+        public string category { get; set; }
         public int width { get; set; }
         public int height { get; set; }
+        public string npc_function { get; set; }
     }
 
     public class PaintSchemeRecommendation

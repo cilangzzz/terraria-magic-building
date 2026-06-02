@@ -10,17 +10,27 @@ namespace trab.Core
 {
     /// <summary>
     /// 向量知识库 - 支持语义检索
+    /// 支持: 方块、墙壁、家具、风格
     /// </summary>
     public class VectorKnowledgeBase
     {
         private Dictionary<int, float[]> _tileEmbeddings;
+        private Dictionary<int, float[]> _wallEmbeddings;
+        private Dictionary<int, float[]> _furnitureEmbeddings;
         private Dictionary<string, float[]> _styleEmbeddings;
+        private Dictionary<string, float[]> _furnitureCategoryEmbeddings;
+
         private Dictionary<int, TileEmbeddingEntry> _tileEntries;
+        private Dictionary<int, WallEmbeddingEntry> _wallEntries;
+        private Dictionary<int, FurnitureEmbeddingEntry> _furnitureEntries;
+
         private int _dimension = 384;
         private bool _initialized = false;
 
         public bool IsInitialized => _initialized;
         public int TileVectorCount => _tileEmbeddings?.Count ?? 0;
+        public int WallVectorCount => _wallEmbeddings?.Count ?? 0;
+        public int FurnitureVectorCount => _furnitureEmbeddings?.Count ?? 0;
         public int StyleVectorCount => _styleEmbeddings?.Count ?? 0;
 
         /// <summary>
@@ -33,10 +43,12 @@ namespace trab.Core
             try
             {
                 LoadTileEmbeddings();
+                LoadWallEmbeddings();
+                LoadFurnitureEmbeddings();
                 LoadStyleEmbeddings();
                 _initialized = true;
 
-                trab.Instance?.Logger.Info($"向量库初始化完成: Tiles={TileVectorCount}, Styles={StyleVectorCount}");
+                trab.Instance?.Logger.Info($"向量库初始化完成: Tiles={TileVectorCount}, Walls={WallVectorCount}, Furniture={FurnitureVectorCount}, Styles={StyleVectorCount}");
             }
             catch (Exception ex)
             {
@@ -119,6 +131,73 @@ namespace trab.Core
                 if (!string.IsNullOrEmpty(entry.style) && entry.embedding != null)
                 {
                     _styleEmbeddings[entry.style.ToLower()] = entry.embedding;
+                }
+            }
+        }
+
+        private void LoadWallEmbeddings()
+        {
+            _wallEmbeddings = new Dictionary<int, float[]>();
+            _wallEntries = new Dictionary<int, WallEmbeddingEntry>();
+
+            string[] possiblePaths = GetPossibleDataPaths("wall_embeddings.json");
+            string foundPath = possiblePaths.FirstOrDefault(p => File.Exists(p));
+
+            if (foundPath == null)
+            {
+                trab.Instance?.Logger.Warn($"Wall向量文件不存在");
+                return;
+            }
+
+            trab.Instance?.Logger.Info($"加载Wall向量: {foundPath}");
+            string json = File.ReadAllText(foundPath);
+            var entries = JsonConvert.DeserializeObject<List<WallEmbeddingEntry>>(json);
+
+            if (entries == null) return;
+
+            foreach (var entry in entries)
+            {
+                if (entry.wall_id >= 0 && entry.embedding != null && entry.embedding.Length > 0)
+                {
+                    _wallEmbeddings[entry.wall_id] = entry.embedding;
+                    _wallEntries[entry.wall_id] = entry;
+                }
+            }
+        }
+
+        private void LoadFurnitureEmbeddings()
+        {
+            _furnitureEmbeddings = new Dictionary<int, float[]>();
+            _furnitureCategoryEmbeddings = new Dictionary<string, float[]>();
+            _furnitureEntries = new Dictionary<int, FurnitureEmbeddingEntry>();
+
+            string[] possiblePaths = GetPossibleDataPaths("furniture_embeddings.json");
+            string foundPath = possiblePaths.FirstOrDefault(p => File.Exists(p));
+
+            if (foundPath == null)
+            {
+                trab.Instance?.Logger.Warn($"Furniture向量文件不存在");
+                return;
+            }
+
+            trab.Instance?.Logger.Info($"加载Furniture向量: {foundPath}");
+            string json = File.ReadAllText(foundPath);
+            var entries = JsonConvert.DeserializeObject<List<FurnitureEmbeddingEntry>>(json);
+
+            if (entries == null) return;
+
+            foreach (var entry in entries)
+            {
+                // 家具条目
+                if (entry.furniture_id >= 0 && entry.embedding != null)
+                {
+                    _furnitureEmbeddings[entry.furniture_id] = entry.embedding;
+                    _furnitureEntries[entry.furniture_id] = entry;
+                }
+                // 家具类别条目
+                if (!string.IsNullOrEmpty(entry.furniture_category) && entry.embedding != null)
+                {
+                    _furnitureCategoryEmbeddings[entry.furniture_category.ToLower()] = entry.embedding;
                 }
             }
         }
@@ -260,11 +339,115 @@ namespace trab.Core
         }
 
         /// <summary>
+        /// 墙壁语义检索
+        /// </summary>
+        public List<WallInfo> SearchWallsSemantic(
+            List<WallInfo> candidates,
+            string style,
+            int topK = 20)
+        {
+            if (!_initialized || candidates == null || candidates.Count == 0)
+                return candidates;
+
+            var styleVector = GetStyleVector(style);
+            if (styleVector == null)
+            {
+                return candidates.Where(w =>
+                    w.styles != null && w.styles.Contains(style)
+                ).Take(topK).ToList();
+            }
+
+            var scored = new List<(WallInfo wall, float score)>();
+
+            foreach (var wall in candidates)
+            {
+                if (_wallEmbeddings.TryGetValue(wall.id, out var wallVector))
+                {
+                    float sim = CosineSimilarity(wallVector, styleVector);
+                    scored.Add((wall, sim));
+                }
+                else
+                {
+                    scored.Add((wall, 0.1f));
+                }
+            }
+
+            return scored
+                .OrderByDescending(s => s.score)
+                .Take(topK)
+                .Select(s => s.wall)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 家具语义检索
+        /// </summary>
+        public List<KeyValuePair<string, FurnitureInfo>> SearchFurnitureSemantic(
+            List<KeyValuePair<string, FurnitureInfo>> candidates,
+            string category,
+            int topK = 20)
+        {
+            if (!_initialized || candidates == null || candidates.Count == 0)
+                return candidates;
+
+            // 获取家具类别向量
+            float[] categoryVector = null;
+            if (!string.IsNullOrEmpty(category))
+            {
+                _furnitureCategoryEmbeddings.TryGetValue(category.ToLower(), out categoryVector);
+            }
+
+            if (categoryVector == null)
+            {
+                return candidates.Take(topK).ToList();
+            }
+
+            var scored = new List<(KeyValuePair<string, FurnitureInfo> furniture, float score)>();
+
+            foreach (var f in candidates)
+            {
+                if (_furnitureEmbeddings.TryGetValue(f.Value.tile_id, out var furnitureVector))
+                {
+                    float sim = CosineSimilarity(furnitureVector, categoryVector);
+                    scored.Add((f, sim));
+                }
+                else
+                {
+                    scored.Add((f, 0.1f));
+                }
+            }
+
+            return scored
+                .OrderByDescending(s => s.score)
+                .Take(topK)
+                .Select(s => s.furniture)
+                .ToList();
+        }
+
+        /// <summary>
         /// 获取tile的embedding信息
         /// </summary>
         public TileEmbeddingEntry GetTileEmbedding(int tileId)
         {
             _tileEntries.TryGetValue(tileId, out var entry);
+            return entry;
+        }
+
+        /// <summary>
+        /// 获取wall的embedding信息
+        /// </summary>
+        public WallEmbeddingEntry GetWallEmbedding(int wallId)
+        {
+            _wallEntries.TryGetValue(wallId, out var entry);
+            return entry;
+        }
+
+        /// <summary>
+        /// 获取furniture的embedding信息
+        /// </summary>
+        public FurnitureEmbeddingEntry GetFurnitureEmbedding(int furnitureId)
+        {
+            _furnitureEntries.TryGetValue(furnitureId, out var entry);
             return entry;
         }
     }
@@ -276,6 +459,35 @@ namespace trab.Core
     {
         public int tile_id { get; set; }
         public string name { get; set; }
+        public string display_name { get; set; }
+        public string category { get; set; }
+        public string text { get; set; }
+        public float[] embedding { get; set; }
+    }
+
+    /// <summary>
+    /// Wall向量数据条目
+    /// </summary>
+    public class WallEmbeddingEntry
+    {
+        public int wall_id { get; set; }
+        public string name { get; set; }
+        public string display_name { get; set; }
+        public string category { get; set; }
+        public string text { get; set; }
+        public float[] embedding { get; set; }
+    }
+
+    /// <summary>
+    /// Furniture向量数据条目
+    /// </summary>
+    public class FurnitureEmbeddingEntry
+    {
+        public int furniture_id { get; set; }
+        public string furniture_category { get; set; }
+        public string name { get; set; }
+        public string display_name { get; set; }
+        public string category { get; set; }
         public string text { get; set; }
         public float[] embedding { get; set; }
     }
