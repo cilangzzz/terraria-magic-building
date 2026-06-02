@@ -42,7 +42,7 @@ namespace trab.Core
 
         private const string WALL_MODULE_PROMPT = @"你是墙壁模块生成器。根据以下参数生成墙壁方块JSON。
 
-参数：宽度{width}, 高度{height}, 墙厚{thickness}, 风格{style}
+参数：宽度{width}, 高度{height}, 墙厚{thickness}, 方块ID{tile_id}, 墙ID{wall_id}
 
 任务：生成外墙tiles和内部wallRanges。
 
@@ -50,41 +50,39 @@ namespace trab.Core
 - 左墙: x=0, y从0到{height}-1
 - 右墙: x={width}-1, y从0到{height}-1
 - 内部墙背景: wallRanges填充
-- 使用灰砖(tile_id=4), 木墙(wall_id=4)
 
 输出示例：
-{""tiles"": [{""x"":0,""y"":0,""tile_id"":4}], ""wallRanges"": [{""x1"":1,""y1"":1,""x2"":{width}-2,""y2"":{height}-2,""wall_id"":4}]}
+{""tiles"": [{""x"":0,""y"":0,""tile_id"":{tile_id}], ""wallRanges"": [{""x1"":1,""y1"":1,""x2"":{width}-2,""y2"":{height}-2,""wall_id"":{wall_id}]}
 
 立即输出JSON，不要解释。";
 
         private const string FLOOR_MODULE_PROMPT = @"你是楼层模块生成器。根据以下参数生成楼层方块JSON。
 
-参数：宽度{width}, Y范围{y_start}-{y_end}, 楼层号{floor_num}, 风格{style}
+参数：宽度{width}, Y范围{y_start}-{y_end}, 楼层号{floor_num}, 方块ID{tile_id}, 墙ID{wall_id}
 
 任务：生成地板tiles和墙背景。
 
 规则：
 - 地板在y={y_end}位置，x从1到{width}-2
 - 天花板在y={y_start}位置
-- 使用木材(tile_id=5)做地板, 木墙(wall_id=4)
 
 输出示例：
-{""tiles"": [{""x"":1,""y"":{y_end},""tile_id"":5}], ""wallRanges"": [{""x1"":1,""y1"":{y_start},""x2"":{width}-2,""y2"":{y_end},""wall_id"":4}]}
+{""tiles"": [{""x"":1,""y"":{y_end},""tile_id"":{tile_id}], ""wallRanges"": [{""x1"":1,""y1"":{y_start},""x2"":{width}-2,""y2"":{y_end},""wall_id"":{wall_id}]}
 
 立即输出JSON，不要解释。";
 
         private const string WINDOW_MODULE_PROMPT = @"你是窗户模块生成器。根据以下参数生成窗户方块JSON。
 
-参数：窗户位置{positions}, 窗户类型{window_type}, 风格{style}
+参数：窗户位置{positions}, 玻璃ID{glass_id}, 窗框ID{frame_id}
 
 任务：在每个窗户位置生成玻璃方块。
 
 规则：
-- 玻璃(tile_id=13)
+- 玻璃(tile_id={glass_id})
 - 窗户宽2高2，生成4个玻璃方块
 
 输出示例：
-{""tiles"": [{""x"":3,""y"":6,""tile_id"":13},{""x"":4,""y"":6,""tile_id"":13},{""x"":3,""y"":7,""tile_id"":13},{""x"":4,""y"":7,""tile_id"":13}]}
+{""tiles"": [{""x"":3,""y"":6,""tile_id"":{glass_id},{""x"":4,""y"":6,""tile_id"":{glass_id},{""x"":3,""y"":7,""tile_id"":{glass_id},{""x"":4,""y"":7,""tile_id"":{glass_id}]}
 
 立即输出JSON，不要解释。";
 
@@ -140,12 +138,16 @@ namespace trab.Core
 
             progressCallback?.Invoke("生成屋顶模块...");
 
-            // 检索向量库获取屋顶材料
+            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
-            var roofTiles = kb.Tiles.SearchTiles(plan.Style, "brick");
-            int roofTileId = roofTiles.FirstOrDefault()?.id ?? 4;  // 默认灰砖
-            int roofWallId = kb.Tiles.GetAllWalls().FirstOrDefault()?.id ?? 4;  // 默认木墙
+            var candidates = kb.Tiles.SearchTiles(null, "brick");  // 本地过滤brick类
+            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);  // 向量排序
+            int roofTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 4;
+            var walls = kb.Tiles.GetAllWalls();
+            int roofWallId = walls.FirstOrDefault(w => w.name.Contains("Brick"))?.id ?? 4;
+
+            trab.Instance?.Logger.Info($"屋顶检索: 本地{candidates.Count}个, 向量排序后取{semanticResults.Count}个, 最终ID={roofTileId}");
 
             int yStart = roofRegion.YRange?[0] ?? 0;
             int yEnd = roofRegion.YRange?[1] ?? 2;
@@ -157,7 +159,7 @@ namespace trab.Core
                 .Replace("{y_start}", yStart.ToString())
                 .Replace("{y_end}", yEnd.ToString())
                 .Replace("{center}", center.ToString())
-                .Replace("{tile_id}", roofTileId.ToString())  // 检索到的方块ID
+                .Replace("{tile_id}", roofTileId.ToString())
                 .Replace("{style}", plan.Style);
 
             try
@@ -180,10 +182,23 @@ namespace trab.Core
             var wallRegion = plan.WallRegion;
             progressCallback?.Invoke("生成墙壁模块...");
 
+            // Step1: 本地过滤 + Step2: 向量语义排序
+            var kb = KnowledgeBaseManager.Instance;
+            kb.Initialize();
+            var candidates = kb.Tiles.SearchTiles(null, "basic");  // 本地过滤basic类（石头等）
+            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);
+            int wallTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 4;
+            var walls = kb.Tiles.GetAllWalls();
+            int wallId = walls.FirstOrDefault()?.id ?? 4;
+
+            trab.Instance?.Logger.Info($"墙壁检索: 本地{candidates.Count}个, 向量排序后{semanticResults.Count}个, 最终ID={wallTileId}");
+
             string prompt = WALL_MODULE_PROMPT
                 .Replace("{width}", plan.Width.ToString())
                 .Replace("{height}", plan.Height.ToString())
                 .Replace("{thickness}", (wallRegion?.Thickness ?? 1).ToString())
+                .Replace("{tile_id}", wallTileId.ToString())
+                .Replace("{wall_id}", wallId.ToString())
                 .Replace("{style}", plan.Style);
 
             try
@@ -210,6 +225,17 @@ namespace trab.Core
         {
             progressCallback?.Invoke("生成楼层模块...");
 
+            // Step1: 本地过滤 + Step2: 向量语义排序
+            var kb = KnowledgeBaseManager.Instance;
+            kb.Initialize();
+            var candidates = kb.Tiles.SearchTiles(null, "wood");  // 本地过滤wood类
+            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);
+            int floorTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 5;
+            var walls = kb.Tiles.GetAllWalls();
+            int floorWallId = walls.FirstOrDefault(w => w.name.Contains("Wood"))?.id ?? walls.FirstOrDefault()?.id ?? 4;
+
+            trab.Instance?.Logger.Info($"楼层检索: 本地{candidates.Count}个, 向量排序后{semanticResults.Count}个, 最终ID={floorTileId}");
+
             var floorRegions = plan.FloorRegions;
             if (floorRegions == null || floorRegions.Count == 0)
                 return new ModuleResult { ModuleName = "floors", IsError = true, ErrorMessage = "无楼层区域定义" };
@@ -224,6 +250,8 @@ namespace trab.Core
                     .Replace("{y_start}", (floor.YRange?[0] ?? 0).ToString())
                     .Replace("{y_end}", (floor.YRange?[1] ?? 0).ToString())
                     .Replace("{floor_num}", floor.Name.Replace("floor", ""))
+                    .Replace("{tile_id}", floorTileId.ToString())
+                    .Replace("{wall_id}", floorWallId.ToString())
                     .Replace("{style}", plan.Style);
 
                 try
@@ -248,6 +276,18 @@ namespace trab.Core
         {
             progressCallback?.Invoke("生成窗户模块...");
 
+            // Step1: 本地过滤 + Step2: 向量语义排序
+            var kb = KnowledgeBaseManager.Instance;
+            kb.Initialize();
+            var glassCandidates = kb.Tiles.SearchTiles(null, "transparent");  // 本地过滤transparent类
+            var glassResults = kb.Vectors.SearchTilesSemantic(glassCandidates, plan.Style, 10);
+            int glassTileId = glassResults.FirstOrDefault()?.id ?? glassCandidates.FirstOrDefault()?.id ?? 13;
+            var frameCandidates = kb.Tiles.SearchTiles(null, "slab");  // 窗框用石板类
+            var frameResults = kb.Vectors.SearchTilesSemantic(frameCandidates, plan.Style, 10);
+            int frameTileId = frameResults.FirstOrDefault()?.id ?? frameCandidates.FirstOrDefault()?.id ?? 143;
+
+            trab.Instance?.Logger.Info($"窗户检索: 玻璃ID={glassTileId}, 窗框ID={frameTileId}");
+
             var positions = plan.WindowPositions;
             if (positions == null || positions.Count == 0)
                 return new ModuleResult { ModuleName = "windows" };
@@ -256,6 +296,8 @@ namespace trab.Core
             string prompt = WINDOW_MODULE_PROMPT
                 .Replace("{positions}", positionsStr)
                 .Replace("{window_type}", positions.FirstOrDefault()?.Type ?? "double")
+                .Replace("{glass_id}", glassTileId.ToString())
+                .Replace("{frame_id}", frameTileId.ToString())
                 .Replace("{style}", plan.Style);
 
             try
