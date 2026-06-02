@@ -22,8 +22,7 @@ Tools/
 │
 ├── vector/            # 向量生成
 │   ├── generate_embeddings_smart.py  # 智能向量 (推荐)
-│   ├── generate_embeddings_pro.py    # TF-IDF向量
-│   ├── generate_embeddings.py        # 简化向量
+│   ├── generate_embeddings_full.py   # 全表向量
 │   └── README.md
 │
 ├── requirements.txt   # Python依赖

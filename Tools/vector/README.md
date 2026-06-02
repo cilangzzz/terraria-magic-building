@@ -6,11 +6,10 @@
 
 ## 脚本列表
 
-| 脚本 | 方法 | 质量 | 推荐 |
-|------|------|------|------|
-| generate_embeddings_smart.py | 语义关键词匹配 | ⭐⭐⭐ | ✓ 推荐 |
-| generate_embeddings_pro.py | SentenceTransformers + TF-IDF | ⭐⭐ | 可选 |
-| generate_embeddings.py | 简化哈希向量 | ⭐ | 备用 |
+| 脚本 | 方法 | 适用场景 | 推荐 |
+|------|------|----------|------|
+| generate_embeddings_smart.py | 语义关键词匹配 | tiles/styles/biomes | ✓ 推荐 |
+| generate_embeddings_full.py | SentenceTransformers/哈希 | tiles/walls/furniture/styles | 全面 |
 
 ---
 
@@ -22,7 +21,7 @@
 
 ## 推荐使用
 
-### generate_embeddings_smart.py
+### generate_embeddings_smart.py (推荐)
 
 ```bash
 cd Tools/vector
@@ -36,13 +35,29 @@ python generate_embeddings_smart.py
 - 无需网络/外部依赖
 - 相似度匹配效果最佳
 
+**输出**: `tile_embeddings.json`, `style_embeddings.json`
+
 **测试结果**:
 ```
-玻璃/透明 → Glass: 0.754 ✓
-豪华/金砖 → GoldBrick: 0.627 ✓
+玻璃/透明 → Glass: 0.778 ✓
+豪华/金砖 → GoldBrick: 0.628 ✓
 神圣/珍珠石 → Pearlstone: 0.554 ✓
 东方/王朝木 → DynastyWood: 0.408 ✓
 ```
+
+### generate_embeddings_full.py (全面)
+
+```bash
+cd Tools/vector
+python generate_embeddings_full.py
+```
+
+**特点**:
+- 处理所有表：tiles、walls、furniture、styles
+- 支持SentenceTransformers（需网络）
+- 哈希向量作为备用方案
+
+**输出**: `tile_embeddings.json`, `wall_embeddings.json`, `furniture_embeddings.json`, `style_embeddings.json`
 
 ---
 
