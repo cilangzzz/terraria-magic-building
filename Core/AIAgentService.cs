@@ -50,20 +50,25 @@ namespace trab.Core
 
         private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。生成有设计感的建筑JSON。
 
+## 重要概念区分
+- **tile_id**: 方块ID（放置在世界中的实体方块），如：4=灰砖、5=木材、10=门、143=石板
+- **wall_id**: 墙壁背景ID（背景墙），如：4=木墙、6=灰砖墙、14=玻璃墙
+- 注意：tile_id和wall_id是不同的系统！门(tile_id=10)不是墙壁！
+
 ## 推荐流程（必须按顺序执行）
 1. analyze_requirement - 分析用户需求，确定建筑类型、风格、材料类别
-2. search_tiles(search_tiles/style=风格,category=main_block) - 检索主要方块候选
+2. search_tiles(style=风格,category=main_block) - 检索主要方块候选
 3. search_tiles(style=风格,category=roof_block) - 检索屋顶方块候选
 4. search_tiles(style=风格,category=floor_block) - 检索地板方块候选
-5. search_walls(style=风格) - 检索墙壁候选
+5. search_walls(style=风格) - 检索墙壁候选（返回wall_id，不是tile_id）
 6. search_furniture(room_type=light/surface/comfort/door) - 检索家具候选
 7. select_materials - 从候选中选择最合适的材料ID（必须调用！）
 8. 输出完整JSON（必须使用select_materials返回的ID！）
 
 ## 重要规则
-- select_materials返回的ID是最终使用的材料，JSON中的tile_id必须使用这些ID
+- select_materials返回的ID是最终使用的材料，JSON中的tile_id/wall_id必须使用这些ID
 - 不要使用默认ID（如石头1、灰砖4），必须使用select_materials选定的ID
-- 示例：如果select_materials返回main_block_id=38，则tiles中使用tile_id=38
+- main_wall_id必须是有效的wall_id（4=木墙、6=灰砖墙、14=玻璃墙），不能用tile_id
 
 ## JSON格式（必须完整输出，使用选定的材料ID）
 {
@@ -716,21 +721,21 @@ namespace trab.Core
                     function = new
                     {
                         name = "select_materials",
-                        description = "从检索到的材料候选中选择最合适的材料ID。需要考虑风格一致性、材料搭配协调度。",
+                        description = "从检索到的材料候选中选择最合适的材料ID。注意：wall_id是墙壁背景ID(如4=木墙、6=灰砖墙、14=玻璃墙)，tile_id是方块ID(如4=灰砖、10=门)。两者不同！",
                         parameters = new
                         {
                             type = "object",
                             properties = new
                             {
-                                main_block_id = new { type = "integer", description = "主要方块ID" },
-                                secondary_block_id = new { type = "integer", description = "次要方块ID（可选）" },
-                                roof_block_id = new { type = "integer", description = "屋顶方块ID" },
-                                floor_block_id = new { type = "integer", description = "地板方块ID" },
-                                main_wall_id = new { type = "integer", description = "主要墙壁ID" },
-                                light_id = new { type = "integer", description = "光源家具ID" },
-                                surface_id = new { type = "integer", description = "桌面家具ID" },
-                                comfort_id = new { type = "integer", description = "舒适家具ID（椅子等）" },
-                                door_id = new { type = "integer", description = "门家具ID" },
+                                main_block_id = new { type = "integer", description = "主要方块tile_id（方块ID，如4=灰砖、5=木材）" },
+                                secondary_block_id = new { type = "integer", description = "次要方块tile_id（可选）" },
+                                roof_block_id = new { type = "integer", description = "屋顶方块tile_id（如143=石板）" },
+                                floor_block_id = new { type = "integer", description = "地板方块tile_id（如5=木材、19=平台）" },
+                                main_wall_id = new { type = "integer", description = "墙壁背景wall_id（注意：这是wall_id不是tile_id！如4=木墙、6=灰砖墙、14=玻璃墙。不要用10，10是门的tile_id不是墙！）" },
+                                light_id = new { type = "integer", description = "光源家具tile_id（如4=火把、34=吊灯）" },
+                                surface_id = new { type = "integer", description = "桌面家具tile_id（如17=工作台、87=桌子）" },
+                                comfort_id = new { type = "integer", description = "舒适家具tile_id（如88=椅子、89=床）" },
+                                door_id = new { type = "integer", description = "门家具tile_id（如10=木门、11=玻璃门）" },
                                 primary_paint = new { type = "integer", description = "主色调油漆ID(0-31)" },
                                 shadow_paint = new { type = "integer", description = "阴影油漆ID(默认28)" },
                                 reasoning = new { type = "string", description = "选择理由说明" }

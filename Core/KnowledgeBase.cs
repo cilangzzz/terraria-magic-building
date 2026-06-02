@@ -115,6 +115,7 @@ namespace trab.Core
                 new WallInfo { id = 1, name = "StoneWall", display_name = "石墙", category = "natural", styles = new List<string> { "medieval", "natural" } },
                 new WallInfo { id = 4, name = "WoodWall", display_name = "木墙", category = "wood", styles = new List<string> { "natural", "medieval" } },
                 new WallInfo { id = 6, name = "GrayBrickWall", display_name = "灰砖墙", category = "brick", styles = new List<string> { "medieval", "castle" } },
+                new WallInfo { id = 14, name = "GlassWall", display_name = "玻璃墙", category = "transparent", styles = new List<string> { "modern", "fantasy" } },
                 new WallInfo { id = 15, name = "GoldBrickWall", display_name = "金砖墙", category = "luxury", styles = new List<string> { "luxury" } },
                 new WallInfo { id = 16, name = "SandstoneWall", display_name = "砂岩墙", category = "desert", styles = new List<string> { "desert" } },
                 new WallInfo { id = 17, name = "SnowWall", display_name = "雪墙", category = "snow", styles = new List<string> { "snow" } }
