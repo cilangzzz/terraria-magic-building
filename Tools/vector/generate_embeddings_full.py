@@ -18,8 +18,8 @@ except ImportError:
     print("警告: sentence-transformers未安装，将使用简化向量")
 
 # 配置
-OUTPUT_DIR = Path(__file__).parent.parent / "Data"
-DB_PATH = OUTPUT_DIR / "terraria_kb.db"
+OUTPUT_DIR = Path(__file__).parent.parent / "Data" / "vectors"
+DB_PATH = Path(__file__).parent.parent / "Data" / "kb" / "terraria_kb.db"
 
 # 输出路径
 TILE_EMBEDDINGS_PATH = OUTPUT_DIR / "tile_embeddings.json"

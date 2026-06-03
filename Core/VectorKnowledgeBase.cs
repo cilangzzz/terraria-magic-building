@@ -339,10 +339,17 @@ namespace trab.Core
         {
             var paths = new List<string>();
 
+            // 判断是向量文件还是数据库文件
+            string subDir = "vectors";
+            if (filename.EndsWith(".db") || filename.EndsWith(".sql"))
+            {
+                subDir = "kb";
+            }
+
             // 1. Mod源码目录 (开发模式)
             string modSourcePath = Path.Combine(
                 "C:", "Users", "admin", "Documents", "My Games", "Terraria",
-                "tModLoader", "ModSources", "trab", "Data", filename);
+                "tModLoader", "ModSources", "trab", "Data", subDir, filename);
             paths.Add(modSourcePath);
 
             // 2. 从Assembly位置推导
@@ -352,19 +359,19 @@ namespace trab.Core
                 if (!string.IsNullOrEmpty(basePath))
                 {
                     // tModLoader运行目录结构
-                    paths.Add(Path.Combine(basePath, "Data", filename));
+                    paths.Add(Path.Combine(basePath, "Data", subDir, filename));
                     // ModSources相对路径
-                    paths.Add(Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab", "Data", filename));
+                    paths.Add(Path.Combine(basePath, "..", "..", "..", "..", "ModSources", "trab", "Data", subDir, filename));
                 }
                 // Terraria数据目录
-                string terrariaPath = Path.Combine(Main.SavePath, "Mods", "trab", "Data", filename);
+                string terrariaPath = Path.Combine(Main.SavePath, "Mods", "trab", "Data", subDir, filename);
                 paths.Add(terrariaPath);
             }
             catch { }
 
             // 3. 当前工作目录
-            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "Data", filename));
-            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "..", "Data", filename));
+            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "Data", subDir, filename));
+            paths.Add(Path.Combine(Directory.GetCurrentDirectory(), "..", "Data", subDir, filename));
 
             return paths.ToArray();
         }

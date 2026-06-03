@@ -12,8 +12,8 @@ from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data")
-DB_PATH = os.path.join(DATA_DIR, "terraria_kb.db")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "vectors")
+DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "kb", "terraria_kb.db")
 VECTOR_DIM = 384
 
 # 预定义语义关键词权重

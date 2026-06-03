@@ -12,7 +12,7 @@ from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "kb")
 DB_PATH = os.path.join(DATA_DIR, "terraria_kb.db")
 SQL_PATH = os.path.join(DATA_DIR, "terraria_kb_tiles.sql")
 

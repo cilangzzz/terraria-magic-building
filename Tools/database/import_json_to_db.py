@@ -13,7 +13,7 @@ import sqlite3
 from datetime import datetime
 
 # 路径配置
-DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "Data", "kb")
 DB_PATH = os.path.join(DATA_DIR, "terraria_kb.db")
 
 # JSON文件路径
