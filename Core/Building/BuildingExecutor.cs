@@ -5,10 +5,14 @@ using Newtonsoft.Json;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using trab.Core.API;
 using trab.Data;
 
-namespace trab.Core
+namespace trab.Core.Building
 {
+    /// <summary>
+    /// 建筑执行器 - 解析设计并在游戏中生成建筑
+    /// </summary>
     public class BuildingExecutor
     {
         private readonly Mod modInst;
@@ -62,7 +66,7 @@ namespace trab.Core
                         if (WorldGen.InWorld(x, y))
                             Main.tile[x, y].ClearEverything();
 
-                // 墙壁 - 支持wall_id精确ID
+                // 墙壁
                 foreach (var w in d.Walls)
                 {
                     int wx = startX + w.X, wy = startY + w.Y;
@@ -78,7 +82,7 @@ namespace trab.Core
                     }
                 }
 
-                // 墙壁范围 - 批量填充墙壁
+                // 墙壁范围
                 foreach (var wr in d.WallRanges)
                 {
                     int wallType = wr.WallId > 0 ? wr.WallId : GetWall(wr.WallType);
@@ -99,30 +103,27 @@ namespace trab.Core
                     }
                 }
 
-                // 方块 - 支持tile_id精确ID和slope斜坡
+                // 方块
                 foreach (var t in d.Tiles)
                 {
                     int tx = startX + t.X, ty = startY + t.Y;
                     if (WorldGen.InWorld(tx, ty))
                     {
-                        // 优先使用tile_id（AI生成的精确ID）
                         int tt = t.TileId > 0 ? t.TileId : GetTile(t.TileType);
                         if (tt > 0)
                         {
                             WorldGen.PlaceTile(tx, ty, (ushort)tt);
 
-                            // 应用斜坡
                             if (t.Slope > 0 && t.Slope <= 5)
                                 SetTileSlope(tx, ty, t.Slope);
 
-                            // 应用油漆
                             if (t.GetPaintId() > 0)
                                 SetTilePaint(tx, ty, t.GetPaintId());
                         }
                     }
                 }
 
-                // 门 - 支持tile_id
+                // 门
                 foreach (var dr in d.Doors)
                 {
                     int dx = startX + dr.X, dy = startY + dr.Y;
@@ -137,7 +138,7 @@ namespace trab.Core
                     }
                 }
 
-                // 家具 - 优先使用tile_id
+                // 家具
                 foreach (var f in d.Furniture)
                 {
                     int fx = startX + f.X, fy = startY + f.Y;
@@ -153,7 +154,7 @@ namespace trab.Core
                     }
                 }
 
-                // 光源 - 优先使用tile_id
+                // 光源
                 foreach (var l in d.LightSources)
                 {
                     int lx = startX + l.X, ly = startY + l.Y;
@@ -183,34 +184,23 @@ namespace trab.Core
             }
         }
 
-        /// <summary>
-        /// 设置方块斜坡 - 使用WorldGen方法
-        /// </summary>
         private void SetTileSlope(int x, int y, int slope)
         {
             if (!WorldGen.InWorld(x, y)) return;
 
-            // SlopeType: 0=none, 1=right(slope down right), 2=left(slope down left), 3=down right, 4=down left
             SlopeType slopeType = (SlopeType)slope;
 
-            // 使用Tile.SmoothSlope或直接设置
             var tile = Main.tile[x, y];
             if (tile.HasTile)
             {
-                // 尝试平滑斜坡
                 Tile.SmoothSlope(x, y, false);
-                // 如果需要特定斜坡，再次设置
                 if (slope > 0)
                 {
-                    // 通过WorldGen设置斜坡方块
                     WorldGen.SlopeTile(x, y, (int)slopeType);
                 }
             }
         }
 
-        /// <summary>
-        /// 设置方块油漆
-        /// </summary>
         private void SetTilePaint(int x, int y, int paintId)
         {
             if (!WorldGen.InWorld(x, y) || paintId <= 0 || paintId > 31) return;
@@ -218,16 +208,12 @@ namespace trab.Core
             var tile = Main.tile[x, y];
             if (tile.HasTile)
             {
-                // 使用NetMessage或直接设置
                 tile.TileColor = (byte)paintId;
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetMessage.SendTileSquare(-1, x, y, 1, 1);
             }
         }
 
-        /// <summary>
-        /// 设置墙壁油漆
-        /// </summary>
         private void SetWallPaint(int x, int y, int paintId)
         {
             if (!WorldGen.InWorld(x, y) || paintId <= 0 || paintId > 31) return;
@@ -285,7 +271,7 @@ namespace trab.Core
                 {"Platform", TileID.Platforms},
                 {"Brick", 38},
                 {"WorkBench", 17},
-                {"BorealWood", 250},  // 寒带木
+                {"BorealWood", 250},
             };
         }
 
@@ -308,7 +294,7 @@ namespace trab.Core
                 {"GraniteWall", WallID.GraniteBlock},
                 {"SnowWall", 64},
                 {"BrickWall", 41},
-                {"BorealWoodWall", 216},  // 寒带木墙
+                {"BorealWoodWall", 216},
             };
         }
 

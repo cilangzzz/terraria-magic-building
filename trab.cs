@@ -1,6 +1,7 @@
 using System;
 using Terraria.ModLoader;
-using trab.Core;
+using trab.Core.Building;
+using trab.Core.KnowledgeBase;
 using trab.Config;
 
 namespace trab
@@ -28,7 +29,7 @@ namespace trab
         public static trab Instance { get; private set; }
 
         /// <summary>
-        /// 建筑执行器实例（基础版）
+        /// 建筑执行器实例
         /// </summary>
         public BuildingExecutor Builder { get; private set; }
 
@@ -60,7 +61,7 @@ namespace trab
             Instance = null;
             Builder = null;
             EnhancedBuilder = null;
-            KnowledgeBaseManager.Instance.Reset();  // 重置知识库状态
+            KnowledgeBaseManager.Instance.Reset();
         }
 
         /// <summary>

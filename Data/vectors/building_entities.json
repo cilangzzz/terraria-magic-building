@@ -1,0 +1,78 @@
+{
+  "buildings": {
+    "20260602215014": {
+      "id": "20260602215014",
+      "source": "QQ截图20260602215014.png",
+      "dimensions": { "width": 53, "height": 32 },
+      "features": {
+        "type": "residence",
+        "style": "asian_fantasy",
+        "progress": "mid_late_game",
+        "complexity": "high",
+        "structure": "multi_story"
+      },
+      "materials": {
+        "primary_tiles": [
+          { "id": 179, "name": "Gold", "count": 179 },
+          { "id": 129, "name": "Pine Lantern", "count": 129 },
+          { "id": 104, "name": "Cactus Door", "count": 104 },
+          { "id": 58, "name": "Dirt", "count": 58 },
+          { "id": 25, "name": "Slush", "count": 25 }
+        ],
+        "primary_walls": [
+          { "id": 172, "name": "Marble Wall", "count": 172 },
+          { "id": 154, "name": "Ebonwood Wall", "count": 154 },
+          { "id": 145, "name": "Crimson Wall", "count": 145 },
+          { "id": 128, "name": "Wood Wall", "count": 128 },
+          { "id": 112, "name": "Mushroom Shelf Wall", "count": 112 }
+        ]
+      },
+      "functions": {
+        "light_source": {
+          "count": 162,
+          "items": ["Pine Lantern(129)", "Blue Torch(12)", "Green Torch(6)", "Campfire(6)", "Torch(3)", "Obsidian Lantern(9)", "Dynasty Lantern(6)"]
+        },
+        "entry": {
+          "count": 112,
+          "items": ["Cactus Door(104)", "Silver Door(8)"]
+        },
+        "storage": {
+          "count": 4,
+          "items": ["Chest(4)"]
+        },
+        "furniture": {
+          "count": 76,
+          "items": ["Marble Bookshelf(23)", "Dynasty Sink(12)", "Teacup(11)", "Tungsten Bathtub(4)", "Gold Bookshelf(3)"]
+        },
+        "platform": {
+          "count": 8,
+          "items": ["Copper Platform(8)"]
+        }
+      },
+      "style_tags": ["asian", "fantasy", "residence", "gold", "lantern", "marble", "ebonwood", "crimson", "multi-story", "warm-tones"],
+      "color_tone": {
+        "primary": "warm",
+        "colors": ["gold", "brown", "green", "purple"]
+      },
+      "biome_match": ["forest", "any"],
+      "npc_suitable": {
+        "is_valid_house": true,
+        "has_light": true,
+        "has_flat_surface": true,
+        "has_comfort": true,
+        "has_entry": true,
+        "has_walls": true
+      },
+      "summary": "中式奇幻风格多层住宅，53x32格，使用金块装饰、大理石墙、松木灯笼等材料，包含地上居住区和地下功能区",
+      "building_sequence": [
+        { "step": 1, "action": "frame", "materials": ["Stone", "Stone Slab"], "note": "搭建主体框架" },
+        { "step": 2, "action": "walls", "materials": ["Marble Wall", "Ebonwood Wall"], "note": "铺设背景墙" },
+        { "step": 3, "action": "floor", "materials": ["Dirt", "Gold"], "note": "铺设地板和装饰" },
+        { "step": 4, "action": "doors", "materials": ["Cactus Door"], "note": "安装入口" },
+        { "step": 5, "action": "lights", "materials": ["Pine Lantern", "Blue Torch"], "note": "布置光源" },
+        { "step": 6, "action": "furniture", "materials": ["Bookshelf", "Sink", "Teacup"], "note": "摆放家具" },
+        { "step": 7, "action": "decor", "materials": ["Gold", "Gemspark"], "note": "添加装饰细节" }
+      ]
+    }
+  }
+}

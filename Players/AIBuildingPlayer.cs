@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
-using trab.Core;
+using trab.Core.Agents;
+using trab.Core.API;
+using trab.Core.Building;
+using trab.Core.KnowledgeBase;
 using trab.Data;
 using trab.Config;
 using trab.UI;
@@ -55,27 +58,23 @@ namespace trab.Players
         {
             var config = ModContent.GetInstance<AIBuildingConfig>();
 
-            // 检查API密钥
             if (string.IsNullOrEmpty(config.ApiKey))
             {
                 Main.NewText("请先在模组配置中设置API密钥!", Color.Red);
                 return;
             }
 
-            // 取消之前的请求
             _currentRequest?.Cancel();
             _currentRequest = new CancellationTokenSource();
 
             IsGenerating = true;
             Main.NewText($"正在请求AI生成建筑: {prompt}", Color.Yellow);
 
-            // 初始化服务
             if (_aiService == null)
             {
-                _aiService = new AIApiService(config.ApiKey, config.ServiceProvider, config.CustomEndpoint, config.ModelName);
+                _aiService = new AIApiService(config.ApiKey, config.ServiceProvider, config.ModelName);
             }
 
-            // 异步请求
             Task.Run(async () =>
             {
                 try
@@ -127,14 +126,12 @@ namespace trab.Players
         {
             var config = ModContent.GetInstance<AIBuildingConfig>();
 
-            // 检查API密钥
             if (string.IsNullOrEmpty(config.ApiKey))
             {
                 Main.NewText("请先在模组配置中设置API密钥!", Color.Red);
                 return;
             }
 
-            // 取消之前的请求
             _currentRequest?.Cancel();
             _currentRequest = new CancellationTokenSource();
 
@@ -144,13 +141,11 @@ namespace trab.Players
 
             Main.NewText($"[Agent模式] 正在生成建筑: {prompt}", Color.Cyan);
 
-            // 初始化Agent服务
             if (_agentService == null)
             {
-                _agentService = new AIAgentService(config.ApiKey, config.ServiceProvider, config.ModelName);
+                _agentService = new AIAgentService();
             }
 
-            // 异步请求（带进度回调）
             Task.Run(async () =>
             {
                 try
@@ -164,7 +159,6 @@ namespace trab.Players
                                 AgentProgress = progress;
                                 ToolCallHistory.Add(progress);
 
-                                // 显示进度（带轮次信息）
                                 var uiSys = ModContent.GetInstance<AIBuildingUISystem>();
                                 if (uiSys.Visible && uiSys.panel != null)
                                 {
@@ -172,7 +166,6 @@ namespace trab.Players
                                 }
                                 else
                                 {
-                                    // 根据轮次选择颜色
                                     Color msgColor = round > 0 ? Color.LightBlue : Color.Green;
                                     Main.NewText($"[Agent] {progress}", msgColor);
                                 }
@@ -223,9 +216,6 @@ namespace trab.Players
             });
         }
 
-        /// <summary>
-        /// 处理Agent返回的设计
-        /// </summary>
         private void ProcessAgentDesign(BuildingDesign design)
         {
             LastDesign = design;
@@ -240,13 +230,11 @@ namespace trab.Players
             Main.NewText($"家具数: {design.Furniture.Count}", Color.White);
             Main.NewText($"光源数: {design.LightSources.Count}", Color.White);
 
-            // 显示油漆方案
             if (design.PaintScheme != null)
             {
                 Main.NewText($"油漆方案: {design.PaintScheme.Description}", Color.Purple);
             }
 
-            // 显示NPC房屋验证
             if (design.NpcSuitability != null)
             {
                 if (design.NpcSuitability.IsValidHouse)
@@ -259,7 +247,6 @@ namespace trab.Players
                 }
             }
 
-            // 显示工具调用历史
             if (design.ToolCalls.Count > 0)
             {
                 Main.NewText($"工具调用: {design.ToolCalls.Count}次", Color.Gray);
@@ -272,14 +259,10 @@ namespace trab.Players
             Main.NewText("按 B 键或使用 /aibuild place 在当前位置生成建筑", Color.Yellow);
         }
 
-        /// <summary>
-        /// 处理AI响应（传统模式）
-        /// </summary>
         private void ProcessBuildingResponse(string jsonResponse)
         {
             LastAIResponse = jsonResponse;
 
-            // 提取JSON
             string json = AIApiService.ExtractJsonFromResponse(jsonResponse);
             if (json == null)
             {
@@ -287,7 +270,6 @@ namespace trab.Players
                 return;
             }
 
-            // 解析建筑数据
             var executor = new BuildingExecutor(Mod);
             var design = executor.ParseDesign(json);
 
@@ -309,9 +291,6 @@ namespace trab.Players
             }
         }
 
-        /// <summary>
-        /// 在玩家位置生成最后设计的建筑
-        /// </summary>
         public void PlaceLastDesign()
         {
             if (LastDesign == null)
@@ -322,8 +301,6 @@ namespace trab.Players
             }
 
             var config = ModContent.GetInstance<AIBuildingConfig>();
-
-            // 使用增强版执行器（支持油漆、斜坡、阴影）
             var executor = trab.Instance.EnhancedBuilder;
 
             int startX = (int)(Player.position.X / 16) + config.BuildOffsetX;
@@ -339,9 +316,6 @@ namespace trab.Players
             }
         }
 
-        /// <summary>
-        /// 在指定位置生成建筑
-        /// </summary>
         public void PlaceDesignAt(BuildingDesign design, int startX, int startY)
         {
             if (design == null)
@@ -354,9 +328,6 @@ namespace trab.Players
             executor.BuildAtLocationEnhanced(design, startX, startY, Player);
         }
 
-        /// <summary>
-        /// 停止当前生成
-        /// </summary>
         public void StopGeneration()
         {
             if (_currentRequest != null && !_currentRequest.IsCancellationRequested)
@@ -372,9 +343,6 @@ namespace trab.Players
             }
         }
 
-        /// <summary>
-        /// 获取知识库状态信息
-        /// </summary>
         public string GetKnowledgeBaseStatus()
         {
             var kb = KnowledgeBaseManager.Instance;
@@ -390,37 +358,31 @@ namespace trab.Players
         {
             var uiSys = ModContent.GetInstance<AIBuildingUISystem>();
 
-            // P键打开/关闭UI（排除聊天模式和菜单）
             if (AIBuildingKeybindSystem.ToggleUIKey.JustPressed && !Main.drawingPlayerChat && !Main.gameMenu)
             {
                 uiSys.Toggle();
             }
 
-            // UI打开时的操作（排除聊天模式）
             if (uiSys.Visible && !Main.drawingPlayerChat)
             {
-                // G键生成
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G) &&
                     !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
                 {
                     if (uiSys.panel != null)
                         uiSys.panel.DoGenerate();
                 }
-                // B键放置（在鼠标位置）
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.B) &&
                     !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.B))
                 {
                     if (uiSys.panel != null)
                         uiSys.panel.DoPlaceAtMouse();
                 }
-                // M键区域选择
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.M) &&
                     !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.M))
                 {
                     if (uiSys.panel != null)
                         uiSys.panel.ToggleAreaMode();
                 }
-                // S键停止生成
                 if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S) &&
                     !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
                 {
@@ -428,7 +390,6 @@ namespace trab.Players
                 }
             }
 
-            // B键快速放置（UI关闭时，且不在聊天模式）
             if (!uiSys.Visible && !Main.drawingPlayerChat && !Main.gameMenu && AIBuildingKeybindSystem.PlaceBuildingKey.JustPressed)
             {
                 PlaceLastDesign();
@@ -436,9 +397,6 @@ namespace trab.Players
         }
     }
 
-    /// <summary>
-    /// AI建筑快捷键绑定系统
-    /// </summary>
     public class AIBuildingKeybindSystem : ModSystem
     {
         public static ModKeybind ToggleUIKey { get; private set; }
@@ -446,7 +404,6 @@ namespace trab.Players
 
         public override void Load()
         {
-            // 注册快捷键
             ToggleUIKey = KeybindLoader.RegisterKeybind(Mod, "ToggleAIUI", "P");
             PlaceBuildingKey = KeybindLoader.RegisterKeybind(Mod, "PlaceBuilding", "B");
         }

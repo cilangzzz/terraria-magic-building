@@ -8,7 +8,7 @@ using Terraria;
 using Terraria.ModLoader;
 using trab.Data;
 
-namespace trab.Core
+namespace trab.Core.KnowledgeBase
 {
     /// <summary>
     /// 向量知识库 - 支持语义检索

@@ -12,7 +12,8 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
 using trab.Config;
-using trab.Core;
+using trab.Core.API;
+using trab.Core.Building;
 using trab.Data;
 using trab.Players;
 
@@ -120,10 +121,10 @@ namespace trab.UI
         public Point? confirmedAreaStart = null;
         public Point? confirmedAreaEnd = null;
 
-        private int[] sizeWidths = { 10, 20, 35 };
-        private int[] sizeHeights = { 8, 15, 25 };
+        private int[] sizeWidths = { 100, 10, 20, 35 };
+        private int[] sizeHeights = { 80, 8, 15, 25 };
         private string[] styleNames = { "中世纪", "现代", "日式", "奇幻", "地下", "自定义" };
-        private string[] sizeNames = { "小", "中", "大" };
+        private string[] sizeNames = { "无限", "小", "中", "大" };
 
         private bool wasMouseLeftPressed = false;
 
@@ -215,13 +216,15 @@ namespace trab.UI
             sizeLabel.TextColor = Color.LightGray;
             sizeModule.Append(sizeLabel);
 
+            // 尺寸按钮 - 显示具体尺寸
             sizeButtons = new UITextPanel<string>[sizeNames.Length];
-            float sBtnW = 48f;
-            float sBtnGap = 3f;
+            string[] sizeLabels = { "无限", "小10x8", "中20x15", "大35x25" };
+            float sBtnW = 56f;
+            float sBtnGap = 4f;
             float sStartX = 46f;
             for (int i = 0; i < sizeNames.Length; i++)
             {
-                sizeButtons[i] = new UITextPanel<string>(sizeNames[i], 0.7f);
+                sizeButtons[i] = new UITextPanel<string>(sizeLabels[i], 0.6f);
                 sizeButtons[i].Width.Set(sBtnW, 0f);
                 sizeButtons[i].Height.Set(BUTTON_HEIGHT, 0f);
                 sizeButtons[i].Left.Set(sStartX + i * (sBtnW + sBtnGap), 0f);
@@ -232,13 +235,6 @@ namespace trab.UI
                 sizeButtons[i].OnLeftClick += (evt, elem) => SelectSize(idx);
                 sizeModule.Append(sizeButtons[i]);
             }
-
-            // 尺寸详情
-            var sizeDetail = new UIText("10x8", 0.75f);
-            sizeDetail.Left.Set(210f, 0f);
-            sizeDetail.Top.Set(12f, 0f);
-            sizeDetail.TextColor = Color.Cyan;
-            sizeModule.Append(sizeDetail);
 
             startY += MODULE_HEIGHT_SIZE + MODULE_MARGIN;
 
@@ -423,12 +419,6 @@ namespace trab.UI
             AddMessage($"尺寸: {sizeWidths[idx]}x{sizeHeights[idx]}");
             for (int i = 0; i < sizeButtons.Length; i++)
                 sizeButtons[i].BackgroundColor = i == idx ? new Color(50, 100, 50) : new Color(45, 45, 65);
-
-            foreach (var elem in sizeModule.Children)
-            {
-                if (elem is UIText t && t.TextColor == Color.Cyan)
-                    t.SetText($"{sizeWidths[idx]}x{sizeHeights[idx]}");
-            }
         }
 
         public void ToggleAreaMode()

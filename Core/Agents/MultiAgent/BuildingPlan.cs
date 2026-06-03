@@ -1,8 +1,9 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using trab.Data;
 
-namespace trab.Data
+namespace trab.Core.Agents.MultiAgent
 {
     /// <summary>
     /// 建筑规划方案 - 区域划分结果
@@ -24,7 +25,6 @@ namespace trab.Data
         [JsonProperty("regions")]
         public List<Region> Regions { get; set; } = new List<Region>();
 
-        // 辅助属性：获取特定区域
         public Region RoofRegion => Regions.FirstOrDefault(r => r.Name == "roof");
         public List<Region> FloorRegions => Regions.Where(r => r.Name.StartsWith("floor")).ToList();
         public Region WallRegion => Regions.FirstOrDefault(r => r.Name == "walls");
@@ -32,33 +32,27 @@ namespace trab.Data
         public List<FurniturePosition> FurniturePositions => Regions.FirstOrDefault(r => r.Name == "furniture")?.Furnitures ?? new List<FurniturePosition>();
     }
 
-    /// <summary>
-    /// 区域定义
-    /// </summary>
     public class Region
     {
         [JsonProperty("name")]
-        public string Name { get; set; }  // roof, floor1, walls, windows, furniture
+        public string Name { get; set; }
 
         [JsonProperty("type")]
-        public string Type { get; set; }  // gable, flat, dome (for roof)
+        public string Type { get; set; }
 
         [JsonProperty("y_range")]
-        public int[] YRange { get; set; }  // [y1, y2]
+        public int[] YRange { get; set; }
 
         [JsonProperty("thickness")]
-        public int Thickness { get; set; } = 1;  // for walls
+        public int Thickness { get; set; } = 1;
 
         [JsonProperty("positions")]
-        public List<WindowPosition> Windows { get; set; }  // for windows region
+        public List<WindowPosition> Windows { get; set; }
 
         [JsonProperty("furnitures")]
-        public List<FurniturePosition> Furnitures { get; set; }  // for furniture region
+        public List<FurniturePosition> Furnitures { get; set; }
     }
 
-    /// <summary>
-    /// 窗户位置
-    /// </summary>
     public class WindowPosition
     {
         [JsonProperty("x")]
@@ -74,12 +68,9 @@ namespace trab.Data
         public int Height { get; set; } = 2;
 
         [JsonProperty("type")]
-        public string Type { get; set; } = "double";  // single, double, arched
+        public string Type { get; set; } = "double";
     }
 
-    /// <summary>
-    /// 家具位置
-    /// </summary>
     public class FurniturePosition
     {
         [JsonProperty("x")]
@@ -89,15 +80,12 @@ namespace trab.Data
         public int Y { get; set; }
 
         [JsonProperty("type")]
-        public string Type { get; set; } = "workbench";  // workbench, table, chair, bed, chest
+        public string Type { get; set; } = "workbench";
 
         [JsonProperty("floor")]
-        public int Floor { get; set; } = 1;  // 所在楼层
+        public int Floor { get; set; } = 1;
     }
 
-    /// <summary>
-    /// 模块生成结果
-    /// </summary>
     public class ModuleResult
     {
         public string ModuleName { get; set; }

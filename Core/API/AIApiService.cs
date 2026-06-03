@@ -9,16 +9,13 @@ using Terraria;
 using Terraria.ModLoader;
 using trab.Data;
 
-namespace trab.Core
+namespace trab.Core.API
 {
-    public class AIApiService
+    /// <summary>
+    /// AI API服务 - 封装API请求逻辑
+    /// </summary>
+    public class AIApiService : ApiServiceBase
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
-        private readonly string _apiEndpoint;
-        private readonly AIServiceType _serviceType;
-        private readonly string _modelName;
-
         private const string SYSTEM_PROMPT = @"你是泰拉瑞亚建筑设计助手。返回简洁的JSON格式建筑设计。
 
 重要规则：
@@ -48,43 +45,10 @@ namespace trab.Core
 
 只返回纯JSON，不要解释，不要思考过程。";
 
-        public AIApiService(string apiKey, AIServiceType serviceType = AIServiceType.DeepSeek, string customEndpoint = "", string modelName = "deepseek-v4-flash")
+        public AIApiService(string apiKey, AIServiceType serviceType = AIServiceType.DeepSeek, string customEndpoint = null, string modelName = "deepseek-v4-flash")
+            : base(apiKey, serviceType, modelName, customEndpoint)
         {
-            _apiKey = apiKey;
-            _serviceType = serviceType;
-            _modelName = modelName;
-
-            _httpClient = new HttpClient();
             _httpClient.Timeout = TimeSpan.FromSeconds(60);
-
-            switch (serviceType)
-            {
-                case AIServiceType.DeepSeek:
-                    // DeepSeek Anthropic兼容端点
-                    _apiEndpoint = "https://api.deepseek.com/anthropic/v1/messages";
-                    _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
-                    _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-                    break;
-                case AIServiceType.DashScope:
-                    _apiEndpoint = customEndpoint;
-                    _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-                    _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-                    break;
-                case AIServiceType.Claude:
-                    _apiEndpoint = "https://api.anthropic.com/v1/messages";
-                    _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
-                    _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-                    break;
-                case AIServiceType.OpenAI:
-                    _apiEndpoint = "https://api.openai.com/v1/chat/completions";
-                    _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-                    break;
-                case AIServiceType.Custom:
-                    _apiEndpoint = customEndpoint;
-                    if (!string.IsNullOrEmpty(apiKey))
-                        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-                    break;
-            }
         }
 
         public async Task<string> SendChatRequestAsync(string userMessage, CancellationToken ct)
@@ -99,7 +63,7 @@ namespace trab.Core
                     requestBody = new
                     {
                         model = _modelName,
-                        max_tokens = 4096,  // 增加token限制，避免截断
+                        max_tokens = 4096,
                         system = SYSTEM_PROMPT,
                         messages = new[]
                         {
@@ -142,7 +106,6 @@ namespace trab.Core
                     var claudeResp = JsonConvert.DeserializeObject<ClaudeResponse>(responseJson);
                     if (claudeResp?.content != null && claudeResp.content.Length > 0)
                     {
-                        // 检查是否被截断
                         if (claudeResp.stop_reason == "max_tokens")
                         {
                             trab.Instance?.Logger.Warn("API响应被截断(max_tokens)，建筑设计可能不完整");
@@ -150,7 +113,6 @@ namespace trab.Core
                                 Main.NewText("[AI建筑] 警告: 响应被截断，建筑可能不完整，请尝试更简单的描述", Color.Yellow));
                         }
 
-                        // 获取文本内容，跳过thinking类型
                         foreach (var item in claudeResp.content)
                         {
                             if (item.type == "text" && !string.IsNullOrEmpty(item.text))
@@ -215,7 +177,7 @@ namespace trab.Core
     public class ClaudeResponse
     {
         public ClaudeContent[] content { get; set; }
-        public string stop_reason { get; set; }  // 添加stop_reason字段检测截断
+        public string stop_reason { get; set; }
     }
 
     public class ClaudeContent

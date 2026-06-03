@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Terraria.ModLoader;
+using trab.Core.API;
+using trab.Core.KnowledgeBase;
 using trab.Data;
 
-namespace trab.Core
+namespace trab.Core.Agents.MultiAgent
 {
     /// <summary>
     /// 模块生成Agent - 每个模块单独调用AI生成
@@ -23,7 +25,6 @@ namespace trab.Core
         private AIServiceType _serviceType;
         private string _modelName;
 
-        // 模块生成系统提示（每个模块不同）
         private const string ROOF_MODULE_PROMPT = @"你是屋顶模块生成器。根据以下参数生成屋顶方块JSON。
 
 参数：宽度{width}, 屋顶类型{roof_type}, Y范围{y_start}-{y_end}, 方块ID{tile_id}
@@ -127,9 +128,6 @@ namespace trab.Core
             }
         }
 
-        /// <summary>
-        /// 生成屋顶模块
-        /// </summary>
         public async Task<ModuleResult> GenerateRoofAsync(BuildingPlan plan, Action<string> progressCallback = null, CancellationToken ct = default)
         {
             var roofRegion = plan.RoofRegion;
@@ -138,26 +136,19 @@ namespace trab.Core
 
             progressCallback?.Invoke("生成屋顶模块...");
 
-            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
-            var candidates = kb.Tiles.SearchTiles(null, "brick");  // 本地过滤brick类
-            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);  // 向量排序
+            var candidates = kb.Tiles.SearchTiles(null, "brick");
+            var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);
             int roofTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 4;
-            var walls = kb.Tiles.GetAllWalls();
-            int roofWallId = walls.FirstOrDefault(w => w.name.Contains("Brick"))?.id ?? 4;
-
-            trab.Instance?.Logger.Info($"屋顶检索: 本地{candidates.Count}个, 向量排序后取{semanticResults.Count}个, 最终ID={roofTileId}");
 
             int yStart = roofRegion.YRange?[0] ?? 0;
-            int yEnd = roofRegion.YRange?[1] ?? 2;
             int center = plan.Width / 2;
 
             string prompt = ROOF_MODULE_PROMPT
                 .Replace("{width}", plan.Width.ToString())
                 .Replace("{roof_type}", roofRegion.Type ?? "gable")
                 .Replace("{y_start}", yStart.ToString())
-                .Replace("{y_end}", yEnd.ToString())
                 .Replace("{center}", center.ToString())
                 .Replace("{tile_id}", roofTileId.ToString())
                 .Replace("{style}", plan.Style);
@@ -174,29 +165,21 @@ namespace trab.Core
             }
         }
 
-        /// <summary>
-        /// 生成墙壁模块
-        /// </summary>
         public async Task<ModuleResult> GenerateWallsAsync(BuildingPlan plan, Action<string> progressCallback = null, CancellationToken ct = default)
         {
             var wallRegion = plan.WallRegion;
             progressCallback?.Invoke("生成墙壁模块...");
 
-            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
 
-            // 方块检索
             var tileCandidates = kb.Tiles.SearchTiles(null, "basic");
             var tileResults = kb.Vectors.SearchTilesSemantic(tileCandidates, plan.Style, 10);
             int wallTileId = tileResults.FirstOrDefault()?.id ?? tileCandidates.FirstOrDefault()?.id ?? 4;
 
-            // 墙壁检索（使用SearchWallsSemantic）
             var wallCandidates = kb.Tiles.GetAllWalls();
             var wallResults = kb.Vectors.SearchWallsSemantic(wallCandidates, plan.Style, 10);
             int wallId = wallResults.FirstOrDefault()?.id ?? wallCandidates.FirstOrDefault()?.id ?? 4;
-
-            trab.Instance?.Logger.Info($"墙壁检索: 方块ID={wallTileId}, 墙壁ID={wallId}");
 
             string prompt = WALL_MODULE_PROMPT
                 .Replace("{width}", plan.Width.ToString())
@@ -223,23 +206,17 @@ namespace trab.Core
             }
         }
 
-        /// <summary>
-        /// 生成楼层模块
-        /// </summary>
         public async Task<ModuleResult> GenerateFloorsAsync(BuildingPlan plan, Action<string> progressCallback = null, CancellationToken ct = default)
         {
             progressCallback?.Invoke("生成楼层模块...");
 
-            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
-            var candidates = kb.Tiles.SearchTiles(null, "wood");  // 本地过滤wood类
+            var candidates = kb.Tiles.SearchTiles(null, "wood");
             var semanticResults = kb.Vectors.SearchTilesSemantic(candidates, plan.Style, 10);
             int floorTileId = semanticResults.FirstOrDefault()?.id ?? candidates.FirstOrDefault()?.id ?? 5;
             var walls = kb.Tiles.GetAllWalls();
             int floorWallId = walls.FirstOrDefault(w => w.name.Contains("Wood"))?.id ?? walls.FirstOrDefault()?.id ?? 4;
-
-            trab.Instance?.Logger.Info($"楼层检索: 本地{candidates.Count}个, 向量排序后{semanticResults.Count}个, 最终ID={floorTileId}");
 
             var floorRegions = plan.FloorRegions;
             if (floorRegions == null || floorRegions.Count == 0)
@@ -274,24 +251,15 @@ namespace trab.Core
             return new ModuleResult { ModuleName = "floors", Tiles = allTiles, WallRanges = allWallRanges };
         }
 
-        /// <summary>
-        /// 生成窗户模块
-        /// </summary>
         public async Task<ModuleResult> GenerateWindowsAsync(BuildingPlan plan, Action<string> progressCallback = null, CancellationToken ct = default)
         {
             progressCallback?.Invoke("生成窗户模块...");
 
-            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
-            var glassCandidates = kb.Tiles.SearchTiles(null, "transparent");  // 本地过滤transparent类
+            var glassCandidates = kb.Tiles.SearchTiles(null, "transparent");
             var glassResults = kb.Vectors.SearchTilesSemantic(glassCandidates, plan.Style, 10);
             int glassTileId = glassResults.FirstOrDefault()?.id ?? glassCandidates.FirstOrDefault()?.id ?? 13;
-            var frameCandidates = kb.Tiles.SearchTiles(null, "slab");  // 窗框用石板类
-            var frameResults = kb.Vectors.SearchTilesSemantic(frameCandidates, plan.Style, 10);
-            int frameTileId = frameResults.FirstOrDefault()?.id ?? frameCandidates.FirstOrDefault()?.id ?? 143;
-
-            trab.Instance?.Logger.Info($"窗户检索: 玻璃ID={glassTileId}, 窗框ID={frameTileId}");
 
             var positions = plan.WindowPositions;
             if (positions == null || positions.Count == 0)
@@ -302,7 +270,6 @@ namespace trab.Core
                 .Replace("{positions}", positionsStr)
                 .Replace("{window_type}", positions.FirstOrDefault()?.Type ?? "double")
                 .Replace("{glass_id}", glassTileId.ToString())
-                .Replace("{frame_id}", frameTileId.ToString())
                 .Replace("{style}", plan.Style);
 
             try
@@ -317,26 +284,19 @@ namespace trab.Core
             }
         }
 
-        /// <summary>
-        /// 生成家具模块
-        /// </summary>
         public async Task<ModuleResult> GenerateFurnitureAsync(BuildingPlan plan, Action<string> progressCallback = null, CancellationToken ct = default)
         {
             progressCallback?.Invoke("生成家具模块...");
 
-            // Step1: 本地过滤 + Step2: 向量语义排序
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
 
-            // 家具检索（使用SearchFurnitureSemantic）
             var furnitureCandidates = kb.Furniture.SearchFurniture(null, null);
             var furnitureResults = kb.Vectors.SearchFurnitureSemantic(furnitureCandidates, plan.Style, 10);
             int workbenchId = furnitureResults.FirstOrDefault(f => f.Key.Contains("WorkBench")).Value?.tile_id ?? 17;
             int tableId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Table")).Value?.tile_id ?? 87;
             int chairId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Chair")).Value?.tile_id ?? 88;
             int doorId = furnitureResults.FirstOrDefault(f => f.Key.Contains("Door")).Value?.tile_id ?? 10;
-
-            trab.Instance?.Logger.Info($"家具检索: 工作台={workbenchId}, 桌子={tableId}, 椅子={chairId}, 门={doorId}");
 
             var positions = plan.FurniturePositions;
             string positionsStr = positions.Count > 0
@@ -376,10 +336,7 @@ namespace trab.Core
             var requestBody = new
             {
                 model = _modelName,
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
+                messages = new[] { new { role = "user", content = prompt } },
                 max_tokens = 2048
             };
 
@@ -388,22 +345,11 @@ namespace trab.Core
             var response = await _httpClient.PostAsync(_apiEndpoint, content, ct);
             string responseJson = await response.Content.ReadAsStringAsync(ct);
 
-            trab.Instance?.Logger.Info($"[{moduleName}] API响应: {responseJson.Substring(0, Math.Min(500, responseJson.Length))}...");
-
             if (!response.IsSuccessStatusCode)
                 throw new Exception($"API错误: {responseJson}");
 
             var apiResponse = JsonConvert.DeserializeObject<OpenAIResponse>(responseJson);
-            var message = apiResponse.choices?[0]?.message;
-
-            // 处理DeepSeek的reasoning_content（当content为空时使用）
-            string messageContent = message?.content;
-            if (string.IsNullOrEmpty(messageContent) && !string.IsNullOrEmpty(message?.reasoning_content))
-            {
-                // 从reasoning_content中提取JSON（通常在末尾）
-                messageContent = ExtractJsonFromReasoning(message.reasoning_content);
-                trab.Instance?.Logger.Info($"[{moduleName}] 使用reasoning_content提取JSON");
-            }
+            var messageContent = apiResponse.choices?[0]?.message?.content;
 
             if (string.IsNullOrEmpty(messageContent))
                 throw new Exception("API返回空内容");
@@ -416,10 +362,7 @@ namespace trab.Core
             var requestBody = new
             {
                 model = _modelName,
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
+                messages = new[] { new { role = "user", content = prompt } },
                 max_tokens = 2048
             };
 
@@ -427,8 +370,6 @@ namespace trab.Core
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(_apiEndpoint, content, ct);
             string responseJson = await response.Content.ReadAsStringAsync(ct);
-
-            trab.Instance?.Logger.Info($"[{moduleName}] API响应: {responseJson.Substring(0, Math.Min(500, responseJson.Length))}...");
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception($"API错误: {responseJson}");
@@ -447,10 +388,7 @@ namespace trab.Core
             var requestBody = new
             {
                 model = _modelName,
-                messages = new[]
-                {
-                    new { role = "user", content = prompt }
-                },
+                messages = new[] { new { role = "user", content = prompt } },
                 max_tokens = 1024
             };
 
@@ -458,8 +396,6 @@ namespace trab.Core
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(_apiEndpoint, content, ct);
             string responseJson = await response.Content.ReadAsStringAsync(ct);
-
-            trab.Instance?.Logger.Info($"[{moduleName}] API响应: {responseJson.Substring(0, Math.Min(500, responseJson.Length))}...");
 
             if (!response.IsSuccessStatusCode)
                 throw new Exception($"API错误: {responseJson}");
@@ -497,9 +433,8 @@ namespace trab.Core
                     Paint = t["paint"]?.Value<int>() ?? 0
                 }).ToList();
             }
-            catch (Exception ex)
+            catch
             {
-                trab.Instance?.Logger.Error($"解析tiles失败: {ex.Message}");
                 return new List<TileData>();
             }
         }
@@ -514,7 +449,6 @@ namespace trab.Core
                 var obj = JObject.Parse(json);
                 var result = new ModuleResult { ModuleName = moduleName };
 
-                // 解析tiles
                 var tilesArray = obj["tiles"] as JArray;
                 if (tilesArray != null)
                 {
@@ -527,7 +461,6 @@ namespace trab.Core
                     }).ToList();
                 }
 
-                // 解析wallRanges
                 var wallsArray = obj["wallRanges"] as JArray;
                 if (wallsArray != null)
                 {
@@ -543,10 +476,9 @@ namespace trab.Core
 
                 return result;
             }
-            catch (Exception ex)
+            catch
             {
-                trab.Instance?.Logger.Error($"解析模块{moduleName}失败: {ex.Message}");
-                return new ModuleResult { ModuleName = moduleName, IsError = true, ErrorMessage = ex.Message };
+                return new ModuleResult { ModuleName = moduleName, IsError = true };
             }
         }
 
@@ -560,7 +492,6 @@ namespace trab.Core
                 var obj = JObject.Parse(json);
                 var result = new ModuleResult { ModuleName = moduleName };
 
-                // 解析furniture
                 var furnitureArray = obj["furniture"] as JArray;
                 if (furnitureArray != null)
                 {
@@ -572,7 +503,6 @@ namespace trab.Core
                     }).ToList();
                 }
 
-                // 解析doors
                 var doorsArray = obj["doors"] as JArray;
                 if (doorsArray != null)
                 {
@@ -584,7 +514,6 @@ namespace trab.Core
                     }).ToList();
                 }
 
-                // 解析lightSources
                 var lightsArray = obj["lightSources"] as JArray;
                 if (lightsArray != null)
                 {
@@ -598,9 +527,8 @@ namespace trab.Core
 
                 return result;
             }
-            catch (Exception ex)
+            catch
             {
-                trab.Instance?.Logger.Error($"解析家具模块失败: {ex.Message}");
                 return new ModuleResult { ModuleName = moduleName };
             }
         }
@@ -619,20 +547,6 @@ namespace trab.Core
             int braceEnd = content.LastIndexOf('}');
             if (braceStart >= 0 && braceEnd > braceStart)
                 return content.Substring(braceStart, braceEnd - braceStart + 1);
-
-            return null;
-        }
-
-        /// <summary>
-        /// 从reasoning_content中提取JSON（通常在末尾）
-        /// </summary>
-        private string ExtractJsonFromReasoning(string reasoning)
-        {
-            // reasoning_content通常是思考过程，JSON可能在末尾
-            int braceStart = reasoning.LastIndexOf('{');
-            int braceEnd = reasoning.LastIndexOf('}');
-            if (braceStart >= 0 && braceEnd > braceStart)
-                return reasoning.Substring(braceStart, braceEnd - braceStart + 1);
 
             return null;
         }

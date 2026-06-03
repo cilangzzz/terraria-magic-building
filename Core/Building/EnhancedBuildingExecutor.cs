@@ -7,7 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using trab.Data;
 
-namespace trab.Core
+namespace trab.Core.Building
 {
     /// <summary>
     /// 增强版建筑执行器

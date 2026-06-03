@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
-using trab.Core;
+using trab.Core.API;
 
 namespace trab.Config
 {
