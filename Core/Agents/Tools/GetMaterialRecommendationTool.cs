@@ -81,8 +81,8 @@ namespace trab.Core.Agents.Tools
                     ["roof_type"] = "gable",
                     ["decorations"] = new[]
                     {
-                        new { type = "light", name = "Torch", placement = "corners" },
-                        new { type = "light", name = "Chandelier", placement = "center" }
+                        new { type = "light", name = "Torch", placement = "corners", spacing = 0 },
+                        new { type = "light", name = "Chandelier", placement = "center", spacing = 0 }
                     },
                     ["color_tone"] = new { primary = "neutral", colors = new[] { "gray", "brown", "stone" } }
                 },
@@ -96,7 +96,7 @@ namespace trab.Core.Agents.Tools
                     ["roof_type"] = "dome",
                     ["decorations"] = new[]
                     {
-                        new { type = "light", name = "Gemspark Block", placement = "edges" }
+                        new { type = "light", name = "Gemspark Block", placement = "edges", spacing = 0 }
                     },
                     ["color_tone"] = new { primary = "cool", colors = new[] { "blue", "pink", "white" } }
                 },
@@ -110,7 +110,7 @@ namespace trab.Core.Agents.Tools
                     ["roof_type"] = "gable",
                     ["decorations"] = new[]
                     {
-                        new { type = "heat", name = "Fireplace", placement = "center" },
+                        new { type = "heat", name = "Fireplace", placement = "center", spacing = 0 },
                         new { type = "light", name = "Chinese Lantern", placement = "every_n_tiles", spacing = 6 }
                     },
                     ["color_tone"] = new { primary = "cold", colors = new[] { "white", "blue", "cyan" } }
@@ -125,7 +125,7 @@ namespace trab.Core.Agents.Tools
                     ["roof_type"] = "flat",
                     ["decorations"] = new[]
                     {
-                        new { type = "light", name = "Campfire", placement = "corners" }
+                        new { type = "light", name = "Campfire", placement = "corners", spacing = 0 }
                     },
                     ["color_tone"] = new { primary = "warm", colors = new[] { "tan", "brown", "orange" } }
                 },
@@ -139,7 +139,7 @@ namespace trab.Core.Agents.Tools
                     ["roof_type"] = "flat",
                     ["decorations"] = new[]
                     {
-                        new { type = "light", name = "Lamp", placement = "edges" }
+                        new { type = "light", name = "Lamp", placement = "edges", spacing = 0 }
                     },
                     ["color_tone"] = new { primary = "neutral", colors = new[] { "white", "gray", "black" } }
                 }

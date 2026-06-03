@@ -92,6 +92,11 @@ Configs: {
 			Label: 使用Pipeline生成模式
 			Tooltip: 启用4阶段生成流程：需求分析→材料检索→材料选择→设计生成。需要配合SingleAgent模式使用。
 		}
+
+		MaxAgentRounds: {
+			Label: 最大Agent轮次
+			Tooltip: AI Agent最大工具调用轮次，每轮可检索模板/材料
+		}
 	}
 
 	AIServiceType: {
