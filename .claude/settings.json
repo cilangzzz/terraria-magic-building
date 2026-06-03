@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/admin/Pictures/Camera Roll/doc/**)",
+      "Read(//c/Users/admin/Pictures/Camera Roll/output/**)",
+      "Read(//c/Users/admin/Pictures/Camera Roll/20260602215205/**)",
+      "Bash(python Tools/database/manage_buildings_v2.py)",
+      "Bash(git commit -m 'Add agent tools and enhance building system *)"
+    ]
+  }
+}

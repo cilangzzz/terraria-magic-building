@@ -1,3 +1,6 @@
+// ============================================================================
+// DEPRECATED - 此文件已废弃，请使用 BuildingRules 替代
+// ============================================================================
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;

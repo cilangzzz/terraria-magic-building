@@ -263,6 +263,440 @@ namespace trab.Core.KnowledgeBase
             };
         }
 
+        /// <summary>
+        /// 多维度模板检索
+        /// 支持按风格、类型、特征、尺寸等条件组合检索
+        /// </summary>
+        public List<TemplateSearchResult> SearchTemplates(TemplateSearchCriteria criteria, int topK = 5)
+        {
+            if (!_initialized)
+                return new List<TemplateSearchResult>();
+
+            var results = new List<(BuildingEntity entity, float score, Dictionary<string, float> scoreBreakdown)>();
+
+            foreach (var kvp in _buildings)
+            {
+                var entity = kvp.Value;
+                var scoreBreakdown = new Dictionary<string, float>();
+                float totalScore = 0f;
+
+                // 风格匹配
+                if (!string.IsNullOrEmpty(criteria.style))
+                {
+                    float styleScore = CalculateStyleScore(entity, criteria.style);
+                    if (styleScore > 0)
+                    {
+                        scoreBreakdown["style"] = styleScore;
+                        totalScore += styleScore * (criteria.styleWeight > 0 ? criteria.styleWeight : 1f);
+                    }
+                }
+
+                // 类型匹配
+                if (!string.IsNullOrEmpty(criteria.buildingType))
+                {
+                    float typeScore = CalculateTypeScore(entity, criteria.buildingType);
+                    if (typeScore > 0)
+                    {
+                        scoreBreakdown["type"] = typeScore;
+                        totalScore += typeScore * (criteria.typeWeight > 0 ? criteria.typeWeight : 1f);
+                    }
+                }
+
+                // 特征匹配
+                if (criteria.features != null && criteria.features.Count > 0)
+                {
+                    float featureScore = CalculateFeatureScore(entity, criteria.features);
+                    if (featureScore > 0)
+                    {
+                        scoreBreakdown["features"] = featureScore;
+                        totalScore += featureScore * (criteria.featureWeight > 0 ? criteria.featureWeight : 1f);
+                    }
+                }
+
+                // 尺寸匹配
+                if (criteria.minWidth > 0 || criteria.maxWidth > 0 || criteria.minHeight > 0 || criteria.maxHeight > 0)
+                {
+                    float sizeScore = CalculateSizeScore(entity, criteria);
+                    if (sizeScore > 0)
+                    {
+                        scoreBreakdown["size"] = sizeScore;
+                        totalScore += sizeScore * (criteria.sizeWeight > 0 ? criteria.sizeWeight : 1f);
+                    }
+                }
+
+                // 材料匹配
+                if (criteria.requiredMaterials != null && criteria.requiredMaterials.Count > 0)
+                {
+                    float materialScore = CalculateMaterialScore(entity, criteria.requiredMaterials);
+                    if (materialScore > 0)
+                    {
+                        scoreBreakdown["materials"] = materialScore;
+                        totalScore += materialScore * (criteria.materialWeight > 0 ? criteria.materialWeight : 1f);
+                    }
+                }
+
+                // NPC适合性
+                if (criteria.npcType != null)
+                {
+                    float npcScore = CalculateNPCScore(entity, criteria.npcType);
+                    if (npcScore > 0)
+                    {
+                        scoreBreakdown["npc"] = npcScore;
+                        totalScore += npcScore * (criteria.npcWeight > 0 ? criteria.npcWeight : 1f);
+                    }
+                }
+
+                if (totalScore > 0)
+                {
+                    results.Add((entity, totalScore, scoreBreakdown));
+                }
+            }
+
+            return results
+                .OrderByDescending(r => r.score)
+                .Take(topK)
+                .Select(r => new TemplateSearchResult
+                {
+                    id = r.entity.id,
+                    dimensions = r.entity.dimensions,
+                    style_tags = r.entity.style_tags,
+                    features = r.entity.features,
+                    summary = r.entity.summary,
+                    score = r.score,
+                    score_breakdown = r.scoreBreakdown
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// 向量相似度检索
+        /// 使用语义向量进行相似建筑搜索
+        /// </summary>
+        public List<TemplateSearchResult> SearchByVectorSimilarity(float[] queryVector, int topK = 5, float minSimilarity = 0.3f)
+        {
+            if (!_initialized || queryVector == null || _buildingVectors.Count == 0)
+                return new List<TemplateSearchResult>();
+
+            var results = new List<(string id, float similarity)>();
+
+            foreach (var kvp in _buildingVectors)
+            {
+                float sim = CosineSimilarity(queryVector, kvp.Value);
+                if (sim > minSimilarity)
+                {
+                    results.Add((kvp.Key, sim));
+                }
+            }
+
+            return results
+                .OrderByDescending(r => r.similarity)
+                .Take(topK)
+                .Where(r => _buildings.ContainsKey(r.id))
+                .Select(r =>
+                {
+                    var entity = _buildings[r.id];
+                    return new TemplateSearchResult
+                    {
+                        id = entity.id,
+                        dimensions = entity.dimensions,
+                        style_tags = entity.style_tags,
+                        features = entity.features,
+                        summary = entity.summary,
+                        score = r.similarity,
+                        score_breakdown = new Dictionary<string, float> { ["vector_similarity"] = r.similarity }
+                    };
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// 获取材料清单
+        /// 返回指定建筑的所有材料信息
+        /// </summary>
+        public MaterialListResult GetMaterialListForAI(string id)
+        {
+            var entity = GetBuilding(id);
+            if (entity == null) return null;
+
+            var result = new MaterialListResult
+            {
+                building_id = id,
+                tiles = new List<MaterialInfo>(),
+                walls = new List<MaterialInfo>()
+            };
+
+            if (entity.materials?.primary_tiles != null)
+            {
+                foreach (var tile in entity.materials.primary_tiles)
+                {
+                    result.tiles.Add(new MaterialInfo
+                    {
+                        id = tile.id,
+                        name = tile.name,
+                        count = tile.count,
+                        category = GetTileCategory(tile.name)
+                    });
+                }
+            }
+
+            if (entity.materials?.primary_walls != null)
+            {
+                foreach (var wall in entity.materials.primary_walls)
+                {
+                    result.walls.Add(new MaterialInfo
+                    {
+                        id = wall.id,
+                        name = wall.name,
+                        count = wall.count,
+                        category = "wall"
+                    });
+                }
+            }
+
+            // 计算总量
+            result.total_tiles = result.tiles.Sum(t => t.count);
+            result.total_walls = result.walls.Sum(w => w.count);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 混合检索：结合向量相似度和多维度匹配
+        /// </summary>
+        public List<TemplateSearchResult> HybridSearch(float[] queryVector, TemplateSearchCriteria criteria, int topK = 5, float vectorWeight = 0.4f)
+        {
+            var vectorResults = SearchByVectorSimilarity(queryVector, topK * 2, 0.2f);
+            var criteriaResults = SearchTemplates(criteria, topK * 2);
+
+            var combined = new Dictionary<string, TemplateSearchResult>();
+
+            // 合并向量检索结果
+            foreach (var r in vectorResults)
+            {
+                if (!combined.ContainsKey(r.id))
+                {
+                    combined[r.id] = r;
+                    combined[r.id].score *= vectorWeight;
+                }
+            }
+
+            // 合并条件检索结果
+            foreach (var r in criteriaResults)
+            {
+                if (combined.ContainsKey(r.id))
+                {
+                    combined[r.id].score += r.score * (1f - vectorWeight);
+                    combined[r.id].score_breakdown["criteria_match"] = r.score;
+                }
+                else
+                {
+                    combined[r.id] = r;
+                    combined[r.id].score *= (1f - vectorWeight);
+                }
+            }
+
+            return combined.Values
+                .OrderByDescending(r => r.score)
+                .Take(topK)
+                .ToList();
+        }
+
+        #region 检索评分辅助方法
+
+        private float CalculateStyleScore(BuildingEntity entity, string style)
+        {
+            float score = 0f;
+            string styleLower = style.ToLower();
+
+            if (entity.style_tags != null)
+            {
+                foreach (var tag in entity.style_tags)
+                {
+                    if (tag.Contains(styleLower))
+                        score += 0.3f;
+                    if (tag == styleLower)
+                        score += 0.2f;
+                }
+            }
+
+            if (entity.features?.style?.Contains(styleLower) == true)
+                score += 0.5f;
+
+            return Math.Min(score, 1f);
+        }
+
+        private float CalculateTypeScore(BuildingEntity entity, string buildingType)
+        {
+            float score = 0f;
+            string typeLower = buildingType.ToLower();
+
+            if (entity.features?.type == typeLower)
+                score = 1f;
+            else if (entity.features?.type?.Contains(typeLower) == true)
+                score = 0.5f;
+
+            return score;
+        }
+
+        private float CalculateFeatureScore(BuildingEntity entity, List<string> features)
+        {
+            float score = 0f;
+            int matched = 0;
+
+            foreach (var feature in features)
+            {
+                string featureLower = feature.ToLower();
+
+                if (entity.features?.structure?.Contains(featureLower) == true)
+                    matched++;
+                if (entity.features?.complexity?.Contains(featureLower) == true)
+                    matched++;
+                if (entity.features?.progress?.Contains(featureLower) == true)
+                    matched++;
+                if (entity.style_tags?.Any(t => t.Contains(featureLower)) == true)
+                    matched++;
+            }
+
+            score = (float)matched / features.Count;
+            return score;
+        }
+
+        private float CalculateSizeScore(BuildingEntity entity, TemplateSearchCriteria criteria)
+        {
+            if (entity.dimensions == null) return 0f;
+
+            float widthScore = 0f;
+            float heightScore = 0f;
+
+            int width = entity.dimensions.width;
+            int height = entity.dimensions.height;
+
+            // 宽度匹配
+            if (criteria.minWidth > 0 && criteria.maxWidth > 0)
+            {
+                if (width >= criteria.minWidth && width <= criteria.maxWidth)
+                    widthScore = 1f;
+                else if (width >= criteria.minWidth - 5 && width <= criteria.maxWidth + 5)
+                    widthScore = 0.5f;
+            }
+            else if (criteria.minWidth > 0)
+            {
+                if (width >= criteria.minWidth)
+                    widthScore = 1f;
+                else if (width >= criteria.minWidth - 5)
+                    widthScore = 0.5f;
+            }
+            else if (criteria.maxWidth > 0)
+            {
+                if (width <= criteria.maxWidth)
+                    widthScore = 1f;
+                else if (width <= criteria.maxWidth + 5)
+                    widthScore = 0.5f;
+            }
+
+            // 高度匹配
+            if (criteria.minHeight > 0 && criteria.maxHeight > 0)
+            {
+                if (height >= criteria.minHeight && height <= criteria.maxHeight)
+                    heightScore = 1f;
+                else if (height >= criteria.minHeight - 3 && height <= criteria.maxHeight + 3)
+                    heightScore = 0.5f;
+            }
+            else if (criteria.minHeight > 0)
+            {
+                if (height >= criteria.minHeight)
+                    heightScore = 1f;
+                else if (height >= criteria.minHeight - 3)
+                    heightScore = 0.5f;
+            }
+            else if (criteria.maxHeight > 0)
+            {
+                if (height <= criteria.maxHeight)
+                    heightScore = 1f;
+                else if (height <= criteria.maxHeight + 3)
+                    heightScore = 0.5f;
+            }
+
+            return (widthScore + heightScore) / 2f;
+        }
+
+        private float CalculateMaterialScore(BuildingEntity entity, List<string> requiredMaterials)
+        {
+            if (entity.materials == null) return 0f;
+
+            int matched = 0;
+            foreach (var required in requiredMaterials)
+            {
+                string requiredLower = required.ToLower();
+
+                if (entity.materials.primary_tiles?.Any(t => t.name?.ToLower().Contains(requiredLower) == true) == true)
+                    matched++;
+                if (entity.materials.primary_walls?.Any(w => w.name?.ToLower().Contains(requiredLower) == true) == true)
+                    matched++;
+            }
+
+            return (float)matched / requiredMaterials.Count;
+        }
+
+        private float CalculateNPCScore(BuildingEntity entity, string npcType)
+        {
+            // 基于建筑特征判断NPC适合性
+            float score = 0f;
+            string npcLower = npcType?.ToLower() ?? "";
+
+            // 基本房屋要求检查
+            if (entity.dimensions?.width >= 7 && entity.dimensions?.height >= 7)
+                score += 0.3f;
+
+            // 特定NPC偏好
+            var npcPreferences = new Dictionary<string, List<string>>
+            {
+                ["merchant"] = new List<string> { "storage", "shop" },
+                ["nurse"] = new List<string> { "medical", "clean" },
+                ["wizard"] = new List<string> { "magic", "bookshelf", "crystal" },
+                ["smith"] = new List<string> { "forge", "anvil", "metal" },
+                ["guide"] = new List<string> { "library", "map" }
+            };
+
+            if (npcPreferences.ContainsKey(npcLower))
+            {
+                var preferences = npcPreferences[npcLower];
+                foreach (var pref in preferences)
+                {
+                    if (entity.style_tags?.Any(t => t.Contains(pref)) == true)
+                        score += 0.2f;
+                }
+            }
+
+            return Math.Min(score, 1f);
+        }
+
+        private string GetTileCategory(string tileName)
+        {
+            if (string.IsNullOrEmpty(tileName)) return "misc";
+
+            string nameLower = tileName.ToLower();
+
+            if (nameLower.Contains("brick") || nameLower.Contains("stone") || nameLower.Contains("slab"))
+                return "structural";
+            if (nameLower.Contains("wood") || nameLower.Contains("plank"))
+                return "wood";
+            if (nameLower.Contains("glass") || nameLower.Contains("window"))
+                return "glass";
+            if (nameLower.Contains("door") || nameLower.Contains("platform"))
+                return "entry";
+            if (nameLower.Contains("torch") || nameLower.Contains("lamp") || nameLower.Contains("lantern") || nameLower.Contains("chandelier"))
+                return "light";
+            if (nameLower.Contains("chair") || nameLower.Contains("table") || nameLower.Contains("bed") || nameLower.Contains("sofa"))
+                return "furniture";
+            if (nameLower.Contains("painting") || nameLower.Contains("statue") || nameLower.Contains("plant"))
+                return "decoration";
+
+            return "misc";
+        }
+
+        #endregion
+
         public List<BuildingEntity> SearchByStyle(string style, int topK = 5)
         {
             if (!_initialized || string.IsNullOrEmpty(style))
@@ -554,6 +988,68 @@ namespace trab.Core.KnowledgeBase
         public string action { get; set; }
         public List<string> materials { get; set; }
         public string note { get; set; }
+    }
+
+    /// <summary>
+    /// 模板检索条件
+    /// </summary>
+    public class TemplateSearchCriteria
+    {
+        public string style { get; set; }
+        public string buildingType { get; set; }
+        public List<string> features { get; set; }
+        public List<string> requiredMaterials { get; set; }
+        public string npcType { get; set; }
+
+        public int minWidth { get; set; }
+        public int maxWidth { get; set; }
+        public int minHeight { get; set; }
+        public int maxHeight { get; set; }
+
+        // 权重配置（可选）
+        public float styleWeight { get; set; }
+        public float typeWeight { get; set; }
+        public float featureWeight { get; set; }
+        public float sizeWeight { get; set; }
+        public float materialWeight { get; set; }
+        public float npcWeight { get; set; }
+    }
+
+    /// <summary>
+    /// 模板检索结果
+    /// </summary>
+    public class TemplateSearchResult
+    {
+        public string id { get; set; }
+        public Dimensions dimensions { get; set; }
+        public List<string> style_tags { get; set; }
+        public Features features { get; set; }
+        public string summary { get; set; }
+        public float score { get; set; }
+        public Dictionary<string, float> score_breakdown { get; set; }
+    }
+
+    /// <summary>
+    /// 材料清单结果
+    /// </summary>
+    public class MaterialListResult
+    {
+        public string building_id { get; set; }
+        public List<MaterialInfo> tiles { get; set; }
+        public List<MaterialInfo> walls { get; set; }
+        public int total_tiles { get; set; }
+        public int total_walls { get; set; }
+    }
+
+    /// <summary>
+    /// 材料信息
+    /// </summary>
+    public class MaterialInfo
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public int count { get; set; }
+        public string category { get; set; }
     }
 
     #endregion

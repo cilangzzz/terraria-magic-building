@@ -3,8 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Terraria.ModLoader;
 using trab.Config;
-using trab.Core.Agents.MultiAgent;
-using trab.Core.Agents.SingleAgent;
 using trab.Core.API;
 using trab.Core.KnowledgeBase;
 using trab.Data;
@@ -12,12 +10,13 @@ using trab.Data;
 namespace trab.Core.Agents
 {
     /// <summary>
-    /// AI Agent建筑生成服务 - 统一入口，根据配置选择SingleAgent或MultiAgent模式
+    /// AI Agent建筑生成服务 - 统一入口
+    /// 使用TrueAgentCore进行建筑生成
     /// </summary>
     public class AIAgentService
     {
         /// <summary>
-        /// Agent主入口 - 根据配置选择SingleAgent或MultiAgent模式，返回TEditSch格式
+        /// Agent主入口 - 使用TrueAgentCore生成建筑
         /// </summary>
         public async Task<TEditSchDesign> GenerateBuildingAsync(
             string userPrompt,
@@ -26,7 +25,7 @@ namespace trab.Core.Agents
         {
             try
             {
-                progressCallback?.Invoke("Agent启动...", 0);
+                progressCallback?.Invoke("初始化AI Agent...", 0);
 
                 // 初始化知识库
                 KnowledgeBaseManager.Instance.Initialize();
@@ -37,30 +36,28 @@ namespace trab.Core.Agents
                 AIServiceType serviceType = config.ServiceProvider;
                 string modelName = config.ModelName;
 
-                // 根据配置选择生成模式
-                if (config.UsePipelineMode || config.AgentGenerationMode == AgentMode.SingleAgent)
-                {
-                    trab.Instance?.Logger.Info("使用SingleAgent模式生成建筑");
-                    if (config.UsePipelineMode)
-                    {
-                        progressCallback?.Invoke("Pipeline模式启动...", 0);
-                    }
+                // 创建TrueAgentCore实例
+                var agentCore = new TrueAgentCore(apiKey, serviceType, modelName);
 
-                    var singleAgent = new BuildingSingleAgent(apiKey, serviceType, modelName, config.MaxBuildingSize);
-                    return await singleAgent.GenerateBuildingAsync(userPrompt, progressCallback, ct);
-                }
-                else
-                {
-                    trab.Instance?.Logger.Info("使用MultiAgent协作模式生成建筑");
+                trab.Instance?.Logger.Info($"TrueAgentCore启动 - 模型: {modelName}, 服务: {serviceType}");
 
-                    var multiAgent = new BuildingMultiAgent(apiKey, serviceType, modelName);
-                    return await multiAgent.GenerateBuildingAsync(userPrompt, progressCallback, ct);
+                // 执行Agent循环
+                var result = await agentCore.RunAgentLoop(userPrompt, progressCallback, ct);
+
+                if (result == null)
+                {
+                    progressCallback?.Invoke("生成失败: Agent未能返回有效结果", 0);
+                    trab.Instance?.Logger.Warn("TrueAgentCore返回空结果");
+                    return null;
                 }
+
+                progressCallback?.Invoke("建筑生成完成!", 100);
+                return result;
             }
             catch (Exception ex)
             {
                 progressCallback?.Invoke($"错误: {ex.Message}", 0);
-                trab.Instance?.Logger.Error($"Agent错误: {ex.Message}");
+                trab.Instance?.Logger.Error($"Agent错误: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
         }

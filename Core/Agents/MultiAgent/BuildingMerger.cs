@@ -1,3 +1,6 @@
+// ============================================================================
+// DEPRECATED - 此文件已废弃，请使用 ProceduralBuilder 替代
+// ============================================================================
 using System.Collections.Generic;
 using System.Linq;
 using Terraria.ModLoader;

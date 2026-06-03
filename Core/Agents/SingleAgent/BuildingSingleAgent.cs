@@ -1,3 +1,10 @@
+// ============================================================================
+// DEPRECATED - 此文件已废弃，请使用 TrueAgentCore 替代
+// 原因: SingleAgent模式已被统一到 TrueAgentCore 中
+// 迁移: 使用 trab.Core.Agents.TrueAgentCore 和 AIAgentService
+// 保留: 仅作为参考，不应再被调用
+// ============================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
