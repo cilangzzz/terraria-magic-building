@@ -547,9 +547,9 @@ namespace trab.UI
                                 string j = AIApiService.ExtractJsonFromResponse(r);
                                 if (j != null)
                                 {
-                                    var d = new BuildingExecutor(trab.Instance).ParseDesign(j);
+                                    var d = new BuildingExecutor(trab.Instance).ParseTEditSchDesign(j);
                                     if (d != null)
-                                        AddMessage($"{d.Name} ({d.Width}x{d.Height})");
+                                        AddMessage($"{d.name} ({d.width}x{d.height})");
                                 }
                                 AddMessage("B键放置");
                             }
@@ -587,7 +587,7 @@ namespace trab.UI
                 if (j == null) { AddMessage("[错误] 解析失败"); return; }
 
                 var e = new BuildingExecutor(trab.Instance);
-                var d = e.ParseDesign(j);
+                var d = e.ParseTEditSchDesign(j);
                 if (d == null) { AddMessage("[错误] 无效数据"); return; }
                 lastDesign = d;
             }
@@ -606,9 +606,9 @@ namespace trab.UI
                 AddMessage($"放置: ({x},{y})");
             }
 
-            var executor = trab.Instance.EnhancedBuilder;
-            executor.BuildAtLocationEnhanced(lastDesign, x, y, Main.LocalPlayer);
-            AddMessage($"'{lastDesign.Name}' 完成");
+            var executor = new BuildingExecutor(trab.Instance);
+            executor.BuildTEditSch(lastDesign, x, y, Main.LocalPlayer);
+            AddMessage($"'{lastDesign.name}' 完成");
 
             confirmedAreaStart = null;
             confirmedAreaEnd = null;

@@ -15,7 +15,7 @@ using trab.Data;
 namespace trab.Core.Agents.MultiAgent
 {
     /// <summary>
-    /// 多Agent协作模式 - 规划 + 模块生成 + 合并
+    /// 多Agent协作模式 - 规划 + 模块生成 + 合并 -> TEditSch格式
     /// </summary>
     public class BuildingMultiAgent : ApiServiceBase
     {
@@ -44,9 +44,9 @@ namespace trab.Core.Agents.MultiAgent
         }
 
         /// <summary>
-        /// 多Agent协作生成建筑
+        /// 多Agent协作生成建筑 - 返回TEditSch格式
         /// </summary>
-        public async Task<BuildingDesign> GenerateBuildingAsync(
+        public async Task<TEditSchDesign> GenerateBuildingAsync(
             string userPrompt,
             Action<string, int> progressCallback = null,
             CancellationToken ct = default)
@@ -81,12 +81,12 @@ namespace trab.Core.Agents.MultiAgent
 
             progressCallback?.Invoke($"模块生成完成: {modules.Count(m => !m.IsError)}/{modules.Count}成功", 2);
 
-            // 阶段3：合并
+            // 阶段3：合并为TEditSch格式
             progressCallback?.Invoke("[阶段3]合并模块...", 3);
             var merger = new BuildingMerger();
-            var design = merger.Merge(plan, modules);
+            var design = merger.MergeToTEditSch(plan, modules);
 
-            progressCallback?.Invoke($"完成: {design?.Tiles?.Count ?? 0}方块", 0);
+            progressCallback?.Invoke($"完成: {design?.stats?.active_tiles ?? 0}方块", 0);
             return design;
         }
 

@@ -17,9 +17,9 @@ namespace trab.Core.Agents
     public class AIAgentService
     {
         /// <summary>
-        /// Agent主入口 - 根据配置选择SingleAgent或MultiAgent模式
+        /// Agent主入口 - 根据配置选择SingleAgent或MultiAgent模式，返回TEditSch格式
         /// </summary>
-        public async Task<BuildingDesign> GenerateBuildingAsync(
+        public async Task<TEditSchDesign> GenerateBuildingAsync(
             string userPrompt,
             Action<string, int> progressCallback = null,
             CancellationToken ct = default)
@@ -46,7 +46,7 @@ namespace trab.Core.Agents
                         progressCallback?.Invoke("Pipeline模式启动...", 0);
                     }
 
-                    var singleAgent = new BuildingSingleAgent(apiKey, serviceType, modelName);
+                    var singleAgent = new BuildingSingleAgent(apiKey, serviceType, modelName, config.MaxBuildingSize);
                     return await singleAgent.GenerateBuildingAsync(userPrompt, progressCallback, ct);
                 }
                 else

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -255,25 +257,31 @@ namespace trab.Commands
                 return;
             }
 
-            // 解析建筑数据
-            var design = executor.ParseDesign(json);
+            // 尝试解析TEditSch格式
+            var design = executor.ParseTEditSchDesign(json);
             if (design == null)
             {
-                caller.Reply("建筑数据解析失败", Color.Red);
-                return;
+                // 回退到旧格式
+                var oldDesign = executor.ParseDesign(json);
+                if (oldDesign == null)
+                {
+                    caller.Reply("建筑数据解析失败", Color.Red);
+                    return;
+                }
+
+                // 转换为TEditSch格式
+                design = ConvertToTEditSch(oldDesign);
             }
 
             // 显示建筑信息
-            caller.Reply($"=== 建筑设计 ===", Color.Cyan);
-            caller.Reply($"名称: {design.Name}", Color.Green);
-            caller.Reply($"描述: {design.Description}", Color.White);
-            caller.Reply($"尺寸: {design.Width}x{design.Height}", Color.White);
-            caller.Reply($"方块数: {design.Tiles.Count}", Color.White);
-            caller.Reply($"墙壁数: {design.Walls.Count}", Color.White);
-            caller.Reply($"家具数: {design.Furniture.Count}", Color.White);
+            caller.Reply($"=== 建筑设计 (TEditSch) ===", Color.Cyan);
+            caller.Reply($"名称: {design.name}", Color.Green);
+            caller.Reply($"尺寸: {design.width}x{design.height}", Color.White);
+            caller.Reply($"活跃方块: {design.stats?.active_tiles ?? 0}", Color.White);
+            caller.Reply($"墙壁数: {design.stats?.tiles_with_wall ?? 0}", Color.White);
 
             // 检查尺寸限制
-            if (design.Width > config.MaxBuildingSize || design.Height > config.MaxBuildingSize)
+            if (design.width > config.MaxBuildingSize || design.height > config.MaxBuildingSize)
             {
                 caller.Reply($"建筑尺寸超出限制（最大{config.MaxBuildingSize}格）", Color.Red);
                 return;
@@ -284,17 +292,96 @@ namespace trab.Commands
             int startY = (int)(caller.Player.position.Y / 16) + config.BuildOffsetY;
 
             // 调整Y坐标，使建筑底部对齐玩家位置
-            startY = startY - design.Height / 2;
+            startY = startY - design.height / 2;
 
             caller.Reply($"准备在位置 ({startX}, {startY}) 生成建筑...", Color.Yellow);
 
             // 执行建筑生成
-            bool success = executor.BuildAtLocation(design, startX, startY, caller.Player);
+            bool success = executor.BuildTEditSch(design, startX, startY, caller.Player);
 
             if (success)
             {
-                caller.Reply($"建筑 '{design.Name}' 已成功生成!", Color.Green);
+                caller.Reply($"建筑 '{design.name}' 已成功生成!", Color.Green);
             }
+        }
+
+        /// <summary>
+        /// 将旧格式转换为TEditSch格式
+        /// </summary>
+        private TEditSchDesign ConvertToTEditSch(BuildingDesign old)
+        {
+            var design = new TEditSchDesign
+            {
+                name = old.Name,
+                width = old.Width,
+                height = old.Height
+            };
+
+            // 初始化空网格
+            for (int y = 0; y < old.Height; y++)
+            {
+                var row = new List<TEditTile>();
+                for (int x = 0; x < old.Width; x++)
+                    row.Add(new TEditTile());
+                design.tiles.Add(row);
+            }
+
+            // 放置墙壁范围
+            foreach (var range in old.WallRanges)
+            {
+                for (int y = range.Y1; y <= range.Y2; y++)
+                {
+                    for (int x = range.X1; x <= range.X2; x++)
+                    {
+                        if (y >= 0 && y < old.Height && x >= 0 && x < old.Width)
+                        {
+                            design.tiles[y][x].wall = range.WallId;
+                        }
+                    }
+                }
+            }
+
+            // 放置方块
+            foreach (var tile in old.Tiles)
+            {
+                if (tile.Y >= 0 && tile.Y < old.Height && tile.X >= 0 && tile.X < old.Width)
+                {
+                    design.tiles[tile.Y][tile.X] = new TEditTile
+                    {
+                        active = true,
+                        type = tile.TileId,
+                        wall = design.tiles[tile.Y][tile.X].wall
+                    };
+                }
+            }
+
+            // 放置家具、门、光源
+            foreach (var f in old.Furniture)
+            {
+                if (f.Y >= 0 && f.Y < old.Height && f.X >= 0 && f.X < old.Width)
+                {
+                    design.tiles[f.Y][f.X] = new TEditTile { active = true, type = f.TileId };
+                }
+            }
+
+            foreach (var d in old.Doors)
+            {
+                if (d.Y >= 0 && d.Y < old.Height && d.X >= 0 && d.X < old.Width)
+                {
+                    design.tiles[d.Y][d.X] = new TEditTile { active = true, type = d.TileId };
+                }
+            }
+
+            foreach (var l in old.LightSources)
+            {
+                if (l.Y >= 0 && l.Y < old.Height && l.X >= 0 && l.X < old.Width)
+                {
+                    design.tiles[l.Y][l.X] = new TEditTile { active = true, type = l.TileId };
+                }
+            }
+
+            design.CalculateStats();
+            return design;
         }
     }
 

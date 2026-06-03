@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -16,7 +17,7 @@ using trab.UI;
 namespace trab.Players
 {
     /// <summary>
-    /// AI建筑玩家扩展类 - Agent模式增强版
+    /// AI建筑玩家扩展类 - TEditSch格式版本
     /// </summary>
     public class AIBuildingPlayer : ModPlayer
     {
@@ -24,8 +25,8 @@ namespace trab.Players
         private AIAgentService _agentService;
         private CancellationTokenSource _currentRequest;
 
-        // 存储最后一次生成的建筑设计
-        public BuildingDesign LastDesign { get; private set; }
+        // 存储最后一次生成的建筑设计（TEditSch格式）
+        public TEditSchDesign LastDesign { get; private set; }
 
         // 存储最后一次的AI响应
         public string LastAIResponse { get; private set; }
@@ -216,43 +217,27 @@ namespace trab.Players
             });
         }
 
-        private void ProcessAgentDesign(BuildingDesign design)
+        private void ProcessAgentDesign(TEditSchDesign design)
         {
             LastDesign = design;
 
-            Main.NewText($"=== Agent建筑设计 ===", Color.Cyan);
-            Main.NewText($"名称: {design.Name}", Color.Green);
-            Main.NewText($"描述: {design.Description}", Color.White);
-            Main.NewText($"尺寸: {design.Width}x{design.Height}", Color.White);
-            Main.NewText($"风格: {design.Style}", Color.LightBlue);
-            Main.NewText($"方块数: {design.Tiles.Count}", Color.White);
-            Main.NewText($"墙壁数: {design.Walls.Count + design.WallRanges.Count}", Color.White);
-            Main.NewText($"家具数: {design.Furniture.Count}", Color.White);
-            Main.NewText($"光源数: {design.LightSources.Count}", Color.White);
+            Main.NewText($"=== Agent建筑设计 (TEditSch) ===", Color.Cyan);
+            Main.NewText($"名称: {design.name}", Color.Green);
+            Main.NewText($"尺寸: {design.width}x{design.height}", Color.White);
 
-            if (design.PaintScheme != null)
+            if (design.stats != null)
             {
-                Main.NewText($"油漆方案: {design.PaintScheme.Description}", Color.Purple);
-            }
+                Main.NewText($"活跃方块: {design.stats.active_tiles}", Color.White);
+                Main.NewText($"墙壁数: {design.stats.tiles_with_wall}", Color.White);
 
-            if (design.NpcSuitability != null)
-            {
-                if (design.NpcSuitability.IsValidHouse)
+                if (design.stats.tile_type_distribution != null && design.stats.tile_type_distribution.Count > 0)
                 {
-                    Main.NewText($"NPC房屋: ✓ 有效", Color.Green);
-                }
-                else
-                {
-                    Main.NewText($"NPC房屋: ⚠ 缺少: {string.Join(", ", design.NpcSuitability.MissingRequirements)}", Color.Yellow);
-                }
-            }
-
-            if (design.ToolCalls.Count > 0)
-            {
-                Main.NewText($"工具调用: {design.ToolCalls.Count}次", Color.Gray);
-                foreach (var call in design.ToolCalls)
-                {
-                    Main.NewText($"  - {call.ToolName}", Color.Gray);
+                    var topTiles = new List<string>();
+                    foreach (var kv in design.stats.tile_type_distribution)
+                    {
+                        topTiles.Add($"Tile_{kv.Key}:{kv.Value}");
+                    }
+                    Main.NewText($"方块分布: {string.Join(", ", topTiles.Take(5))}", Color.Gray);
                 }
             }
 
@@ -271,18 +256,15 @@ namespace trab.Players
             }
 
             var executor = new BuildingExecutor(Mod);
-            var design = executor.ParseDesign(json);
+            var design = executor.ParseTEditSchDesign(json);
 
             if (design != null)
             {
                 LastDesign = design;
-                Main.NewText($"=== 建筑设计 ===", Color.Cyan);
-                Main.NewText($"名称: {design.Name}", Color.Green);
-                Main.NewText($"描述: {design.Description}", Color.White);
-                Main.NewText($"尺寸: {design.Width}x{design.Height}", Color.White);
-                Main.NewText($"方块数: {design.Tiles.Count}", Color.White);
-                Main.NewText($"墙壁数: {design.Walls.Count}", Color.White);
-                Main.NewText($"家具数: {design.Furniture.Count}", Color.White);
+                Main.NewText($"=== 建筑设计 (TEditSch) ===", Color.Cyan);
+                Main.NewText($"名称: {design.name}", Color.Green);
+                Main.NewText($"尺寸: {design.width}x{design.height}", Color.White);
+                Main.NewText($"活跃方块: {design.stats?.active_tiles ?? 0}", Color.White);
                 Main.NewText("使用 /aibuild place 在当前位置生成建筑", Color.Yellow);
             }
             else
@@ -301,22 +283,22 @@ namespace trab.Players
             }
 
             var config = ModContent.GetInstance<AIBuildingConfig>();
-            var executor = trab.Instance.EnhancedBuilder;
+            var executor = new BuildingExecutor(Mod);
 
             int startX = (int)(Player.position.X / 16) + config.BuildOffsetX;
-            int startY = (int)(Player.position.Y / 16) + config.BuildOffsetY - LastDesign.Height / 2;
+            int startY = (int)(Player.position.Y / 16) + config.BuildOffsetY - LastDesign.height / 2;
 
             Main.NewText($"正在在位置 ({startX}, {startY}) 生成建筑...", Color.Yellow);
 
-            bool success = executor.BuildAtLocationEnhanced(LastDesign, startX, startY, Player);
+            bool success = executor.BuildTEditSch(LastDesign, startX, startY, Player);
 
             if (success)
             {
-                Main.NewText($"建筑 '{LastDesign.Name}' 已成功生成!", Color.Green);
+                Main.NewText($"建筑 '{LastDesign.name}' 已成功生成!", Color.Green);
             }
         }
 
-        public void PlaceDesignAt(BuildingDesign design, int startX, int startY)
+        public void PlaceDesignAt(TEditSchDesign design, int startX, int startY)
         {
             if (design == null)
             {
@@ -324,8 +306,8 @@ namespace trab.Players
                 return;
             }
 
-            var executor = trab.Instance.EnhancedBuilder;
-            executor.BuildAtLocationEnhanced(design, startX, startY, Player);
+            var executor = new BuildingExecutor(Mod);
+            executor.BuildTEditSch(design, startX, startY, Player);
         }
 
         public void StopGeneration()

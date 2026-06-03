@@ -16,41 +16,92 @@ using trab.Data;
 namespace trab.Core.Agents.SingleAgent
 {
     /// <summary>
-    /// 单Agent建筑生成器 - 单次API调用生成完整建筑
+    /// 单Agent建筑生成器 - 生成TEditSch格式建筑
     /// </summary>
     public class BuildingSingleAgent : ApiServiceBase
     {
         private const int MAX_AGENT_ROUNDS = 10;
+        private readonly int _maxBuildingSize;
 
-        private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。根据已有建筑数据生成新建筑。
+        private const string AGENT_SYSTEM_PROMPT = @"泰拉瑞亚建筑设计Agent。输出TEditSch格式的建筑JSON。
 
-## 流程：检索→参考→生成
+## TEditSch输出格式（必须严格遵守）
+```json
+{
+  ""name"": ""建筑名称"",
+  ""width"": 10,
+  ""height"": 8,
+  ""tiles"": [
+    [
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6}
+    ],
+    [
+      {""active"":true,""type"":4,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":false,""wall"":6},
+      {""active"":true,""type"":4,""wall"":6}
+    ]
+  ]
+}
+```
 
-1. analyze_requirement - 分析需求，确定风格和类型
-2. search_buildings - 检索相似建筑，获取真实数据
-3. get_building_sequence - 获取建造顺序步骤
-4. select_materials - 选择材料ID
-5. 输出JSON - 使用检索到的材料和结构
+## tiles数组规则（重要！）
+- tiles是二维数组，tiles[y][x]表示坐标(x,y)的格子
+- 每行必须有width个元素，共有height行
+- active=true表示有方块，active=false表示空（只有墙）
+- type是TileID（方块ID），wall是WallID（墙壁ID）
+- 必须为每个格子指定wall值，即使是边界方块
 
-## 风格指南
-- medieval: 灰砖、石板、石墙，人字形屋顶
-- asian: 木材、王朝木、木墙，宝塔屋顶
-- fantasy: 珍珠石、玻璃墙，圆顶
-- natural: 木材、木墙，平顶
-- modern: 花岗岩、玻璃墙，简洁线条
+## TileID参考（常用）
+- 1=Stone, 4=GrayBrick, 5=Wood, 30=WoodBlock
+- 38=GrayBrick, 143=StoneSlab, 171=Glass
+- 10=WoodenDoor, 11=GlassDoor
+- 17=WorkBench, 87=Table, 88=Chair, 89=Bed
+- 4=Torch, 34=Chandelier, 33=LampPost
 
-**核心原则：参考检索到的建筑数据，使用其材料和结构生成新建筑。**";
+## WallID参考（常用）
+- 1=StoneWall, 4=WoodWall, 6=GrayBrickWall
+- 11=BrickWall, 14=GlassWall, 16=StoneSlabWall
 
-        public BuildingSingleAgent(string apiKey, AIServiceType serviceType, string modelName)
+## 建筑设计规则
+1. 尺寸控制在MaxBuildingSize以内
+2. 边界放置方块(active=true,type=ID)，内部只填墙(active=false,wall=ID)
+3. 底部中间留空放置门(active=true,type=10)
+4. 内部放置必要家具：光源(type=4)、工作台(type=17)、椅子(type=88)
+
+## 工具调用流程
+1. search_tiles - 获取方块TileID
+2. search_walls - 获取墙壁WallID
+3. search_furniture - 获取家具TileID
+4. select_materials - 确认材料选择
+5. 输出完整TEditSch格式JSON（必须包含所有width*height个格子）";
+
+        public BuildingSingleAgent(string apiKey, AIServiceType serviceType, string modelName, int maxBuildingSize = 50)
             : base(apiKey, serviceType, modelName)
         {
             _httpClient.Timeout = TimeSpan.FromSeconds(120);
+            _maxBuildingSize = maxBuildingSize;
         }
 
         /// <summary>
-        /// 生成建筑
+        /// 生成建筑 - 返回TEditSch格式
         /// </summary>
-        public async Task<BuildingDesign> GenerateBuildingAsync(
+        public async Task<TEditSchDesign> GenerateBuildingAsync(
             string userPrompt,
             Action<string, int> progressCallback = null,
             CancellationToken ct = default)
@@ -58,30 +109,27 @@ namespace trab.Core.Agents.SingleAgent
             var kb = KnowledgeBaseManager.Instance;
             kb.Initialize();
 
-            var toolCallRecords = new List<ToolCallRecord>();
-
             if (_useOpenAIFormat)
             {
-                return await RunOpenAIAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
+                return await RunOpenAIAgentLoop(userPrompt, kb, progressCallback, ct);
             }
             else
             {
-                return await RunAnthropicAgentLoop(userPrompt, kb, toolCallRecords, progressCallback, ct);
+                return await RunAnthropicAgentLoop(userPrompt, kb, progressCallback, ct);
             }
         }
 
         #region OpenAI格式Agent
 
-        private async Task<BuildingDesign> RunOpenAIAgentLoop(
+        private async Task<TEditSchDesign> RunOpenAIAgentLoop(
             string userPrompt,
             KnowledgeBaseManager kb,
-            List<ToolCallRecord> toolCallRecords,
             Action<string, int> progressCallback,
             CancellationToken ct)
         {
             var messages = new List<object>
             {
-                new { role = "system", content = AGENT_SYSTEM_PROMPT },
+                new { role = "system", content = AGENT_SYSTEM_PROMPT.Replace("MaxBuildingSize", _maxBuildingSize.ToString()) },
                 new { role = "user", content = userPrompt }
             };
 
@@ -89,6 +137,12 @@ namespace trab.Core.Agents.SingleAgent
             while (true)
             {
                 round++;
+                if (round > MAX_AGENT_ROUNDS)
+                {
+                    progressCallback?.Invoke("超过最大轮数限制", 0);
+                    return null;
+                }
+
                 progressCallback?.Invoke($"[轮次{round}]思考中...", round);
 
                 var requestBody = BuildOpenAIRequest(messages);
@@ -127,14 +181,6 @@ namespace trab.Core.Agents.SingleAgent
 
                         var result = ExecuteTool(toolName, argsObj, kb);
 
-                        toolCallRecords.Add(new ToolCallRecord
-                        {
-                            ToolName = toolName,
-                            Input = argsObj,
-                            Output = result.Content,
-                            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                        });
-
                         messages.Add(new
                         {
                             role = "tool",
@@ -149,8 +195,8 @@ namespace trab.Core.Agents.SingleAgent
                 if (!string.IsNullOrEmpty(message.content))
                 {
                     progressCallback?.Invoke($"[轮次{round}]生成完成", round);
-                    var design = ParseBuildingDesign(message.content, toolCallRecords);
-                    progressCallback?.Invoke($"完成({round}轮,{toolCallRecords.Count}次工具调用)", 0);
+                    var design = ParseTEditSchDesign(message.content);
+                    progressCallback?.Invoke($"完成({round}轮)", 0);
                     return design;
                 }
 
@@ -166,7 +212,7 @@ namespace trab.Core.Agents.SingleAgent
                 messages = messages,
                 tools = GetOpenAIToolDefinitions(),
                 tool_choice = "auto",
-                max_tokens = 32768
+                max_tokens = 16384
             };
         }
 
@@ -174,18 +220,12 @@ namespace trab.Core.Agents.SingleAgent
         {
             return new List<object>
             {
-                new { type = "function", function = new { name = "search_tiles", description = "搜索方块类型，返回tile_id、名称、属性。用于确定建筑材料。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格: medieval, fantasy, natural, steampunk, asian, snow, desert, modern, dark" }, category = new { type = "string", description = "类别: basic, wood, brick, slab, luxury, furniture, light, door" }, biome = new { type = "string", description = "生物群落: forest, desert, snow, jungle, ocean, underground" } }, required = new[] { "style" } } } },
-                new { type = "function", function = new { name = "search_walls", description = "搜索墙壁类型，返回wall_id、名称、属性。用于确定建筑墙壁材料。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格: medieval, fantasy, natural, steampunk, asian, snow, desert, modern, dark" }, category = new { type = "string", description = "类别: natural, wood, brick, luxury, desert, snow" } }, required = new[] { "style" } } } },
-                new { type = "function", function = new { name = "get_style_template", description = "获取建筑风格模板，包含推荐方块、油漆方案、建筑规则。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格名称" }, building_type = new { type = "string", description = "建筑类型: house, castle, tower, shop, temple" } }, required = new[] { "style" } } } },
-                new { type = "function", function = new { name = "search_furniture", description = "搜索家具及其NPC房屋功能。返回tile_id、尺寸、放置规则。支持按类别向量检索。", parameters = new { type = "object", properties = new { room_type = new { type = "string", description = "房间类型/家具类别: light(光源), surface(桌面), comfort(舒适), storage(存储), door(门), decoration(装饰)" }, npc_type = new { type = "string", description = "目标NPC类型（可选）" } } } } },
-                new { type = "function", function = new { name = "get_paint_scheme", description = "获取推荐的油漆颜色方案。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格名称" }, theme = new { type = "string", description = "主题: warm, cold, dark, bright" } } } } },
-                new { type = "function", function = new { name = "get_roof_template", description = "获取屋顶设计模板，返回形状描述和推荐方块。用于设计建筑屋顶结构。", parameters = new { type = "object", properties = new { roof_type = new { type = "string", description = "屋顶类型: gable(人字形), flat(平顶), dome(圆顶), pagoda(宝塔), stepped(阶梯)" }, style = new { type = "string", description = "建筑风格: medieval, fantasy, natural..." }, width = new { type = "integer", description = "建筑宽度，用于计算屋顶高度" } }, required = new[] { "roof_type", "width" } } } },
-                new { type = "function", function = new { name = "get_window_template", description = "获取窗户设计模板，返回尺寸和方块ID。用于设计窗户布局。", parameters = new { type = "object", properties = new { window_type = new { type = "string", description = "窗户类型: single(单窗), double(双窗), arched(拱窗), bay(凸窗)" }, style = new { type = "string", description = "建筑风格" } }, required = new[] { "window_type" } } } },
-                new { type = "function", function = new { name = "get_floor_structure", description = "获取楼层结构模板，返回楼层数、高度、墙壁厚度。用于设计建筑骨架。", parameters = new { type = "object", properties = new { structure_type = new { type = "string", description = "结构类型: single_story(单层), two_story(双层), tower(塔楼), castle(城堡)" }, style = new { type = "string", description = "建筑风格" } }, required = new[] { "structure_type" } } } },
-                new { type = "function", function = new { name = "analyze_requirement", description = "分析用户建筑需求，提取建筑类型、风格、材料类别等关键信息。这是建筑生成的第一步。", parameters = new { type = "object", properties = new { building_type = new { type = "string", description = "建筑类型: house, tower, castle, shop, temple" }, style = new { type = "string", description = "风格: medieval, fantasy, natural, steampunk, asian, snow, desert, modern, dark" }, biome = new { type = "string", description = "生物群落: forest, desert, snow, jungle, ocean, underground" }, floor_count = new { type = "integer", description = "楼层数(1-4)" }, width = new { type = "integer", description = "建筑宽度(6-20)" }, height = new { type = "integer", description = "建筑高度(6-16)" }, main_block_category = new { type = "string", description = "主要方块类别: basic, wood, brick, slab, luxury" }, roof_block_category = new { type = "string", description = "屋顶方块类别: slab, brick" }, floor_block_category = new { type = "string", description = "地板方块类别: wood, brick" }, main_wall_category = new { type = "string", description = "主要墙壁类别: natural, wood, brick" }, need_npc_house = new { type = "boolean", description = "是否需要NPC房屋功能" }, reasoning = new { type = "string", description = "分析推理说明" } }, required = new[] { "building_type", "style" } } } },
-                new { type = "function", function = new { name = "select_materials", description = "从检索到的材料候选中选择最合适的材料ID。注意：wall_id是墙壁背景ID(如4=木墙、6=灰砖墙、14=玻璃墙)，tile_id是方块ID(如4=灰砖、10=门)。两者不同！", parameters = new { type = "object", properties = new { main_block_id = new { type = "integer", description = "主要方块tile_id（方块ID，如4=灰砖、5=木材）" }, secondary_block_id = new { type = "integer", description = "次要方块tile_id（可选）" }, roof_block_id = new { type = "integer", description = "屋顶方块tile_id（如143=石板）" }, floor_block_id = new { type = "integer", description = "地板方块tile_id（如5=木材、19=平台）" }, main_wall_id = new { type = "integer", description = "墙壁背景wall_id（注意：这是wall_id不是tile_id！如4=木墙、6=灰砖墙、14=玻璃墙。不要用10，10是门的tile_id不是墙！）" }, light_id = new { type = "integer", description = "光源家具tile_id（如4=火把、34=吊灯）" }, surface_id = new { type = "integer", description = "桌面家具tile_id（如17=工作台、87=桌子）" }, comfort_id = new { type = "integer", description = "舒适家具tile_id（如88=椅子、89=床）" }, door_id = new { type = "integer", description = "门家具tile_id（如10=木门、11=玻璃门）" }, primary_paint = new { type = "integer", description = "主色调油漆ID(0-31)" }, shadow_paint = new { type = "integer", description = "阴影油漆ID(默认28)" }, reasoning = new { type = "string", description = "选择理由说明" } }, required = new[] { "main_block_id", "roof_block_id", "floor_block_id", "main_wall_id" } } } },
-                new { type = "function", function = new { name = "search_buildings", description = "搜索建筑实体库，返回相似建筑的ID、风格、材料、建造顺序。用于参考已有建筑的构造方式。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "建筑风格: asian, medieval, fantasy, natural, steampunk, modern, dark" }, building_type = new { type = "string", description = "建筑类型: residence, castle, tower, temple, shop" }, top_k = new { type = "integer", description = "返回数量(默认3)" } } } } },
-                new { type = "function", function = new { name = "get_building_sequence", description = "获取建筑的详细建造顺序，返回step-by-step建造指令。Agent按此顺序执行建造。", parameters = new { type = "object", properties = new { building_id = new { type = "string", description = "建筑实体ID（如20260602215014）" } }, required = new[] { "building_id" } } } }
+                new { type = "function", function = new { name = "search_tiles", description = "搜索方块类型，返回tile_id、名称。用于确定建筑材料。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格: medieval, fantasy, natural, asian, steampunk" }, category = new { type = "string", description = "类别: basic, wood, brick, slab, glass, door, furniture, light" } }, required = new[] { "style" } } } },
+                new { type = "function", function = new { name = "search_walls", description = "搜索墙壁类型，返回wall_id、名称。用于确定建筑墙壁材料。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格: medieval, fantasy, natural" }, category = new { type = "string", description = "类别: natural, wood, brick, glass" } }, required = new[] { "style" } } } },
+                new { type = "function", function = new { name = "search_furniture", description = "搜索家具，返回tile_id、名称、NPC房屋功能。", parameters = new { type = "object", properties = new { category = new { type = "string", description = "类别: light(光源), surface(桌面), comfort(舒适), storage(存储), door(门)" } } } } },
+                new { type = "function", function = new { name = "select_materials", description = "确认材料选择，返回选定的TileID和WallID。", parameters = new { type = "object", properties = new { main_tile_id = new { type = "integer", description = "主要方块TileID" }, roof_tile_id = new { type = "integer", description = "屋顶方块TileID" }, floor_tile_id = new { type = "integer", description = "地板方块TileID" }, wall_id = new { type = "integer", description = "墙壁WallID" }, door_id = new { type = "integer", description = "门TileID" }, light_id = new { type = "integer", description = "光源TileID" }, surface_id = new { type = "integer", description = "桌面TileID" }, comfort_id = new { type = "integer", description = "舒适家具TileID" } }, required = new[] { "main_tile_id", "wall_id" } } } },
+                new { type = "function", function = new { name = "get_roof_template", description = "获取屋顶设计模板，返回形状描述和推荐方块。", parameters = new { type = "object", properties = new { roof_type = new { type = "string", description = "屋顶类型: gable(人字形), flat(平顶), dome(圆顶)" }, width = new { type = "integer", description = "建筑宽度" } }, required = new[] { "roof_type", "width" } } } },
+                new { type = "function", function = new { name = "get_style_template", description = "获取建筑风格模板，包含推荐方块和油漆方案。", parameters = new { type = "object", properties = new { style = new { type = "string", description = "风格名称: medieval, fantasy, natural, asian" } }, required = new[] { "style" } } } }
             };
         }
 
@@ -213,10 +253,9 @@ namespace trab.Core.Agents.SingleAgent
 
         #region Anthropic格式Agent
 
-        private async Task<BuildingDesign> RunAnthropicAgentLoop(
+        private async Task<TEditSchDesign> RunAnthropicAgentLoop(
             string userPrompt,
             KnowledgeBaseManager kb,
-            List<ToolCallRecord> toolCallRecords,
             Action<string, int> progressCallback,
             CancellationToken ct)
         {
@@ -244,8 +283,8 @@ namespace trab.Core.Agents.SingleAgent
                     var textContent = ExtractTextContent(response.content);
                     if (textContent != null)
                     {
-                        var design = ParseBuildingDesign(textContent, toolCallRecords);
-                        progressCallback?.Invoke($"完成({round}轮,{toolCallRecords.Count}次工具调用)", 0);
+                        var design = ParseTEditSchDesign(textContent);
+                        progressCallback?.Invoke($"完成({round}轮)", 0);
                         return design;
                     }
                     return null;
@@ -266,14 +305,6 @@ namespace trab.Core.Agents.SingleAgent
 
                             progressCallback?.Invoke($"[轮次{round}]调用工具: {toolName}", round);
                             var result = ExecuteTool(toolName, toolInput, kb);
-
-                            toolCallRecords.Add(new ToolCallRecord
-                            {
-                                ToolName = toolName,
-                                Input = toolInput,
-                                Output = result.Content,
-                                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-                            });
 
                             toolResults.Add(JObject.FromObject(new
                             {
@@ -302,8 +333,8 @@ namespace trab.Core.Agents.SingleAgent
             return new
             {
                 model = _modelName,
-                max_tokens = 4096,
-                system = AGENT_SYSTEM_PROMPT,
+                max_tokens = 8192,
+                system = AGENT_SYSTEM_PROMPT.Replace("MaxBuildingSize", _maxBuildingSize.ToString()),
                 messages = messages,
                 tools = GetAnthropicToolDefinitions()
             };
@@ -313,16 +344,12 @@ namespace trab.Core.Agents.SingleAgent
         {
             return new List<object>
             {
-                new { name = "search_tiles", description = "搜索方块类型，返回tile_id、名称、属性。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, category = new { type = "string" }, biome = new { type = "string" } }, required = new[] { "style" } } },
-                new { name = "search_walls", description = "搜索墙壁类型，返回wall_id、名称、属性。用于确定建筑墙壁材料。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, category = new { type = "string" } }, required = new[] { "style" } } },
-                new { name = "get_style_template", description = "获取建筑风格模板。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, building_type = new { type = "string" } }, required = new[] { "style" } } },
-                new { name = "search_furniture", description = "搜索家具及NPC房屋功能。支持按类别向量检索。", input_schema = new { type = "object", properties = new { room_type = new { type = "string", description = "家具类别: light, surface, comfort, storage, door, decoration" }, npc_type = new { type = "string" } } } },
-                new { name = "get_paint_scheme", description = "获取油漆颜色方案。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, theme = new { type = "string" } } } },
-                new { name = "get_roof_template", description = "获取屋顶设计模板，返回形状描述和推荐方块。", input_schema = new { type = "object", properties = new { roof_type = new { type = "string" }, style = new { type = "string" }, width = new { type = "integer" } }, required = new[] { "roof_type", "width" } } },
-                new { name = "get_window_template", description = "获取窗户设计模板，返回尺寸和方块ID。", input_schema = new { type = "object", properties = new { window_type = new { type = "string" }, style = new { type = "string" } }, required = new[] { "window_type" } } },
-                new { name = "get_floor_structure", description = "获取楼层结构模板，返回楼层数、高度、墙壁厚度。", input_schema = new { type = "object", properties = new { structure_type = new { type = "string" }, style = new { type = "string" } }, required = new[] { "structure_type" } } },
-                new { name = "search_buildings", description = "搜索建筑实体库，返回相似建筑的ID、风格、材料、建造顺序。用于参考已有建筑的构造方式。", input_schema = new { type = "object", properties = new { style = new { type = "string", description = "建筑风格: asian, medieval, fantasy, natural" }, building_type = new { type = "string", description = "建筑类型: residence, castle, tower, temple" }, top_k = new { type = "integer", description = "返回数量(默认3)" } } } },
-                new { name = "get_building_sequence", description = "获取建筑的详细建造顺序，返回step-by-step建造指令。", input_schema = new { type = "object", properties = new { building_id = new { type = "string", description = "建筑实体ID" } }, required = new[] { "building_id" } } }
+                new { name = "search_tiles", description = "搜索方块类型，返回tile_id、名称。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, category = new { type = "string" } }, required = new[] { "style" } } },
+                new { name = "search_walls", description = "搜索墙壁类型，返回wall_id、名称。", input_schema = new { type = "object", properties = new { style = new { type = "string" }, category = new { type = "string" } }, required = new[] { "style" } } },
+                new { name = "search_furniture", description = "搜索家具，返回tile_id、名称。", input_schema = new { type = "object", properties = new { category = new { type = "string" } } } },
+                new { name = "select_materials", description = "确认材料选择。", input_schema = new { type = "object", properties = new { main_tile_id = new { type = "integer" }, wall_id = new { type = "integer" } }, required = new[] { "main_tile_id", "wall_id" } } },
+                new { name = "get_roof_template", description = "获取屋顶设计模板。", input_schema = new { type = "object", properties = new { roof_type = new { type = "string" }, width = new { type = "integer" } }, required = new[] { "roof_type", "width" } } },
+                new { name = "get_style_template", description = "获取建筑风格模板。", input_schema = new { type = "object", properties = new { style = new { type = "string" } }, required = new[] { "style" } } }
             };
         }
 
@@ -368,29 +395,17 @@ namespace trab.Core.Agents.SingleAgent
                 switch (name)
                 {
                     case "search_tiles":
-                        return SearchTiles(input["style"]?.ToString(), input["category"]?.ToString(), input["biome"]?.ToString(), kb);
+                        return SearchTiles(input["style"]?.ToString(), input["category"]?.ToString(), kb);
                     case "search_walls":
                         return SearchWalls(input["style"]?.ToString(), input["category"]?.ToString(), kb);
-                    case "get_style_template":
-                        return GetStyleTemplate(input["style"]?.ToString(), input["building_type"]?.ToString(), kb);
                     case "search_furniture":
-                        return SearchFurniture(input["room_type"]?.ToString(), input["npc_type"]?.ToString(), kb);
-                    case "get_paint_scheme":
-                        return GetPaintScheme(input["style"]?.ToString(), input["theme"]?.ToString(), kb);
-                    case "get_roof_template":
-                        return GetRoofTemplate(input["roof_type"]?.ToString(), input["style"]?.ToString(), input["width"]?.Value<int>() ?? 10, kb);
-                    case "get_window_template":
-                        return GetWindowTemplate(input["window_type"]?.ToString(), input["style"]?.ToString(), kb);
-                    case "get_floor_structure":
-                        return GetFloorStructure(input["structure_type"]?.ToString(), input["style"]?.ToString(), kb);
-                    case "analyze_requirement":
-                        return AnalyzeRequirement(input, kb);
+                        return SearchFurniture(input["category"]?.ToString(), kb);
                     case "select_materials":
                         return SelectMaterials(input, kb);
-                    case "search_buildings":
-                        return SearchBuildings(input["style"]?.ToString(), input["building_type"]?.ToString(), input["top_k"]?.Value<int>() ?? 3, kb);
-                    case "get_building_sequence":
-                        return GetBuildingSequence(input["building_id"]?.ToString(), kb);
+                    case "get_roof_template":
+                        return GetRoofTemplate(input["roof_type"]?.ToString(), input["width"]?.Value<int>() ?? 10, kb);
+                    case "get_style_template":
+                        return GetStyleTemplate(input["style"]?.ToString(), kb);
                     default:
                         return new ToolResult { IsError = true, Content = "{\"error\": \"未知工具\"}" };
                 }
@@ -401,25 +416,23 @@ namespace trab.Core.Agents.SingleAgent
             }
         }
 
-        private ToolResult SearchTiles(string style, string category, string biome, KnowledgeBaseManager kb)
+        private ToolResult SearchTiles(string style, string category, KnowledgeBaseManager kb)
         {
-            var candidates = kb.Tiles.SearchTiles(null, category, biome).ToList();
+            var candidates = kb.Tiles.SearchTiles(null, category, null).ToList();
 
             if (!string.IsNullOrEmpty(style) && kb.Vectors.IsInitialized)
             {
-                candidates = kb.Vectors.SearchTilesSemantic(candidates, style, 20);
+                candidates = kb.Vectors.SearchTilesSemantic(candidates, style, 15);
             }
             else
             {
-                candidates = candidates.Take(20).ToList();
+                candidates = candidates.Take(15).ToList();
             }
 
             var result = new
             {
-                tiles = candidates.Select(t => new { id = t.id, name = t.name, display_name = t.display_name, category = t.category }),
-                total_count = candidates.Count,
-                search_criteria = new { style, category, biome },
-                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(style)
+                tiles = candidates.Select(t => new { id = t.id, name = t.name, display_name = t.display_name }),
+                note = "使用tile_id作为TEditSch格式中的type值"
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
         }
@@ -430,26 +443,75 @@ namespace trab.Core.Agents.SingleAgent
 
             if (!string.IsNullOrEmpty(style) && kb.Vectors.IsInitialized)
             {
-                candidates = kb.Vectors.SearchWallsSemantic(candidates, style, 20);
+                candidates = kb.Vectors.SearchWallsSemantic(candidates, style, 15);
             }
             else
             {
-                candidates = candidates.Take(20).ToList();
+                candidates = candidates.Take(15).ToList();
             }
 
             var result = new
             {
-                walls = candidates.Select(w => new { id = w.id, name = w.name, display_name = w.display_name, category = w.category }),
-                total_count = candidates.Count,
-                search_criteria = new { style, category },
-                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(style)
+                walls = candidates.Select(w => new { id = w.id, name = w.name, display_name = w.display_name }),
+                note = "使用wall_id作为TEditSch格式中的wall值"
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
         }
 
-        private ToolResult GetStyleTemplate(string style, string buildingType, KnowledgeBaseManager kb)
+        private ToolResult SearchFurniture(string category, KnowledgeBaseManager kb)
         {
-            var template = kb.Styles.GetTemplate(style, buildingType);
+            var candidates = kb.Furniture.SearchFurniture(category, null);
+
+            var result = new
+            {
+                furniture = candidates.Select(f => new { tile_id = f.Value.tile_id, name = f.Key, display_name = f.Value.display_name, category = f.Value.category }),
+                npc_requirements = new { light = "光源如Torch(id=4)", surface = "桌面如WorkBench(id=17)", comfort = "舒适如Chair(id=88)", door = "门如WoodenDoor(id=10)" }
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        private ToolResult SelectMaterials(JObject input, KnowledgeBaseManager kb)
+        {
+            var result = new
+            {
+                selected = new
+                {
+                    main_tile_id = input["main_tile_id"]?.Value<int>() ?? 4,
+                    roof_tile_id = input["roof_tile_id"]?.Value<int>() ?? 143,
+                    floor_tile_id = input["floor_tile_id"]?.Value<int>() ?? 19,
+                    wall_id = input["wall_id"]?.Value<int>() ?? 6,
+                    door_id = input["door_id"]?.Value<int>() ?? 10,
+                    light_id = input["light_id"]?.Value<int>() ?? 4,
+                    surface_id = input["surface_id"]?.Value<int>() ?? 17,
+                    comfort_id = input["comfort_id"]?.Value<int>() ?? 88
+                },
+                message = "材料已选择。现在生成TEditSch格式JSON。tiles[y][x]二维数组，使用选定的ID。"
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        private ToolResult GetRoofTemplate(string roofType, int width, KnowledgeBaseManager kb)
+        {
+            var template = kb.Roofs.GetTemplate(roofType);
+            if (template == null)
+                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到屋顶模板\"}" };
+
+            int roofHeight = CalculateRoofHeight(roofType, width);
+
+            var result = new
+            {
+                roof_type = roofType,
+                height = roofHeight,
+                shape = template.shape_pattern,
+                edge_tiles = template.edge_tiles,
+                fill_tiles = template.fill_tiles
+            };
+            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
+        }
+
+        private ToolResult GetStyleTemplate(string style, KnowledgeBaseManager kb)
+        {
+            var template = kb.Styles.GetTemplate(style, null);
             if (template == null)
                 return new ToolResult { IsError = true, Content = $"{{\"error\": \"未找到风格: {style}\"}}" };
 
@@ -458,112 +520,8 @@ namespace trab.Core.Agents.SingleAgent
             {
                 style = style,
                 name = template.name,
-                display_name = template.display_name,
                 description = template.description,
-                paint_scheme = new { primary = paintScheme.PrimaryPaint, shadow = paintScheme.ShadowPaint }
-            };
-            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-        }
-
-        private ToolResult SearchFurniture(string roomType, string npcType, KnowledgeBaseManager kb)
-        {
-            var candidates = kb.Furniture.SearchFurniture(roomType, npcType);
-
-            string category = roomType?.ToLower();
-            if (!string.IsNullOrEmpty(category) && kb.Vectors.IsInitialized)
-            {
-                candidates = kb.Vectors.SearchFurnitureSemantic(candidates, category, 20);
-            }
-            else
-            {
-                candidates = candidates.Take(20).ToList();
-            }
-
-            var result = new
-            {
-                furniture = candidates.Select(f => new { name = f.Key, tile_id = f.Value.tile_id, display_name = f.Value.display_name, category = f.Value.category, npc_function = f.Value.npc_function }),
-                total_count = candidates.Count,
-                search_criteria = new { room_type = roomType, npc_type = npcType },
-                vector_search_used = kb.Vectors.IsInitialized && !string.IsNullOrEmpty(category),
-                npc_requirements = new { valid_house_requires = new[] { "light_source", "flat_surface", "comfort", "door" } }
-            };
-            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-        }
-
-        private ToolResult GetPaintScheme(string style, string theme, KnowledgeBaseManager kb)
-        {
-            var paintScheme = kb.Tiles.GetPaintRecommendation(style);
-            var paints = kb.Tiles.GetAllPaints().Take(10).ToList();
-            var result = new
-            {
-                style = style,
-                primary_paint = paintScheme.PrimaryPaint,
-                shadow_paint = paintScheme.ShadowPaint,
-                highlight_paint = paintScheme.HighlightPaint,
-                paints = paints.Select(p => new { id = p.id, name = p.name })
-            };
-            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-        }
-
-        private ToolResult GetRoofTemplate(string roofType, string style, int width, KnowledgeBaseManager kb)
-        {
-            var template = kb.Roofs.GetTemplate(roofType);
-            if (template == null)
-                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到屋顶模板: " + roofType + "\"}" };
-
-            int roofHeight = CalculateRoofHeight(roofType, width);
-
-            var result = new
-            {
-                roof_type = roofType,
-                display_name = template.display_name,
-                shape_pattern = template.shape_pattern,
-                calculated_height = roofHeight,
-                edge_tiles = template.edge_tiles,
-                fill_tiles = template.fill_tiles,
-                description = template.description
-            };
-            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-        }
-
-        private ToolResult GetWindowTemplate(string windowType, string style, KnowledgeBaseManager kb)
-        {
-            var template = kb.Windows.GetTemplate(windowType);
-            if (template == null)
-                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到窗户模板: " + windowType + "\"}" };
-
-            var result = new
-            {
-                window_type = windowType,
-                display_name = template.display_name,
-                width = template.width,
-                height = template.height,
-                frame_tile_id = template.frame_tile_id,
-                glass_tile_id = template.glass_tile_id,
-                description = template.description
-            };
-            return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-        }
-
-        private ToolResult GetFloorStructure(string structureType, string style, KnowledgeBaseManager kb)
-        {
-            var template = kb.Floors.GetTemplate(structureType);
-            if (template == null)
-                return new ToolResult { IsError = true, Content = "{\"error\": \"未找到楼层结构模板: " + structureType + "\"}" };
-
-            int totalHeight = template.floor_count * template.floor_height;
-
-            var result = new
-            {
-                structure_type = structureType,
-                display_name = template.display_name,
-                floor_count = template.floor_count,
-                floor_height = template.floor_height,
-                total_height = totalHeight,
-                wall_thickness = template.wall_thickness,
-                floor_tiles = template.floor_tiles,
-                wall_tiles = template.wall_tiles,
-                description = template.description
+                paint = new { primary = paintScheme.PrimaryPaint, shadow = paintScheme.ShadowPaint }
             };
             return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
         }
@@ -575,241 +533,7 @@ namespace trab.Core.Agents.SingleAgent
                 case "gable": return Math.Max(2, width / 3);
                 case "flat": return 1;
                 case "dome": return Math.Max(2, width / 4);
-                case "pagoda": return Math.Max(3, width / 2);
-                case "stepped": return Math.Max(2, width / 3);
                 default: return Math.Max(2, width / 4);
-            }
-        }
-
-        private ToolResult AnalyzeRequirement(JObject input, KnowledgeBaseManager kb)
-        {
-            try
-            {
-                string style = input["style"]?.ToString()?.ToLower() ?? "medieval";
-
-                var validStyles = kb.Styles.GetAllStyleNames();
-                if (!validStyles.Contains(style))
-                {
-                    style = "medieval";
-                }
-
-                var requirement = new BuildingRequirement
-                {
-                    BuildingType = input["building_type"]?.ToString() ?? "house",
-                    Style = style,
-                    Biome = input["biome"]?.ToString() ?? "forest",
-                    FloorCount = input["floor_count"]?.Value<int>() ?? 1,
-                    PreferredWidth = input["width"]?.Value<int>(),
-                    PreferredHeight = input["height"]?.Value<int>(),
-                    Materials = new MaterialCategoryRequirement
-                    {
-                        MainBlockCategory = input["main_block_category"]?.ToString() ?? "brick",
-                        RoofBlockCategory = input["roof_block_category"]?.ToString() ?? "slab",
-                        FloorBlockCategory = input["floor_block_category"]?.ToString() ?? "wood",
-                        MainWallCategory = input["main_wall_category"]?.ToString() ?? "brick",
-                        RequiredFurnitureCategories = new List<string> { "light", "surface", "comfort", "door" }
-                    },
-                    NeedNpcHouse = input["need_npc_house"]?.Value<bool>() ?? true,
-                    AnalysisReasoning = input["reasoning"]?.ToString()
-                };
-
-                var result = new
-                {
-                    requirement = requirement,
-                    valid_styles = validStyles,
-                    style_description = kb.Styles.GetTemplate(style)?.description,
-                    suggested_searches = new List<object>
-                    {
-                        new { tool = "search_tiles", category = requirement.Materials.MainBlockCategory, style = style },
-                        new { tool = "search_tiles", category = requirement.Materials.RoofBlockCategory, style = style },
-                        new { tool = "search_tiles", category = requirement.Materials.FloorBlockCategory, style = style },
-                        new { tool = "search_walls", category = requirement.Materials.MainWallCategory, style = style },
-                        new { tool = "search_furniture", room_type = "light" },
-                        new { tool = "search_furniture", room_type = "surface" },
-                        new { tool = "search_furniture", room_type = "comfort" },
-                        new { tool = "search_furniture", room_type = "door" }
-                    },
-                    message = "需求分析完成。请按建议的搜索顺序调用工具获取材料候选，然后调用select_materials选择最终材料。"
-                };
-
-                trab.Instance?.Logger.Info($"需求分析: {requirement.BuildingType}, {requirement.Style}, {requirement.FloorCount}层");
-
-                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-            }
-            catch (Exception ex)
-            {
-                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
-            }
-        }
-
-        private ToolResult SelectMaterials(JObject input, KnowledgeBaseManager kb)
-        {
-            try
-            {
-                var selected = new SelectedMaterials
-                {
-                    MainBlockId = input["main_block_id"]?.Value<int>() ?? 4,
-                    SecondaryBlockId = input["secondary_block_id"]?.Value<int>(),
-                    RoofBlockId = input["roof_block_id"]?.Value<int>() ?? 143,
-                    FloorBlockId = input["floor_block_id"]?.Value<int>() ?? 5,
-                    MainWallId = input["main_wall_id"]?.Value<int>() ?? 6,
-                    PrimaryPaint = input["primary_paint"]?.Value<int>() ?? 0,
-                    ShadowPaint = input["shadow_paint"]?.Value<int>() ?? 28,
-                    SelectionReasoning = input["reasoning"]?.ToString()
-                };
-
-                if (input["light_id"] != null)
-                    selected.FurnitureIds["light"] = input["light_id"].Value<int>();
-                if (input["surface_id"] != null)
-                    selected.FurnitureIds["surface"] = input["surface_id"].Value<int>();
-                if (input["comfort_id"] != null)
-                    selected.FurnitureIds["comfort"] = input["comfort_id"].Value<int>();
-                if (input["door_id"] != null)
-                    selected.FurnitureIds["door"] = input["door_id"].Value<int>();
-
-                var tileInfo = kb.Tiles.GetTileById(selected.MainBlockId);
-                if (tileInfo == null)
-                {
-                    trab.Instance?.Logger.Warn($"选定的MainBlockId={selected.MainBlockId}不在知识库中，使用默认值4");
-                    selected.MainBlockId = 4;
-                }
-
-                var result = new
-                {
-                    selected_materials = selected,
-                    material_summary = new
-                    {
-                        main_block = kb.Tiles.GetTileById(selected.MainBlockId)?.display_name ?? "灰砖",
-                        roof_block = kb.Tiles.GetTileById(selected.RoofBlockId)?.display_name ?? "石板",
-                        floor_block = kb.Tiles.GetTileById(selected.FloorBlockId)?.display_name ?? "木材",
-                        main_wall = kb.Tiles.GetWallById(selected.MainWallId)?.display_name ?? "灰砖墙"
-                    },
-                    message = "材料选择完成。请使用选定的材料ID生成建筑JSON。"
-                };
-
-                trab.Instance?.Logger.Info($"材料选择: Main={selected.MainBlockId}, Roof={selected.RoofBlockId}, Floor={selected.FloorBlockId}, Wall={selected.MainWallId}");
-
-                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-            }
-            catch (Exception ex)
-            {
-                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
-            }
-        }
-
-        private ToolResult SearchBuildings(string style, string buildingType, int topK, KnowledgeBaseManager kb)
-        {
-            try
-            {
-                if (!kb.Buildings.IsInitialized)
-                {
-                    kb.Buildings.Initialize();
-                }
-
-                var buildings = kb.Buildings.SearchByStyle(style, topK);
-
-                if (buildings.Count == 0 && !string.IsNullOrEmpty(buildingType))
-                {
-                    buildings = kb.Buildings.SearchByStyle(buildingType, topK);
-                }
-
-                var result = new
-                {
-                    buildings = buildings.Select(b => new
-                    {
-                        id = b.id,
-                        source = b.source,
-                        dimensions = b.dimensions,
-                        features = b.features,
-                        style_tags = b.style_tags,
-                        summary = b.summary,
-                        materials_preview = b.materials?.primary_tiles?.Take(3)?.Select(t => t.name)?.ToList()
-                    }),
-                    total_count = buildings.Count,
-                    search_criteria = new { style, building_type = buildingType },
-                    message = buildings.Count > 0
-                        ? $"找到{buildings.Count}个相似建筑。调用get_building_sequence获取详细建造顺序。"
-                        : "未找到匹配建筑，使用默认设计流程。"
-                };
-
-                trab.Instance?.Logger.Info($"建筑实体检索: style={style}, type={buildingType}, found={buildings.Count}");
-
-                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-            }
-            catch (Exception ex)
-            {
-                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
-            }
-        }
-
-        private ToolResult GetBuildingSequence(string buildingId, KnowledgeBaseManager kb)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(buildingId))
-                {
-                    return new ToolResult { IsError = true, Content = "{\"error\": \"缺少building_id参数\"}" };
-                }
-
-                if (!kb.Buildings.IsInitialized)
-                {
-                    kb.Buildings.Initialize();
-                }
-
-                var building = kb.Buildings.GetBuilding(buildingId);
-                if (building == null)
-                {
-                    return new ToolResult { IsError = true, Content = $"{{\"error\": \"未找到建筑: {buildingId}\"}}" };
-                }
-
-                var sequence = kb.Buildings.GetBuildingSequence(buildingId);
-                var materials = kb.Buildings.GetMaterialList(buildingId);
-                var detail = kb.Buildings.GetBuildingDetail(buildingId);
-
-                string aiDescription = kb.Buildings.GetBuildingDescriptionForAI(buildingId);
-
-                var result = new
-                {
-                    building_id = buildingId,
-                    building_info = new
-                    {
-                        dimensions = building.dimensions,
-                        features = building.features,
-                        summary = building.summary,
-                        style_tags = building.style_tags
-                    },
-                    tile_stats = detail != null ? new
-                    {
-                        total_tiles = detail.total_tiles,
-                        active_tiles = detail.active_tiles,
-                        unique_tile_types = detail.unique_tile_types,
-                        unique_wall_types = detail.unique_wall_types,
-                        tile_distribution = detail.tile_distribution?.OrderByDescending(t => t.Value).Take(15).ToDictionary(t => t.Key, t => t.Value),
-                        wall_distribution = detail.wall_distribution?.OrderByDescending(t => t.Value).Take(10).ToDictionary(t => t.Key, t => t.Value)
-                    } : null,
-                    building_sequence = sequence?.Select(s => new
-                    {
-                        step = s.step,
-                        action = s.action,
-                        materials = s.materials,
-                        note = s.note
-                    }),
-                    material_list = new
-                    {
-                        primary_tiles = materials.tiles?.Select(t => new { id = t.id, name = t.name, count = t.count }),
-                        primary_walls = materials.walls?.Select(w => new { id = w.id, name = w.name, count = w.count })
-                    },
-                    ai_readable_description = aiDescription,
-                    message = "建筑数据已加载。参考 tile_distribution 理解建筑组成，按 building_sequence 的顺序生成新建筑。"
-                };
-
-                trab.Instance?.Logger.Info($"获取建造顺序: building={buildingId}, steps={sequence?.Count ?? 0}, tiles={detail?.unique_tile_types ?? 0}种");
-
-                return new ToolResult { IsError = false, Content = JsonConvert.SerializeObject(result) };
-            }
-            catch (Exception ex)
-            {
-                return new ToolResult { IsError = true, Content = $"{{\"error\": \"{ex.Message}\"}}" };
             }
         }
 
@@ -817,7 +541,7 @@ namespace trab.Core.Agents.SingleAgent
 
         #region JSON解析
 
-        private BuildingDesign ParseBuildingDesign(string content, List<ToolCallRecord> toolCalls)
+        private TEditSchDesign ParseTEditSchDesign(string content)
         {
             if (string.IsNullOrEmpty(content)) return null;
             string json = ExtractJson(content);
@@ -825,15 +549,156 @@ namespace trab.Core.Agents.SingleAgent
 
             try
             {
-                var design = JsonConvert.DeserializeObject<BuildingDesign>(json);
-                if (design != null) design.ToolCalls = toolCalls;
+                var design = JsonConvert.DeserializeObject<TEditSchDesign>(json);
+
+                // 验证并修复数据
+                if (design != null)
+                {
+                    ValidateAndFixDesign(design);
+                    design.CalculateStats();
+                }
+
                 return design;
             }
             catch (Exception ex)
             {
-                trab.Instance?.Logger.Error($"解析失败: {ex.Message}");
+                trab.Instance?.Logger.Error($"解析TEditSch失败: {ex.Message}");
+
+                // 尝试解析旧格式并转换
+                var oldDesign = JsonConvert.DeserializeObject<BuildingDesign>(json);
+                if (oldDesign != null)
+                {
+                    return ConvertFromOldFormat(oldDesign);
+                }
+
                 return null;
             }
+        }
+
+        private void ValidateAndFixDesign(TEditSchDesign design)
+        {
+            // 确保tiles数组正确
+            if (design.tiles == null || design.tiles.Count == 0)
+            {
+                design.tiles = new List<List<TEditTile>>();
+                for (int y = 0; y < design.height; y++)
+                {
+                    var row = new List<TEditTile>();
+                    for (int x = 0; x < design.width; x++)
+                        row.Add(new TEditTile());
+                    design.tiles.Add(row);
+                }
+            }
+
+            // 确保每行有正确的宽度
+            foreach (var row in design.tiles)
+            {
+                while (row.Count < design.width)
+                    row.Add(new TEditTile());
+            }
+
+            // 确保有足够的行
+            while (design.tiles.Count < design.height)
+            {
+                var row = new List<TEditTile>();
+                for (int x = 0; x < design.width; x++)
+                    row.Add(new TEditTile());
+                design.tiles.Add(row);
+            }
+        }
+
+        private TEditSchDesign ConvertFromOldFormat(BuildingDesign old)
+        {
+            var design = new TEditSchDesign
+            {
+                name = old.Name,
+                width = old.Width,
+                height = old.Height
+            };
+
+            // 初始化空网格
+            for (int y = 0; y < old.Height; y++)
+            {
+                var row = new List<TEditTile>();
+                for (int x = 0; x < old.Width; x++)
+                    row.Add(new TEditTile());
+                design.tiles.Add(row);
+            }
+
+            // 放置墙壁范围
+            foreach (var range in old.WallRanges)
+            {
+                for (int y = range.Y1; y <= range.Y2; y++)
+                {
+                    for (int x = range.X1; x <= range.X2; x++)
+                    {
+                        if (y >= 0 && y < old.Height && x >= 0 && x < old.Width)
+                        {
+                            design.tiles[y][x].wall = range.WallId;
+                        }
+                    }
+                }
+            }
+
+            // 放置方块
+            foreach (var tile in old.Tiles)
+            {
+                if (tile.Y >= 0 && tile.Y < old.Height && tile.X >= 0 && tile.X < old.Width)
+                {
+                    design.tiles[tile.Y][tile.X] = new TEditTile
+                    {
+                        active = true,
+                        type = tile.TileId,
+                        wall = design.tiles[tile.Y][tile.X].wall,
+                        tile_color = tile.Paint > 0 ? tile.Paint : null
+                    };
+                }
+            }
+
+            // 放置家具
+            foreach (var f in old.Furniture)
+            {
+                if (f.Y >= 0 && f.Y < old.Height && f.X >= 0 && f.X < old.Width)
+                {
+                    design.tiles[f.Y][f.X] = new TEditTile
+                    {
+                        active = true,
+                        type = f.TileId,
+                        wall = design.tiles[f.Y][f.X].wall
+                    };
+                }
+            }
+
+            // 放置门
+            foreach (var d in old.Doors)
+            {
+                if (d.Y >= 0 && d.Y < old.Height && d.X >= 0 && d.X < old.Width)
+                {
+                    design.tiles[d.Y][d.X] = new TEditTile
+                    {
+                        active = true,
+                        type = d.TileId,
+                        wall = design.tiles[d.Y][d.X].wall
+                    };
+                }
+            }
+
+            // 放置光源
+            foreach (var l in old.LightSources)
+            {
+                if (l.Y >= 0 && l.Y < old.Height && l.X >= 0 && l.X < old.Width)
+                {
+                    design.tiles[l.Y][l.X] = new TEditTile
+                    {
+                        active = true,
+                        type = l.TileId,
+                        wall = design.tiles[l.Y][l.X].wall
+                    };
+                }
+            }
+
+            design.CalculateStats();
+            return design;
         }
 
         private string ExtractJson(string content)
@@ -856,73 +721,4 @@ namespace trab.Core.Agents.SingleAgent
 
         #endregion
     }
-
-    #region 数据结构
-
-    public class OpenAIResponse
-    {
-        public OpenAIChoice[] choices { get; set; }
-    }
-
-    public class OpenAIChoice
-    {
-        public OpenAIMessage message { get; set; }
-        public string finish_reason { get; set; }
-    }
-
-    public class OpenAIMessage
-    {
-        public string role { get; set; }
-        public string content { get; set; }
-        public string reasoning_content { get; set; }
-        public OpenAIToolCall[] tool_calls { get; set; }
-    }
-
-    public class OpenAIToolCall
-    {
-        public string id { get; set; }
-        public string type { get; set; }
-        public OpenAIFunction function { get; set; }
-    }
-
-    public class OpenAIFunction
-    {
-        public string name { get; set; }
-        public string arguments { get; set; }
-    }
-
-    public class ClaudeAgentResponse
-    {
-        public string id { get; set; }
-        public string type { get; set; }
-        public string role { get; set; }
-        public List<ClaudeContentItem> content { get; set; }
-        public string model { get; set; }
-        public string stop_reason { get; set; }
-        public string stop_sequence { get; set; }
-        public ClaudeUsage usage { get; set; }
-    }
-
-    public class ClaudeContentItem
-    {
-        public string type { get; set; }
-        public string text { get; set; }
-        public string id { get; set; }
-        public string name { get; set; }
-        public object input { get; set; }
-    }
-
-    public class ClaudeUsage
-    {
-        public int input_tokens { get; set; }
-        public int output_tokens { get; set; }
-    }
-
-    public class ToolResult
-    {
-        public bool IsError { get; set; }
-        public string Content { get; set; }
-    }
-
-    #endregion
 }

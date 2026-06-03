@@ -6,11 +6,14 @@ using trab.Data;
 namespace trab.Core.Agents.MultiAgent
 {
     /// <summary>
-    /// 建筑模块合并器 - 将多个模块JSON合并为完整BuildingDesign
+    /// 建筑模块合并器 - 将多个模块合并为TEditSch格式
     /// </summary>
     public class BuildingMerger
     {
-        public BuildingDesign Merge(BuildingPlan plan, List<ModuleResult> modules)
+        /// <summary>
+        /// 合并模块为TEditSch格式
+        /// </summary>
+        public TEditSchDesign MergeToTEditSch(BuildingPlan plan, List<ModuleResult> modules)
         {
             if (plan == null)
             {
@@ -24,15 +27,23 @@ namespace trab.Core.Agents.MultiAgent
                 return CreateFallbackDesign(plan);
             }
 
-            var design = new BuildingDesign
+            var design = new TEditSchDesign
             {
-                Name = GenerateBuildingName(plan),
-                Width = plan.Width,
-                Height = plan.Height,
-                Style = plan.Style,
-                Description = GenerateDescription(plan, modules)
+                name = GenerateBuildingName(plan),
+                width = plan.Width,
+                height = plan.Height
             };
 
+            // 初始化空网格
+            for (int y = 0; y < plan.Height; y++)
+            {
+                var row = new List<TEditTile>();
+                for (int x = 0; x < plan.Width; x++)
+                    row.Add(new TEditTile());
+                design.tiles.Add(row);
+            }
+
+            // 合并各模块
             foreach (var module in modules)
             {
                 if (module.IsError)
@@ -41,28 +52,108 @@ namespace trab.Core.Agents.MultiAgent
                     continue;
                 }
 
-                if (module.Tiles != null && module.Tiles.Count > 0)
-                    design.Tiles.AddRange(module.Tiles);
-
-                if (module.WallRanges != null && module.WallRanges.Count > 0)
-                    design.WallRanges.AddRange(module.WallRanges);
-
-                if (module.Furniture != null && module.Furniture.Count > 0)
-                    design.Furniture.AddRange(module.Furniture);
-
-                if (module.Doors != null && module.Doors.Count > 0)
-                    design.Doors.AddRange(module.Doors);
-
-                if (module.LightSources != null && module.LightSources.Count > 0)
-                    design.LightSources.AddRange(module.LightSources);
+                MergeModuleToGrid(design, module);
             }
 
-            design.Tiles = DeduplicateTiles(design.Tiles);
+            // 验证并填充缺失元素
             ValidateAndFillMissing(design, plan);
 
-            trab.Instance?.Logger.Info($"合并完成: {design.Tiles.Count} tiles, {design.WallRanges.Count} walls, {design.Furniture.Count} furniture");
+            // 计算统计信息
+            design.CalculateStats();
+
+            trab.Instance?.Logger.Info($"合并完成: {design.stats.active_tiles} tiles, {design.stats.tiles_with_wall} walls");
 
             return design;
+        }
+
+        private void MergeModuleToGrid(TEditSchDesign design, ModuleResult module)
+        {
+            // 合并方块
+            if (module.Tiles != null)
+            {
+                foreach (var tile in module.Tiles)
+                {
+                    if (tile.X >= 0 && tile.X < design.width && tile.Y >= 0 && tile.Y < design.height)
+                    {
+                        design.tiles[tile.Y][tile.X] = new TEditTile
+                        {
+                            active = true,
+                            type = tile.TileId,
+                            tile_color = tile.Paint > 0 ? tile.Paint : null
+                        };
+                    }
+                }
+            }
+
+            // 合并墙壁范围
+            if (module.WallRanges != null)
+            {
+                foreach (var range in module.WallRanges)
+                {
+                    for (int y = range.Y1; y <= range.Y2; y++)
+                    {
+                        for (int x = range.X1; x <= range.X2; x++)
+                        {
+                            if (y >= 0 && y < design.height && x >= 0 && x < design.width)
+                            {
+                                design.tiles[y][x].wall = range.WallId;
+                                design.tiles[y][x].wall_color = range.Paint > 0 ? range.Paint : null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 合并家具
+            if (module.Furniture != null)
+            {
+                foreach (var f in module.Furniture)
+                {
+                    if (f.X >= 0 && f.X < design.width && f.Y >= 0 && f.Y < design.height)
+                    {
+                        design.tiles[f.Y][f.X] = new TEditTile
+                        {
+                            active = true,
+                            type = f.TileId,
+                            wall = design.tiles[f.Y][f.X].wall
+                        };
+                    }
+                }
+            }
+
+            // 合并门
+            if (module.Doors != null)
+            {
+                foreach (var d in module.Doors)
+                {
+                    if (d.X >= 0 && d.X < design.width && d.Y >= 0 && d.Y < design.height)
+                    {
+                        design.tiles[d.Y][d.X] = new TEditTile
+                        {
+                            active = true,
+                            type = d.TileId,
+                            wall = design.tiles[d.Y][d.X].wall
+                        };
+                    }
+                }
+            }
+
+            // 合并光源
+            if (module.LightSources != null)
+            {
+                foreach (var l in module.LightSources)
+                {
+                    if (l.X >= 0 && l.X < design.width && l.Y >= 0 && l.Y < design.height)
+                    {
+                        design.tiles[l.Y][l.X] = new TEditTile
+                        {
+                            active = true,
+                            type = l.TileId,
+                            wall = design.tiles[l.Y][l.X].wall
+                        };
+                    }
+                }
+            }
         }
 
         private string GenerateBuildingName(BuildingPlan plan)
@@ -72,110 +163,131 @@ namespace trab.Core.Agents.MultiAgent
             return $"{styleName}{typeName}";
         }
 
-        private string GenerateDescription(BuildingPlan plan, List<ModuleResult> modules)
+        private void ValidateAndFillMissing(TEditSchDesign design, BuildingPlan plan)
         {
-            int successModules = modules.Count(m => !m.IsError);
-            int totalTiles = modules.Sum(m => m.Tiles?.Count ?? 0);
-            return $"分模块生成建筑，{successModules}/{modules.Count}模块成功，共{totalTiles}个方块";
-        }
+            // 检查是否有门
+            bool hasDoor = false;
+            bool hasLight = false;
+            bool hasSurface = false;
+            bool hasComfort = false;
 
-        private List<TileData> DeduplicateTiles(List<TileData> tiles)
-        {
-            if (tiles == null) return new List<TileData>();
-
-            var uniqueTiles = new Dictionary<string, TileData>();
-            foreach (var tile in tiles)
+            foreach (var row in design.tiles)
             {
-                string key = $"{tile.X},{tile.Y}";
-                if (!uniqueTiles.ContainsKey(key))
+                foreach (var tile in row)
                 {
-                    uniqueTiles[key] = tile;
-                }
-                else
-                {
-                    var existing = uniqueTiles[key];
-                    if (tile.Slope > 0 || tile.Paint > 0)
+                    if (tile.type.HasValue)
                     {
-                        uniqueTiles[key] = tile;
+                        int tid = tile.type.Value;
+                        if (tid == 10 || tid == 11) hasDoor = true;
+                        if (tid == 4 || tid == 33 || tid == 34) hasLight = true;
+                        if (tid == 17 || tid == 87) hasSurface = true;
+                        if (tid == 88 || tid == 89) hasComfort = true;
                     }
                 }
             }
 
-            return uniqueTiles.Values.ToList();
-        }
+            int floorY = plan.Height - 2;
 
-        private void ValidateAndFillMissing(BuildingDesign design, BuildingPlan plan)
-        {
-            if (design.Doors.Count == 0)
+            // 添加缺失的门
+            if (!hasDoor)
             {
                 int doorX = plan.Width / 2;
-                int doorY = plan.Height - 2;
-                design.Doors.Add(new DoorData { X = doorX, Y = doorY, TileId = 10 });
-                trab.Instance?.Logger.Info($"自动添加门: ({doorX}, {doorY})");
+                if (doorX >= 0 && doorX < design.width && floorY >= 0 && floorY < design.height)
+                {
+                    design.tiles[floorY][doorX] = new TEditTile { active = true, type = 10 };
+                    trab.Instance?.Logger.Info($"自动添加门: ({doorX}, {floorY})");
+                }
             }
 
-            if (design.LightSources.Count == 0)
+            // 添加缺失的光源
+            if (!hasLight)
             {
-                design.LightSources.Add(new LightSourceData { X = 2, Y = plan.Height / 2, TileId = 4 });
-                design.LightSources.Add(new LightSourceData { X = plan.Width - 3, Y = plan.Height / 2, TileId = 4 });
+                int torchX1 = 2;
+                int torchX2 = plan.Width - 3;
+                int torchY = plan.Height / 2;
+
+                if (torchX1 >= 0 && torchX1 < design.width && torchY >= 0 && torchY < design.height)
+                    design.tiles[torchY][torchX1] = new TEditTile { active = true, type = 4 };
+                if (torchX2 >= 0 && torchX2 < design.width && torchY >= 0 && torchY < design.height)
+                    design.tiles[torchY][torchX2] = new TEditTile { active = true, type = 4 };
+
                 trab.Instance?.Logger.Info($"自动添加火把");
             }
 
-            if (design.Furniture.Count == 0)
+            // 添加缺失的家具
+            if (!hasSurface)
             {
-                int floorY = plan.Height - 2;
-                design.Furniture.Add(new FurnitureData { X = 3, Y = floorY, TileId = 17 });
-                design.Furniture.Add(new FurnitureData { X = 5, Y = floorY, TileId = 87 });
-                design.Furniture.Add(new FurnitureData { X = 6, Y = floorY, TileId = 88 });
-                trab.Instance?.Logger.Info($"自动添加基础家具");
+                int workbenchX = 3;
+                if (workbenchX >= 0 && workbenchX < design.width && floorY >= 0 && floorY < design.height)
+                    design.tiles[floorY][workbenchX] = new TEditTile { active = true, type = 17 };
+                trab.Instance?.Logger.Info($"自动添加工作台");
             }
 
-            design.NpcSuitability = new NpcSuitability
+            if (!hasComfort)
             {
-                IsValidHouse = design.Doors.Count > 0 && design.LightSources.Count > 0 && design.Furniture.Count > 0,
-                HasLight = design.LightSources.Count > 0,
-                HasFlatSurface = design.Furniture.Any(f => f.TileId == 17 || f.TileId == 87),
-                HasComfort = design.Furniture.Any(f => f.TileId == 88),
-                HasDoor = design.Doors.Count > 0,
-                TileCount = design.Tiles.Count
-            };
+                int chairX = 5;
+                if (chairX >= 0 && chairX < design.width && floorY >= 0 && floorY < design.height)
+                    design.tiles[floorY][chairX] = new TEditTile { active = true, type = 88 };
+                trab.Instance?.Logger.Info($"自动添加椅子");
+            }
         }
 
-        private BuildingDesign CreateFallbackDesign(BuildingPlan plan)
+        private TEditSchDesign CreateFallbackDesign(BuildingPlan plan)
         {
             trab.Instance?.Logger.Warn("使用备用设计方案");
 
-            var design = new BuildingDesign
+            var design = new TEditSchDesign
             {
-                Name = GenerateBuildingName(plan),
-                Width = plan.Width,
-                Height = plan.Height,
-                Style = plan.Style
+                name = GenerateBuildingName(plan),
+                width = plan.Width,
+                height = plan.Height
             };
 
+            // 初始化网格
+            for (int y = 0; y < plan.Height; y++)
+            {
+                var row = new List<TEditTile>();
+                for (int x = 0; x < plan.Width; x++)
+                    row.Add(new TEditTile());
+                design.tiles.Add(row);
+            }
+
+            // 放置边界方块
             for (int x = 0; x < plan.Width; x++)
             {
-                design.Tiles.Add(new TileData { X = x, Y = 0, TileId = 4 });
-                design.Tiles.Add(new TileData { X = x, Y = plan.Height - 1, TileId = 5 });
+                design.tiles[0][x] = new TEditTile { active = true, type = 4 }; // 屋顶边缘
+                design.tiles[plan.Height - 1][x] = new TEditTile { active = true, type = 5 }; // 地板
             }
             for (int y = 0; y < plan.Height; y++)
             {
-                design.Tiles.Add(new TileData { X = 0, Y = y, TileId = 4 });
-                design.Tiles.Add(new TileData { X = plan.Width - 1, Y = y, TileId = 4 });
+                design.tiles[y][0] = new TEditTile { active = true, type = 4 }; // 左墙
+                design.tiles[y][plan.Width - 1] = new TEditTile { active = true, type = 4 }; // 右墙
             }
 
-            design.WallRanges.Add(new WallRangeData
+            // 填充墙壁
+            for (int y = 1; y < plan.Height - 1; y++)
             {
-                X1 = 1, Y1 = 1, X2 = plan.Width - 2, Y2 = plan.Height - 2, WallId = 4
-            });
+                for (int x = 1; x < plan.Width - 1; x++)
+                {
+                    design.tiles[y][x].wall = 4; // 木墙
+                }
+            }
 
-            design.Doors.Add(new DoorData { X = plan.Width / 2, Y = plan.Height - 2, TileId = 10 });
-            design.Furniture.Add(new FurnitureData { X = 3, Y = plan.Height - 2, TileId = 17 });
-            design.Furniture.Add(new FurnitureData { X = 5, Y = plan.Height - 2, TileId = 87 });
-            design.Furniture.Add(new FurnitureData { X = 6, Y = plan.Height - 2, TileId = 88 });
-            design.LightSources.Add(new LightSourceData { X = 2, Y = plan.Height / 2, TileId = 4 });
-            design.LightSources.Add(new LightSourceData { X = plan.Width - 3, Y = plan.Height / 2, TileId = 4 });
+            // 添加门
+            int doorX = plan.Width / 2;
+            int doorY = plan.Height - 2;
+            design.tiles[doorY][doorX] = new TEditTile { active = true, type = 10 };
 
+            // 添加家具
+            design.tiles[plan.Height - 2][3] = new TEditTile { active = true, type = 17 };
+            design.tiles[plan.Height - 2][5] = new TEditTile { active = true, type = 87 };
+            design.tiles[plan.Height - 2][6] = new TEditTile { active = true, type = 88 };
+
+            // 添加光源
+            design.tiles[plan.Height / 2][2] = new TEditTile { active = true, type = 4 };
+            design.tiles[plan.Height / 2][plan.Width - 3] = new TEditTile { active = true, type = 4 };
+
+            design.CalculateStats();
             return design;
         }
 

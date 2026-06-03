@@ -43,6 +43,106 @@ namespace trab.Core.Building
             }
         }
 
+        public TEditSchDesign ParseTEditSchDesign(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return null;
+            try
+            {
+                string ext = AIApiService.ExtractJsonFromResponse(json) ?? json;
+                return JsonConvert.DeserializeObject<TEditSchDesign>(ext);
+            }
+            catch (Exception ex)
+            {
+                modInst.Logger.Error("ParseTEditSch: " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 构建TEditSch格式建筑
+        /// </summary>
+        public bool BuildTEditSch(TEditSchDesign design, int startX, int startY, Player p = null)
+        {
+            if (design == null || design.width <= 0 || design.height <= 0)
+            {
+                Main.NewText("无效设计", Color.Red);
+                return false;
+            }
+
+            if (!WorldGen.InWorld(startX, startY, 10) ||
+                !WorldGen.InWorld(startX + design.width, startY + design.height, 10))
+            {
+                Main.NewText("超出边界", Color.Red);
+                return false;
+            }
+
+            try
+            {
+                // 清空区域
+                for (int x = startX; x < startX + design.width; x++)
+                {
+                    for (int y = startY; y < startY + design.height; y++)
+                    {
+                        if (WorldGen.InWorld(x, y))
+                            Main.tile[x, y].ClearEverything();
+                    }
+                }
+
+                // 遍历tiles二维数组
+                for (int y = 0; y < design.height && y < design.tiles.Count; y++)
+                {
+                    var row = design.tiles[y];
+                    for (int x = 0; x < design.width && x < row.Count; x++)
+                    {
+                        var tile = row[x];
+                        int worldX = startX + x;
+                        int worldY = startY + y;
+
+                        if (!WorldGen.InWorld(worldX, worldY)) continue;
+
+                        // 先放置墙壁
+                        if (tile.wall.HasValue && tile.wall.Value > 0)
+                        {
+                            WorldGen.PlaceWall(worldX, worldY, (ushort)tile.wall.Value);
+                            if (tile.wall_color.HasValue && tile.wall_color.Value > 0)
+                                SetWallPaint(worldX, worldY, tile.wall_color.Value);
+                        }
+
+                        // 再放置方块
+                        if (tile.active && tile.type.HasValue && tile.type.Value > 0)
+                        {
+                            WorldGen.PlaceTile(worldX, worldY, (ushort)tile.type.Value);
+
+                            if (tile.tile_color.HasValue && tile.tile_color.Value > 0)
+                                SetTilePaint(worldX, worldY, tile.tile_color.Value);
+                        }
+                    }
+                }
+
+                // 刷新帧
+                for (int x = startX; x < startX + design.width; x++)
+                {
+                    for (int y = startY; y < startY + design.height; y++)
+                    {
+                        if (WorldGen.InWorld(x, y))
+                            WorldGen.SquareTileFrame(x, y);
+                    }
+                }
+
+                if (Main.netMode != NetmodeID.SinglePlayer)
+                    NetMessage.SendTileSquare(-1, startX, startY, design.width, design.height);
+
+                int activeTiles = design.stats?.active_tiles ?? 0;
+                Main.NewText($"建筑 '{design.name}' 完成! 方块:{activeTiles}", Color.Green);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Main.NewText("错误: " + ex.Message, Color.Red);
+                return false;
+            }
+        }
+
         public bool BuildAtLocation(BuildingDesign d, int startX, int startY, Player p = null)
         {
             if (d == null || d.Width <= 0 || d.Height <= 0)
