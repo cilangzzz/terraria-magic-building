@@ -9,39 +9,28 @@ namespace trab.Core.Agents.Tools
 {
     /// <summary>
     /// 材料检索工具
-    /// 检索方块或墙壁，返回ID、名称、属性
+    /// 从建筑实体库中检索材料信息
     /// </summary>
     public class SearchMaterialsTool : BaseAgentTool
     {
         public override string Name => "search_materials";
 
-        public override string Description => "检索材料（方块或墙壁），返回ID、名称、类别。用于确定建筑材料的选择。";
+        public override string Description => "从建筑实体库中检索材料信息。返回材料ID、名称、用途。用于确定建筑材料的选择。";
 
         public override JObject InputSchema => new JObject
         {
             ["type"] = "object",
             ["properties"] = new JObject
             {
-                ["type"] = new JObject
-                {
-                    ["type"] = "string",
-                    ["description"] = "材料类型: tile(方块) 或 wall(墙壁)",
-                    ["enum"] = new JArray { "tile", "wall" }
-                },
                 ["style"] = new JObject
                 {
                     ["type"] = "string",
                     ["description"] = "风格: asian, medieval, fantasy, snow, desert, modern, natural"
                 },
-                ["category"] = new JObject
+                ["building_id"] = new JObject
                 {
                     ["type"] = "string",
-                    ["description"] = "类别: basic(基础), wood(木材), brick(砖块), glass(玻璃), slab(板), metal(金属)"
-                },
-                ["biome"] = new JObject
-                {
-                    ["type"] = "string",
-                    ["description"] = "生物群落: forest, snow, desert, jungle, ocean, underground, hallow"
+                    ["description"] = "指定建筑ID获取其材料列表"
                 },
                 ["top_k"] = new JObject
                 {
@@ -49,89 +38,163 @@ namespace trab.Core.Agents.Tools
                     ["description"] = "返回数量，默认10",
                     ["default"] = 10
                 }
-            },
-            ["required"] = new JArray { "type" }
+            }
         };
 
         public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
         {
-            string type = GetStringParam(input, "type");
             string style = GetStringParam(input, "style");
-            string category = GetStringParam(input, "category");
-            string biome = GetStringParam(input, "biome");
+            string buildingId = GetStringParam(input, "building_id");
             int topK = GetIntParam(input, "top_k") ?? 10;
 
-            if (type == "tile")
+            // 如果指定了建筑ID，返回该建筑的材料列表
+            if (!string.IsNullOrEmpty(buildingId))
             {
-                return SearchTiles(kb, style, category, biome, topK);
+                return GetBuildingMaterials(kb, buildingId);
             }
-            else if (type == "wall")
-            {
-                return SearchWalls(kb, style, category, biome, topK);
-            }
-            else
-            {
-                return Task.FromResult(ToolResult.Error($"未知的材料类型: {type}，请使用 tile 或 wall"));
-            }
+
+            // 否则按风格搜索建筑，返回材料汇总
+            return SearchMaterialsByStyle(kb, style, topK);
         }
 
-        private Task<ToolResult> SearchTiles(KnowledgeBaseManager kb, string style, string category, string biome, int topK)
+        private Task<ToolResult> GetBuildingMaterials(KnowledgeBaseManager kb, string buildingId)
         {
-            var tiles = kb.Tiles.SearchTiles(style, category, biome);
+            var entity = kb.Buildings.GetBuilding(buildingId);
+            if (entity == null)
+            {
+                return Task.FromResult(ToolResult.Error($"未找到建筑: {buildingId}"));
+            }
 
-            // 如果有向量库，进行语义排序
-            if (kb.Vectors.IsInitialized && !string.IsNullOrEmpty(style))
-            {
-                tiles = kb.Vectors.SearchTilesSemantic(tiles, style, topK);
-            }
-            else
-            {
-                tiles = tiles.Take(topK).ToList();
-            }
+            var detail = kb.Buildings.GetBuildingDetail(buildingId);
 
             var result = new
             {
-                type = "tile",
-                materials = tiles.Select(t => new
+                building_id = buildingId,
+                name = entity.summary,
+                dimensions = entity.dimensions,
+                materials = new
                 {
-                    id = t.id,
-                    name = t.name,
-                    display_name = t.display_name,
-                    category = t.category,
-                    styles = t.styles,
-                    biome_match = t.biome_match,
-                    paint_compatible = t.paint_compatible,
-                    slope_compatible = t.slope_compatible
-                }).ToList(),
-                total = tiles.Count,
-                note = "使用返回的 id 作为 tile_id 或 material_id"
+                    tiles = entity.materials?.primary_tiles?.Select(t => new
+                    {
+                        id = t.id,
+                        name = t.name,
+                        count = t.count
+                    }),
+                    walls = entity.materials?.primary_walls?.Select(w => new
+                    {
+                        id = w.id,
+                        name = w.name,
+                        count = w.count
+                    })
+                },
+                tile_distribution = detail?.tile_distribution?.OrderByDescending(t => t.Value).Take(15),
+                wall_distribution = detail?.wall_distribution?.OrderByDescending(w => w.Value).Take(10),
+                note = "使用 tile_distribution 中的材料ID作为 tile_id，wall_distribution 中的ID作为 wall_id"
             };
 
             return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
         }
 
-        private Task<ToolResult> SearchWalls(KnowledgeBaseManager kb, string style, string category, string biome, int topK)
+        private Task<ToolResult> SearchMaterialsByStyle(KnowledgeBaseManager kb, string style, int topK)
         {
-            var walls = kb.Tiles.SearchWalls(style, category);
+            // 按风格搜索建筑
+            var buildings = kb.Buildings.SearchByStyle(style, topK);
 
-            walls = walls.Take(topK).ToList();
+            if (buildings.Count == 0)
+            {
+                // 返回默认材料推荐
+                return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(GetDefaultMaterials(style))));
+            }
+
+            // 汇总所有建筑的材料
+            var allTiles = new Dictionary<int, (string name, int count)>();
+            var allWalls = new Dictionary<int, (string name, int count)>();
+
+            foreach (var building in buildings)
+            {
+                if (building.materials?.primary_tiles != null)
+                {
+                    foreach (var tile in building.materials.primary_tiles)
+                    {
+                        if (allTiles.ContainsKey(tile.id))
+                        {
+                            var existing = allTiles[tile.id];
+                            allTiles[tile.id] = (existing.name, existing.count + tile.count);
+                        }
+                        else
+                        {
+                            allTiles[tile.id] = (tile.name, tile.count);
+                        }
+                    }
+                }
+
+                if (building.materials?.primary_walls != null)
+                {
+                    foreach (var wall in building.materials.primary_walls)
+                    {
+                        if (allWalls.ContainsKey(wall.id))
+                        {
+                            var existing = allWalls[wall.id];
+                            allWalls[wall.id] = (existing.name, existing.count + wall.count);
+                        }
+                        else
+                        {
+                            allWalls[wall.id] = (wall.name, wall.count);
+                        }
+                    }
+                }
+            }
 
             var result = new
             {
-                type = "wall",
-                materials = walls.Select(w => new
+                style = style,
+                matched_buildings = buildings.Count,
+                tiles = allTiles.OrderByDescending(t => t.Value.count).Select(t => new
                 {
-                    id = w.id,
-                    name = w.name,
-                    display_name = w.display_name,
-                    category = w.category,
-                    styles = w.styles
-                }).ToList(),
-                total = walls.Count,
-                note = "使用返回的 id 作为 wall_id"
+                    id = t.Key,
+                    name = t.Value.name,
+                    count = t.Value.count
+                }),
+                walls = allWalls.OrderByDescending(w => w.Value.count).Select(w => new
+                {
+                    id = w.Key,
+                    name = w.Value.name,
+                    count = w.Value.count
+                }),
+                note = "以上材料从匹配风格的建筑中汇总得出"
             };
 
             return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+
+        private object GetDefaultMaterials(string style)
+        {
+            // 默认材料推荐
+            var defaults = new Dictionary<string, object>
+            {
+                ["medieval"] = new
+                {
+                    tiles = new[] { new { id = 4, name = "Gray Brick", count = 100 } },
+                    walls = new[] { new { id = 6, name = "Gray Brick Wall", count = 80 } }
+                },
+                ["asian"] = new
+                {
+                    tiles = new[] { new { id = 179, name = "Gold", count = 100 } },
+                    walls = new[] { new { id = 172, name = "Marble Wall", count = 80 } }
+                },
+                ["fantasy"] = new
+                {
+                    tiles = new[] { new { id = 57, name = "Marble", count = 100 } },
+                    walls = new[] { new { id = 14, name = "Glass Wall", count = 80 } }
+                }
+            };
+
+            if (defaults.TryGetValue(style ?? "medieval", out var materials))
+            {
+                return new { style = style ?? "medieval", materials, note = "默认材料推荐" };
+            }
+
+            return new { style = style ?? "medieval", materials = defaults["medieval"], note = "默认材料推荐" };
         }
     }
 }

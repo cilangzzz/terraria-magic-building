@@ -53,7 +53,7 @@ namespace trab
             Logger.Info("AI建筑模组已加载 (Agent模式)");
             Logger.Info("使用 /aibuild help 查看帮助");
             Logger.Info("按 P 键打开AI建筑UI");
-            Logger.Info($"知识库状态: 方块{KnowledgeBaseManager.Instance.Tiles.TileCount}个, 风格{KnowledgeBaseManager.Instance.Styles.StyleCount}种, 向量{KnowledgeBaseManager.Instance.Vectors.TileVectorCount}个");
+            Logger.Info($"知识库状态: 建筑{KnowledgeBaseManager.Instance.Buildings.BuildingCount}个");
         }
 
         public override void Unload()

@@ -171,22 +171,43 @@ namespace trab.Core.Building
         {
             if (refItem == null) return null;
 
+            // 如果没有ID但有名称，使用默认材料映射
             if (!refItem.id.HasValue && !string.IsNullOrEmpty(refItem.name))
             {
+                // 材料名称到ID的默认映射
+                var tileDefaults = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["gray brick"] = 4, ["stone"] = 1, ["wood"] = 5,
+                    ["gold brick"] = 41, ["marble"] = 57, ["glass"] = 13,
+                    ["stone slab"] = 143, ["gold"] = 179
+                };
+
+                var wallDefaults = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["gray brick wall"] = 6, ["stone wall"] = 1, ["wood wall"] = 4,
+                    ["glass wall"] = 14, ["marble wall"] = 172, ["gold brick wall"] = 15
+                };
+
                 if (type == "tile")
                 {
-                    var tile = _kb.Tiles.SearchTiles(refItem.name, null, null).FirstOrDefault();
-                    if (tile != null)
+                    if (tileDefaults.TryGetValue(refItem.name, out var tileId))
                     {
-                        refItem.id = tile.id;
+                        refItem.id = tileId;
+                    }
+                    else
+                    {
+                        refItem.id = 4; // 默认 Gray Brick
                     }
                 }
                 else if (type == "wall")
                 {
-                    var wall = _kb.Tiles.SearchWalls(refItem.name, null).FirstOrDefault();
-                    if (wall != null)
+                    if (wallDefaults.TryGetValue(refItem.name, out var wallId))
                     {
-                        refItem.id = wall.id;
+                        refItem.id = wallId;
+                    }
+                    else
+                    {
+                        refItem.id = 6; // 默认 Gray Brick Wall
                     }
                 }
             }
@@ -772,8 +793,14 @@ namespace trab.Core.Building
 
             if (!string.IsNullOrEmpty(name))
             {
-                var tile = _kb.Tiles.SearchTiles(name, null, null).FirstOrDefault();
-                if (tile != null) return tile.id;
+                var tileDefaults = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["gray brick"] = 4, ["stone"] = 1, ["wood"] = 5,
+                    ["gold brick"] = 41, ["marble"] = 57, ["glass"] = 13,
+                    ["stone slab"] = 143, ["gold"] = 179
+                };
+                if (tileDefaults.TryGetValue(name, out var tileId))
+                    return tileId;
             }
 
             return fallback?.id ?? 4; // 默认 Gray Brick
@@ -785,11 +812,16 @@ namespace trab.Core.Building
 
             if (!string.IsNullOrEmpty(name))
             {
-                var wall = _kb.Tiles.SearchWalls(name, null).FirstOrDefault();
-                if (wall != null) return wall.id;
+                var wallDefaults = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["gray brick wall"] = 6, ["stone wall"] = 1, ["wood wall"] = 4,
+                    ["glass wall"] = 14, ["marble wall"] = 172, ["gold brick wall"] = 15
+                };
+                if (wallDefaults.TryGetValue(name, out var wallId))
+                    return wallId;
             }
 
-            return fallback?.id ?? 5; // 默认 Gray Brick Wall
+            return fallback?.id ?? 6; // 默认 Gray Brick Wall
         }
 
         #endregion

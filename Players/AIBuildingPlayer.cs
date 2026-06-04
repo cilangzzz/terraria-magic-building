@@ -333,7 +333,7 @@ namespace trab.Players
                 return "知识库未初始化";
             }
 
-            return $"方块: {kb.Tiles.TileCount} | 墙壁: {kb.Tiles.WallCount} | 油漆: {kb.Tiles.PaintCount} | 风格: {kb.Styles.StyleCount} | 家具: {kb.Furniture.FurnitureCount}";
+            return $"建筑实体: {kb.Buildings.BuildingCount}";
         }
 
         public override void PreUpdate()
