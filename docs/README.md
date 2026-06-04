@@ -14,12 +14,6 @@ docs/
 ├── database/              # 数据库与数据
 ├── project/               # 项目概览与分析
 └── README.md              # 本索引文件
-
-Tools/                     # 数据处理工具 (Python)
-├── database/              # 数据库脚本
-├── crawler/               # Wiki爬取脚本
-├── vector/                # 向量生成脚本
-└── README.md              # 工具文档
 ```
 
 ---
@@ -55,6 +49,7 @@ AI 功能集成的技术方案和实现文档。
 |------|------|
 | [AI集成技术方案.md](ai-integration/AI集成技术方案.md) | HTTP请求调用AI API、游戏内聊天界面、结构化数据处理、流式输出、安全性 |
 | [AI_Agent升级方案.md](ai-integration/AI_Agent升级方案.md) | 真Agent vs 伪Agent对比、工具调用改造、多轮循环实现、自主决策架构 |
+| [AI建筑生成升级方案_模板检索.md](ai-integration/AI建筑生成升级方案_模板检索.md) | 建筑模板检索系统、向量相似度匹配、模板库设计 |
 
 ---
 
@@ -66,6 +61,9 @@ AI 功能集成的技术方案和实现文档。
 |------|------|
 | [SQLite数据库设计方案.md](database/SQLite数据库设计方案.md) | 数据库架构、核心表Schema（tiles/walls/paints/furniture等）、索引设计 |
 | [数据检索文档.md](database/数据检索文档.md) | 混合检索架构、SQL精确查询+向量语义匹配、Agent工具调用接口 |
+| [数据库说明.md](database/数据库说明.md) | 数据库使用说明、表结构说明 |
+| [建筑蓝图数据格式.md](database/建筑蓝图数据格式.md) | TEdit蓝图数据格式、JSON结构定义 |
+| [npc_house_data.json](database/npc_house_data.json) | NPC房屋需求数据 |
 
 ---
 
@@ -77,19 +75,6 @@ AI 功能集成的技术方案和实现文档。
 |------|------|
 | [项目结构文档.md](project/项目结构文档.md) | 项目目录结构、模块划分、核心文件说明 |
 | [建筑生成模组分析文档.md](project/建筑生成模组分析文档.md) | 主流建筑模组分析（CheatSheet/HEROsMod/StructureHelper）、代码模式、实现思路 |
-
----
-
-## 6. 数据工具 (`../Tools/`)
-
-Python数据处理和向量生成工具。
-
-| 目录/文档 | 描述 |
-|------|------|
-| [Tools README](../Tools/README.md) | 工具目录总览、快速开始 |
-| [database/](../Tools/database/README.md) | 数据库初始化、统计脚本 |
-| [crawler/](../Tools/crawler/README.md) | Wiki数据爬取脚本 |
-| [vector/](../Tools/vector/README.md) | 向量生成脚本（推荐smart方法） |
 
 ---
 

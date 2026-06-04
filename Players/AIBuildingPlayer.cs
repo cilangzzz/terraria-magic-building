@@ -365,11 +365,6 @@ namespace trab.Players
                     if (uiSys.panel != null)
                         uiSys.panel.ToggleAreaMode();
                 }
-                if (Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S) &&
-                    !Main.oldKeyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
-                {
-                    StopGeneration();
-                }
             }
 
             if (!uiSys.Visible && !Main.drawingPlayerChat && !Main.gameMenu && AIBuildingKeybindSystem.PlaceBuildingKey.JustPressed)

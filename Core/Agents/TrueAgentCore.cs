@@ -107,9 +107,18 @@ namespace trab.Core.Agents
                 return null;
             }
 
+            // 检查是否已取消
+            if (ct.IsCancellationRequested)
+            {
+                progressCallback?.Invoke("请求已取消", 0);
+                trab.Instance?.Logger.Warn("RunAgentLoop: 请求在开始前已取消");
+                return null;
+            }
+
             try
             {
                 progressCallback?.Invoke("Agent启动...", 0);
+                trab.Instance?.Logger.Info($"TrueAgentCore启动 - 模型: {_modelName}, 服务: {_serviceType}");
 
                 // 初始化消息队列
                 var messages = new List<AgentMessage>
@@ -120,6 +129,14 @@ namespace trab.Core.Agents
                 // Agent主循环
                 for (int round = 1; round <= MAX_AGENT_ROUNDS; round++)
                 {
+                    // 检查取消
+                    if (ct.IsCancellationRequested)
+                    {
+                        progressCallback?.Invoke("请求已取消", 0);
+                        trab.Instance?.Logger.Warn($"RunAgentLoop: 请求在轮次{round}被取消");
+                        return null;
+                    }
+
                     progressCallback?.Invoke($"[轮次{round}]思考中...", round);
 
                     // 发送API请求
@@ -216,24 +233,47 @@ namespace trab.Core.Agents
         /// </summary>
         private async Task<AgentResponse> SendOpenAIRequest(List<AgentMessage> messages, CancellationToken ct)
         {
-            var request = new JObject
+            try
             {
-                ["model"] = _modelName,
-                ["messages"] = BuildOpenAIMessages(messages),
-                ["tools"] = _toolRegistry.GetOpenAIToolDefinitions(),
-                ["max_tokens"] = 4096,
-                ["temperature"] = 0.7
-            };
+                var request = new JObject
+                {
+                    ["model"] = _modelName,
+                    ["messages"] = BuildOpenAIMessages(messages),
+                    ["tools"] = _toolRegistry.GetOpenAIToolDefinitions(),
+                    ["max_tokens"] = 4096,
+                    ["temperature"] = 0.7
+                };
 
-            string endpoint = GetAPIEndpoint();
-            ConfigureHttpClient();
+                string endpoint = GetAPIEndpoint();
+                ConfigureHttpClient();
 
-            var content = new StringContent(request.ToString(), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(endpoint, content, ct);
-            response.EnsureSuccessStatusCode();
+                var requestJson = request.ToString();
+                trab.Instance?.Logger.Debug($"OpenAI请求: {requestJson}");
 
-            var responseJson = await response.Content.ReadAsStringAsync(ct);
-            return ParseOpenAIResponse(responseJson);
+                var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(endpoint, content, ct);
+
+                var responseJson = await response.Content.ReadAsStringAsync(ct);
+                trab.Instance?.Logger.Debug($"OpenAI响应: {responseJson}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    trab.Instance?.Logger.Error($"API错误 ({response.StatusCode}): {responseJson}");
+                    return null;
+                }
+
+                return ParseOpenAIResponse(responseJson);
+            }
+            catch (OperationCanceledException)
+            {
+                trab.Instance?.Logger.Info("请求被用户取消");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                trab.Instance?.Logger.Error($"OpenAI请求异常: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>
@@ -253,11 +293,21 @@ namespace trab.Core.Agents
             string endpoint = GetAPIEndpoint();
             ConfigureHttpClient();
 
-            var content = new StringContent(request.ToString(), Encoding.UTF8, "application/json");
+            var requestJson = request.ToString();
+            trab.Instance?.Logger.Debug($"Anthropic请求: {requestJson}");
+
+            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(endpoint, content, ct);
-            response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(ct);
+            trab.Instance?.Logger.Debug($"Anthropic响应: {responseJson}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                trab.Instance?.Logger.Error($"API错误 ({response.StatusCode}): {responseJson}");
+                return null;
+            }
+
             return ParseAnthropicResponse(responseJson);
         }
 
@@ -278,26 +328,42 @@ namespace trab.Core.Agents
             {
                 if (msg.role == "user" && msg.content is List<ContentItem> contentItems)
                 {
-                    // 工具结果
-                    var toolResults = new JArray();
+                    // 工具结果 - 每个tool_result作为独立的tool消息
                     foreach (var item in contentItems)
                     {
-                        toolResults.Add(new JObject
+                        if (item.type == "tool_result")
                         {
-                            ["role"] = "tool",
-                            ["tool_call_id"] = item.tool_call_id,
-                            ["content"] = item.content
-                        });
+                            result.Add(new JObject
+                            {
+                                ["role"] = "tool",
+                                ["tool_call_id"] = item.tool_call_id,
+                                ["content"] = item.content
+                            });
+                        }
+                        else if (item.type == "metadata")
+                        {
+                            // 跳过元数据项，不发送给API
+                            continue;
+                        }
                     }
-                    result.Add(toolResults);
                 }
                 else if (msg.role == "assistant" && msg.content is List<ContentItem> assistantItems)
                 {
                     var msgObj = new JObject
                     {
-                        ["role"] = "assistant",
-                        ["content"] = ExtractTextContent(assistantItems)
+                        ["role"] = "assistant"
                     };
+
+                    // 提取文本内容
+                    var textContent = ExtractTextContent(assistantItems);
+                    if (!string.IsNullOrEmpty(textContent))
+                    {
+                        msgObj["content"] = textContent;
+                    }
+                    else
+                    {
+                        msgObj["content"] = ""; // OpenAI要求content字段存在
+                    }
 
                     var toolCalls = new JArray();
                     foreach (var item in assistantItems)
@@ -311,7 +377,7 @@ namespace trab.Core.Agents
                                 ["function"] = new JObject
                                 {
                                     ["name"] = item.name,
-                                    ["arguments"] = item.input?.ToString()
+                                    ["arguments"] = item.input?.ToString() ?? "{}"
                                 }
                             });
                         }
@@ -327,7 +393,7 @@ namespace trab.Core.Agents
                     result.Add(new JObject
                     {
                         ["role"] = msg.role,
-                        ["content"] = msg.content?.ToString()
+                        ["content"] = msg.content?.ToString() ?? ""
                     });
                 }
             }

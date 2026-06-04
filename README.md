@@ -45,13 +45,16 @@ trab/
 │   │
 │   ├── Agents/              # Agent服务
 │   │   ├── AIAgentService.cs    # Agent入口服务
-│   │   ├── MultiAgent/          # 多Agent协作
-│   │   │   ├── BuildingMerger.cs    # 建筑合并器
-│   │   │   ├── BuildingMultiAgent.cs # 多Agent协调器
-│   │   │   ├── BuildingPlan.cs       # 建筑规划
-│   │   │   └ ModuleAgents.cs         # 模块Agent
-│   │   └ SingleAgent/           # 单Agent模式
-│   │       └ BuildingSingleAgent.cs  # 单Agent生成器
+│   │   ├── TrueAgentCore.cs     # 真Agent核心实现
+│   │   └── Tools/               # Agent工具集
+│   │       ├── ToolRegistry.cs            # 工具注册中心
+│   │       ├── SearchMaterialsTool.cs      # 材料搜索工具
+│   │       ├── SearchBuildingTemplatesTool.cs # 模板搜索工具
+│   │       ├── GetMaterialRecommendationTool.cs # 材料推荐工具
+│   │       ├── GetTemplateDetailsTool.cs   # 模板详情工具
+│   │       ├── GetBuildingSequenceTool.cs  # 建筑序列工具
+│   │       ├── GenerateDesignRulesTool.cs  # 设计规则工具
+│   │       └── ValidateRequirementsTool.cs # 需求验证工具
 │   │
 │   ├── Building/            # 建筑执行
 │   │   ├── BuildingExecutor.cs      # 基础执行器
@@ -187,12 +190,16 @@ trab/
 
 | 目录/文件 | 功能 |
 |-----------|------|
-| AIAgentService.cs | Agent入口服务，统一调度单/多Agent |
-| MultiAgent/BuildingMultiAgent.cs | 多Agent协调器，规划+模块并行生成 |
-| MultiAgent/BuildingMerger.cs | 合并模块结果，验证NPC房屋要求 |
-| MultiAgent/BuildingPlan.cs | 建筑规划数据结构 |
-| MultiAgent/ModuleAgents.cs | 5个模块Agent（屋顶/墙壁/楼层/窗户/家具） |
-| SingleAgent/BuildingSingleAgent.cs | 单Agent模式，直接生成完整建筑 |
+| AIAgentService.cs | Agent入口服务，初始化并启动Agent |
+| TrueAgentCore.cs | 真Agent核心实现，工具调用循环和自主决策 |
+| Tools/ToolRegistry.cs | 工具注册中心，管理所有可用工具 |
+| Tools/SearchMaterialsTool.cs | 搜索建筑材料 |
+| Tools/SearchBuildingTemplatesTool.cs | 搜索建筑模板 |
+| Tools/GetMaterialRecommendationTool.cs | 获取材料推荐 |
+| Tools/GetTemplateDetailsTool.cs | 获取模板详情 |
+| Tools/GetBuildingSequenceTool.cs | 获取建筑序列 |
+| Tools/GenerateDesignRulesTool.cs | 生成设计规则 |
+| Tools/ValidateRequirementsTool.cs | 验证需求 |
 
 ### Core/Building - 建筑执行层
 
@@ -201,6 +208,7 @@ trab/
 | BuildingExecutor.cs | 基础执行器，解析JSON并放置方块 |
 | EnhancedBuildingExecutor.cs | 增强执行器，支持油漆/斜坡/阴影 |
 | BuildingRequirement.cs | 建筑需求验证，检查方块ID有效性 |
+| ProceduralBuilder.cs | 程序化生成器，基于规则生成建筑 |
 
 ### Core/KnowledgeBase - 知识库层
 
@@ -274,17 +282,15 @@ trab/
 ```
 用户描述 → AIAgentService
               ↓
-    ┌─────────┴─────────┐
-    ↓                   ↓
-SingleAgent         MultiAgent
-    ↓                   ↓
-BuildingDesign    BuildingPlan → ModuleAgents(并行)
-                        ↓
-                  BuildingMerger
-                        ↓
-                  BuildingDesign
-                        ↓
-            EnhancedBuildingExecutor → 世界放置
+         TrueAgentCore (工具调用循环)
+              ↓
+         ToolRegistry (分发工具调用)
+              ↓
+         KnowledgeBase/BuildingEntityBase
+              ↓
+         BuildingDesign
+              ↓
+         BuildingExecutor → 世界放置
 ```
 
 ### 知识库结构
@@ -306,14 +312,13 @@ KnowledgeBaseManager
 ### Agent工具调用
 
 Agent可调用的工具:
-- `search_tiles` - 搜索方块（SQL过滤 + 向量排序）
-- `get_style_template` - 获取风格模板
-- `search_furniture` - 搜索家具
-- `get_paint_scheme` - 获取油漆方案
-- `get_roof_template` - 获取屋顶设计
-- `get_window_template` - 获取窗户设计
-- `get_floor_structure` - 获取楼层结构
-- `search_building_entities` - 搜索建筑蓝图实体
+- `search_materials` - 搜索建筑材料
+- `search_building_templates` - 搜索建筑模板
+- `get_material_recommendation` - 获取材料推荐
+- `get_template_details` - 获取模板详情
+- `get_building_sequence` - 获取建筑序列
+- `generate_design_rules` - 生成设计规则
+- `validate_requirements` - 验证需求
 
 ---
 

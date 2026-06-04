@@ -16,30 +16,33 @@ Core/
 │   └ ApiServiceBase.cs          # API服务基类 (2.8KB)
 │
 ├── Agents/                      # Agent服务层
-│   ├── AIAgentService.cs        # Agent入口服务 (2.5KB)
+│   ├── AIAgentService.cs        # Agent入口服务 (2.2KB)
+│   ├── TrueAgentCore.cs         # 真Agent核心实现 (25KB)
 │   │
-│   ├── MultiAgent/              # 多Agent协作模式
-│   │   ├── BuildingMerger.cs    # 建筑合并器 (11.7KB)
-│   │   ├── BuildingMultiAgent.cs # 多Agent协调器 (9.8KB)
-│   │   ├── BuildingPlan.cs      # 建筑规划 (3.2KB)
-│   │   └ ModuleAgents.cs        # 模块Agent (23KB)
-│   │
-│   └── SingleAgent/             # 单Agent模式
-│       └ BuildingSingleAgent.cs # 单Agent生成器 (30KB)
+│   └── Tools/                   # Agent工具集
+│       ├── ToolRegistry.cs              # 工具注册中心 (9KB)
+│       ├── SearchMaterialsTool.cs       # 材料搜索工具 (5KB)
+│       ├── SearchBuildingTemplatesTool.cs # 模板搜索工具 (5KB)
+│       ├── GetMaterialRecommendationTool.cs # 材料推荐工具 (9KB)
+│       ├── GetTemplateDetailsTool.cs    # 模板详情工具 (3KB)
+│       ├── GetBuildingSequenceTool.cs   # 建筑序列工具 (4.6KB)
+│       ├── GenerateDesignRulesTool.cs   # 设计规则工具 (6.8KB)
+│       └ ValidateRequirementsTool.cs   # 需求验证工具 (5.6KB)
 │
 ├── Building/                    # 建筑执行层
 │   ├── BuildingExecutor.cs      # 基础执行器 (15KB)
 │   ├── BuildingRequirement.cs   # 建筑需求验证 (6.3KB)
-│   └ EnhancedBuildingExecutor.cs # 增强执行器 (4KB)
+│   ├── EnhancedBuildingExecutor.cs # 增强执行器 (4KB)
+│   └ ProceduralBuilder.cs       # 程序化生成器 (32KB)
 │
 └── KnowledgeBase/               # 知识库层
     ├── KnowledgeBaseManager.cs  # 知识库管理器 (2.4KB)
     ├── TileKnowledgeBase.cs     # 方块知识库 (8.4KB)
     ├── VectorKnowledgeBase.cs   # 向量知识库 (28.5KB)
+    ├── BuildingEntityBase.cs    # 建筑实体基类 (39KB)
     ├── StyleTemplateBase.cs     # 风格模板库 (3.5KB)
     ├── FurnitureRuleBase.cs     # 家具规则库 (2.2KB)
-    ├── ComponentTemplates.cs    # 构件模板库 (10KB)
-    └ BuildingEntityBase.cs      # 建筑实体基类 (20.8KB)
+    └ ComponentTemplates.cs      # 构件模板库 (10KB)
 ```
 
 ---
@@ -62,21 +65,37 @@ Core/
 
 ### Agents/ - Agent服务层
 
-AI Agent架构实现，支持单Agent和多Agent两种模式。
+实现真Agent架构，支持工具调用和多轮对话。
 
-| 文件/目录 | 功能 |
-|-----------|------|
-| AIAgentService.cs | Agent入口服务，根据配置选择单/多Agent模式 |
-| MultiAgent/ | 多Agent协作模式，规划+模块并行生成 |
-| SingleAgent/ | 单Agent模式，直接生成完整建筑 |
-
-**MultiAgent 子模块**:
 | 文件 | 功能 |
 |------|------|
-| BuildingMultiAgent.cs | 多Agent协调器，调度规划和模块生成 |
-| BuildingMerger.cs | 合并模块结果，验证NPC房屋要求 |
-| BuildingPlan.cs | 建筑规划数据结构 |
-| ModuleAgents.cs | 5个模块Agent（屋顶/墙壁/楼层/窗户/家具） |
+| AIAgentService.cs | Agent入口服务，初始化并启动Agent |
+| TrueAgentCore.cs | 真Agent核心实现，工具调用循环和自主决策 |
+
+**TrueAgentCore 特性**:
+- 多轮对话循环
+- 工具调用分发
+- 自主决策架构
+- 错误恢复机制
+
+### Agents/Tools/ - Agent工具集
+
+Agent可调用的工具集合。
+
+| 工具类 | 功能 | 输入参数 |
+|--------|------|----------|
+| SearchMaterialsTool | 搜索建筑材料 | style, category, biome |
+| SearchBuildingTemplatesTool | 搜索建筑模板 | style, building_type |
+| GetMaterialRecommendationTool | 获取材料推荐 | style, requirements |
+| GetTemplateDetailsTool | 获取模板详情 | template_id |
+| GetBuildingSequenceTool | 获取建筑序列 | building_type, style |
+| GenerateDesignRulesTool | 生成设计规则 | style, constraints |
+| ValidateRequirementsTool | 验证需求 | requirements, design |
+
+**ToolRegistry** - 工具注册中心:
+- 统一管理所有工具
+- 提供工具发现和调用接口
+- 处理工具执行结果
 
 ### Building/ - 建筑执行层
 
@@ -87,6 +106,7 @@ AI Agent架构实现，支持单Agent和多Agent两种模式。
 | BuildingExecutor.cs | 基础执行器，解析JSON并放置方块 |
 | EnhancedBuildingExecutor.cs | 增强执行器，支持油漆、斜坡、阴影效果 |
 | BuildingRequirement.cs | 建筑需求验证，检查方块ID有效性 |
+| ProceduralBuilder.cs | 程序化生成器，基于规则生成建筑 |
 
 ### KnowledgeBase/ - 知识库层
 
@@ -97,42 +117,43 @@ AI Agent架构实现，支持单Agent和多Agent两种模式。
 | KnowledgeBaseManager.cs | 知识库管理器（单例模式） |
 | TileKnowledgeBase.cs | 方块知识库，提供搜索和过滤 |
 | VectorKnowledgeBase.cs | 向量知识库，384维语义检索 |
+| BuildingEntityBase.cs | 建筑实体基类，蓝图数据访问 |
 | StyleTemplateBase.cs | 风格模板库（9种风格） |
 | FurnitureRuleBase.cs | 家具规则库，NPC房屋功能映射 |
 | ComponentTemplates.cs | 构件模板库（屋顶/窗户/楼层） |
-| BuildingEntityBase.cs | 建筑实体基类，蓝图数据访问 |
 
 ---
 
 ## 核心类详解
 
-### AIAgentService
+### TrueAgentCore
 
-Agent入口服务，统一调度单/多Agent模式。
+真Agent核心实现，实现完整的工具调用循环。
 
 ```csharp
 // 使用方式
-var agent = new AIAgentService(apiKey, serviceType, modelName);
-var design = await agent.GenerateBuildingAsync(prompt, progressCallback, ct);
+var agent = new TrueAgentCore(apiKey, serviceType, modelName);
+var result = await agent.GenerateAsync(prompt, progressCallback, ct);
 ```
 
-### BuildingMultiAgent
+**核心流程**:
+1. 接收用户描述
+2. 构建系统提示
+3. 循环调用工具直到完成
+4. 返回建筑设计
 
-多Agent协调器，实现规划+模块并行生成。
+### ToolRegistry
 
-**生成流程**:
-1. 规划Agent - 划分建筑区域
-2. 模块Agents - 并行生成5个模块
-3. 合并器 - 合并验证生成最终设计
+工具注册中心，管理所有可用工具。
 
-### BuildingSingleAgent
+```csharp
+// 注册工具
+ToolRegistry.Register(new SearchMaterialsTool());
+ToolRegistry.Register(new SearchBuildingTemplatesTool());
 
-单Agent模式，直接生成完整建筑。
-
-**特点**:
-- 简单直接，适合小型建筑
-- 支持工具调用（search_tiles等）
-- 单次API请求完成生成
+// 调用工具
+var result = await ToolRegistry.ExecuteAsync("search_materials", parameters);
+```
 
 ### VectorKnowledgeBase
 
@@ -143,7 +164,6 @@ var design = await agent.GenerateBuildingAsync(prompt, progressCallback, ct);
 - `CosineSimilarity(a, b)` - 计算余弦相似度
 - `SearchTilesSemantic(candidates, style, topK)` - 方块语义检索
 - `SearchWallsSemantic(candidates, style, topK)` - 墙壁语义检索
-- `SearchFurnitureSemantic(candidates, category, topK)` - 家具语义检索
 
 **向量维度**: 384维 (SentenceTransformers)
 
@@ -163,17 +183,21 @@ var design = await agent.GenerateBuildingAsync(prompt, progressCallback, ct);
 ```
 用户描述 → AIAgentService
               ↓
+         TrueAgentCore
+              ↓
+         构建系统提示 + 初始化工具
+              ↓
     ┌─────────┴─────────┐
     ↓                   ↓
-SingleAgent         MultiAgent
+API调用             工具调用
     ↓                   ↓
-BuildingDesign    BuildingPlan → ModuleAgents(并行)
-                        ↓
-                  BuildingMerger
-                        ↓
-                  BuildingDesign
-                        ↓
-            EnhancedBuildingExecutor → 世界放置
+响应解析         ToolRegistry分发
+    ↓                   ↓
+检查完成 ← ← ← 工具执行结果
+    ↓
+BuildingDesign
+    ↓
+BuildingExecutor → 世界放置
 ```
 
 ---
@@ -184,14 +208,13 @@ Agent可调用的工具:
 
 | 工具名 | 功能 | 参数 |
 |--------|------|------|
-| search_tiles | 搜索方块 | style, category, biome |
-| get_style_template | 获取风格模板 | style, building_type |
-| search_furniture | 搜索家具 | room_type, npc_type |
-| get_paint_scheme | 获取油漆方案 | style, theme |
-| get_roof_template | 获取屋顶设计 | roof_type, style, width |
-| get_window_template | 获取窗户设计 | window_type, style |
-| get_floor_structure | 获取楼层结构 | structure_type, style |
-| search_building_entities | 搜索建筑蓝图 | query, style, top_k |
+| search_materials | 搜索建筑材料 | style, category, biome |
+| search_building_templates | 搜索建筑模板 | style, building_type, top_k |
+| get_material_recommendation | 获取材料推荐 | style, requirements |
+| get_template_details | 获取模板详情 | template_id |
+| get_building_sequence | 获取建筑序列 | building_type, style |
+| generate_design_rules | 生成设计规则 | style, constraints |
+| validate_requirements | 验证需求 | requirements, design |
 
 ---
 
@@ -199,5 +222,6 @@ Agent可调用的工具:
 
 - [AI集成技术方案](../docs/ai-integration/AI集成技术方案.md)
 - [AI_Agent升级方案](../docs/ai-integration/AI_Agent升级方案.md)
+- [AI建筑生成升级方案_模板检索](../docs/ai-integration/AI建筑生成升级方案_模板检索.md)
 - [数据检索文档](../docs/database/数据检索文档.md)
 - [建筑蓝图数据格式](../docs/database/建筑蓝图数据格式.md)
