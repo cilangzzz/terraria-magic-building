@@ -65,6 +65,7 @@ AI 功能集成的技术方案和实现文档。
 | [数据检索文档.md](database/数据检索文档.md) | 混合检索架构、SQL精确查询+向量语义匹配、Agent工具调用接口 |
 | [数据库说明.md](database/数据库说明.md) | 数据库使用说明、表结构说明 |
 | [建筑蓝图数据格式.md](database/建筑蓝图数据格式.md) | TEdit蓝图数据格式、BuildingRules JSON结构定义 |
+| [构件级数据库设计.md](database/构件级数据库设计.md) | 构件级架构设计、building_index/buildings/atomic_components表设计 |
 | [npc_house_data.json](database/npc_house_data.json) | NPC房屋需求数据 |
 
 ---
@@ -95,15 +96,29 @@ AI 功能集成的技术方案和实现文档。
 ```
 用户描述 → TrueAgentCore (工具调用循环)
               ↓
-         search_buildings → 检索建筑模板
-         get_building_details → 获取构件详情
+         search_buildings → 向量检索建筑模板 (building_embeddings.json)
+              ↓
+         get_building_details → 获取构件详情 (buildings + atomic_components)
+              ↓
          get_component_rules → 获取生成规则
-         get_style_materials → 获取材料推荐
+              ↓
+         get_style_materials → 获取材料推荐 (style_materials)
+              ↓
          generate_design_rules → 生成BuildingRules
               ↓
          ProceduralBuilder → 展开为完整方块数据
               ↓
          BuildingExecutor → 世界放置
+```
+
+**数据文件**:
+```
+Data/
+├── kb/
+│   ├── buildings_v3.sql      # 构件级数据库Schema
+│   └── terraria_kb.db        # SQLite数据库 (1.8MB)
+└── vectors/
+    └── building_embeddings.json  # 建筑向量 (28个, 384维)
 ```
 
 ---
