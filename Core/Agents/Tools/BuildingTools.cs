@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -139,6 +140,11 @@ namespace trab.Core.Agents.Tools
                 var legacyBuilding = kb.Buildings.GetBuilding(buildingId);
                 if (legacyBuilding != null)
                 {
+                    // 从functions推断NPC房屋有效性
+                    bool npcValid = legacyBuilding.functions?.light_source?.count > 0 &&
+                                    legacyBuilding.functions?.entry?.count > 0 &&
+                                    legacyBuilding.functions?.furniture?.count > 0;
+
                     return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(new
                     {
                         id = legacyBuilding.id,
@@ -150,7 +156,7 @@ namespace trab.Core.Agents.Tools
                         style_tags = legacyBuilding.style_tags,
                         building_sequence = legacyBuilding.building_sequence,
                         summary = legacyBuilding.summary,
-                        npc_suitable = legacyBuilding.npc_suitable,
+                        npc_suitable = new { is_valid_house = npcValid },
                         note = "旧格式数据，建议迁移到新格式"
                     })));
                 }

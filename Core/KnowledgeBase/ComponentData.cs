@@ -72,16 +72,16 @@ namespace trab.Core.KnowledgeBase
     /// </summary>
     public class ComponentMaterials
     {
-        public MaterialRef primary { get; set; }
-        public MaterialRef secondary { get; set; }
-        public MaterialRef accent { get; set; }
-        public MaterialRef frame { get; set; }
+        public ComponentMaterialRef primary { get; set; }
+        public ComponentMaterialRef secondary { get; set; }
+        public ComponentMaterialRef accent { get; set; }
+        public ComponentMaterialRef frame { get; set; }
     }
 
     /// <summary>
-    /// 材料引用
+    /// 构件材料引用
     /// </summary>
-    public class MaterialRef
+    public class ComponentMaterialRef
     {
         public int? tile_id { get; set; }
         public int? wall_id { get; set; }
@@ -181,7 +181,7 @@ namespace trab.Core.KnowledgeBase
         public string type { get; set; }       // 构件类型
         public string role { get; set; }       // 角色描述
         public int? level { get; set; }        // 楼层编号
-        public Bounds bounds { get; set; }     // 边界范围
+        public ComponentBounds bounds { get; set; }     // 边界范围
     }
 
     /// <summary>

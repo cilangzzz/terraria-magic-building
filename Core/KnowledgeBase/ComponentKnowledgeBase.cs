@@ -196,7 +196,7 @@ namespace trab.Core.KnowledgeBase
                     has_table = legacy.functions.furniture?.count > 0,
                     has_chair = legacy.functions.furniture?.count > 0,
                     has_walls = true,
-                    valid_house = legacy.npc_suitable?.is_valid_house ?? false
+                    valid_house = legacy.functions.light_source?.count > 0 && legacy.functions.entry?.count > 0
                 };
             }
 
@@ -283,8 +283,8 @@ namespace trab.Core.KnowledgeBase
 
         private void LoadVectors()
         {
-            // 加载建筑向量
-            var buildingVectorPath = GetPossibleDataPaths("building_vectors.json")
+            // 加载建筑向量 (v3格式)
+            var buildingVectorPath = GetPossibleDataPaths("building_embeddings.json")
                 .FirstOrDefault(p => File.Exists(p));
 
             if (buildingVectorPath != null)
@@ -294,10 +294,11 @@ namespace trab.Core.KnowledgeBase
                     var json = File.ReadAllText(buildingVectorPath);
                     var jobj = JObject.Parse(json);
 
-                    if (jobj["vectors"] != null)
+                    // v3格式: {"embeddings": {"building_id": [0.1, 0.2, ...]}}
+                    if (jobj["embeddings"] != null)
                     {
-                        var vectorsObj = jobj["vectors"] as JObject;
-                        foreach (var kvp in vectorsObj)
+                        var embeddingsObj = jobj["embeddings"] as JObject;
+                        foreach (var kvp in embeddingsObj)
                         {
                             var arr = kvp.Value as JArray;
                             if (arr != null)
@@ -305,11 +306,44 @@ namespace trab.Core.KnowledgeBase
                                 _buildingVectors[kvp.Key] = arr.Select(v => (float)v).ToArray();
                             }
                         }
+                        trab.Instance?.Logger.Info($"加载建筑向量: {buildingVectorPath}, {_buildingVectors.Count}个");
                     }
                 }
                 catch (Exception ex)
                 {
                     trab.Instance?.Logger.Error($"加载建筑向量失败: {ex.Message}");
+                }
+            }
+            else
+            {
+                // 尝试旧格式
+                var legacyPath = GetPossibleDataPaths("building_vectors.json")
+                    .FirstOrDefault(p => File.Exists(p));
+
+                if (legacyPath != null)
+                {
+                    try
+                    {
+                        var json = File.ReadAllText(legacyPath);
+                        var jobj = JObject.Parse(json);
+
+                        if (jobj["vectors"] != null)
+                        {
+                            var vectorsObj = jobj["vectors"] as JObject;
+                            foreach (var kvp in vectorsObj)
+                            {
+                                var arr = kvp.Value as JArray;
+                                if (arr != null)
+                                {
+                                    _buildingVectors[kvp.Key] = arr.Select(v => (float)v).ToArray();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        trab.Instance?.Logger.Error($"加载旧格式建筑向量失败: {ex.Message}");
+                    }
                 }
             }
         }
@@ -370,7 +404,7 @@ namespace trab.Core.KnowledgeBase
                 },
                 materials = new ComponentMaterials
                 {
-                    primary = new MaterialRef { tile_id = 179, name = "Gold" }
+                    primary = new ComponentMaterialRef { tile_id = 179, name = "Gold" }
                 },
                 generation_rule = new GenerationRule
                 {
@@ -393,8 +427,8 @@ namespace trab.Core.KnowledgeBase
                 },
                 materials = new ComponentMaterials
                 {
-                    primary = new MaterialRef { wall_id = 172, name = "Marble Wall" },
-                    frame = new MaterialRef { tile_id = 4, name = "Wood" }
+                    primary = new ComponentMaterialRef { wall_id = 172, name = "Marble Wall" },
+                    frame = new ComponentMaterialRef { tile_id = 4, name = "Wood" }
                 },
                 generation_rule = new GenerationRule
                 {
@@ -416,7 +450,7 @@ namespace trab.Core.KnowledgeBase
                 },
                 materials = new ComponentMaterials
                 {
-                    primary = new MaterialRef { tile_id = 129, name = "Pine Lantern" }
+                    primary = new ComponentMaterialRef { tile_id = 129, name = "Pine Lantern" }
                 },
                 generation_rule = new GenerationRule
                 {

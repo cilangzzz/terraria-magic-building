@@ -73,7 +73,13 @@ namespace trab.UI
 
     public enum BuildingStyle
     {
-        Medieval, Modern, Japanese, Fantasy, Underground, Custom
+        Medieval,    // 中世纪
+        Modern,      // 现代
+        Asian,       // 中式/日式
+        Fantasy,     // 奇幻
+        Underground, // 地下
+        Snow,        // 雪地
+        Custom       // 自定义
     }
 
     public class AIBuildingPanel : UIState
@@ -123,7 +129,7 @@ namespace trab.UI
 
         private int[] sizeWidths = { 100, 35 };
         private int[] sizeHeights = { 80, 25 };
-        private string[] styleNames = { "中世纪", "现代", "日式", "奇幻", "地下", "自定义" };
+        private string[] styleNames = { "中世纪", "现代", "中式", "奇幻", "地下", "雪地", "自定义" };
         private string[] sizeNames = { "无限", "大" };
 
         private bool wasMouseLeftPressed = false;
@@ -465,28 +471,90 @@ namespace trab.UI
 
         private string GetStylePrompt(BuildingStyle style, int w, int h)
         {
-            // 更丰富的提示词，包含方块和家具要求
+            // 基于实际建筑数据的风格提示词
             return style switch
             {
                 BuildingStyle.Medieval =>
-                    $"生成中世纪风格建筑 {w}x{h}。使用GrayBrick、StoneSlab方块，Wood地板，添加WorkBench、Chair、Table家具，放置Torch照明，WoodenDoor作为门。墙壁使用GrayBrickWall。返回JSON格式。",
+                    $@"生成中世纪风格建筑，尺寸{w}x{h}。
+
+风格特征: 石砖结构、木梁支撑、火炬照明、人字屋顶
+推荐方块: Stone(1), Wood(4), StoneSlab(5), GrayBrick
+推荐墙壁: StoneWall(1), BrickWall(4)
+家具配置: WorkBench(21), Table(46), Chair(38), Torch(10), WoodenDoor
+建筑结构: 地基→墙壁→楼层→屋顶→装饰
+
+返回JSON格式的TEditSch数据。",
 
                 BuildingStyle.Modern =>
-                    $"生成现代风格建筑 {w}x{h}。使用Glass、GrayBrick方块，Platform地板，添加Bed、Dresser、Table家具，放置Chandelier照明，使用各种Paint涂色。墙壁使用GlassWall。返回JSON格式。",
+                    $@"生成现代风格建筑，尺寸{w}x{h}。
 
-                BuildingStyle.Japanese =>
-                    $"生成日式风格建筑 {w}x{h}。使用Wood、BorealWood方块，Wood地板，添加WorkBench、Chair、Table家具，放置Torch照明，使用红棕色Paint。墙壁使用WoodWall。屋顶用斜坡Slope。返回JSON格式。",
+风格特征: 玻璃幕墙、金属框架、简洁线条、平顶设计
+推荐方块: Glass, GrayBrick, Metal, Platform(19)
+推荐墙壁: GlassWall(60), ObsidianWall
+家具配置: Bed(91), Dresser, Table, Chandelier, 各种Paint
+建筑结构: 金属框架→玻璃幕墙→现代家具
+
+返回JSON格式的TEditSch数据。",
+
+                BuildingStyle.Asian =>
+                    $@"生成日式/中式风格建筑，尺寸{w}x{h}。
+
+风格特征: 宝塔屋顶、金块装饰、灯笼照明、木质结构
+推荐方块: BorealWood(273), Gold(179), Wood(4), Platform(19)
+推荐墙壁: MarbleWall(31), WoodWall(3), EbonwoodWall(22)
+家具配置: PineLantern(312), PineCandle(384), ChineseLantern, WorkBench, Table, Chair
+建筑结构: 地基→木墙→楼层→宝塔屋顶→灯笼装饰
+特殊要求: 屋顶使用分层金字塔结构，每层宽度递减
+
+返回JSON格式的TEditSch数据。",
 
                 BuildingStyle.Fantasy =>
-                    $"生成奇幻风格建筑 {w}x{h}。使用GoldBrick、Marble方块，添加Piano、Bathtub、Bed豪华家具，放置红蓝Paint配色。墙壁使用GoldBrickWall。返回JSON格式。",
+                    $@"生成奇幻风格建筑，尺寸{w}x{h}。
+
+风格特征: 金色装饰、水晶元素、梦幻配色、圆顶设计
+推荐方块: Gold(179), Pearlstone(182), BlueBrick(191), Crystal
+推荐墙壁: GlassWall(60), PearlstoneWall, GoldBrickWall
+家具配置: Bed, Piano, Bathtub, Chandelier, Crystal灯具
+建筑结构: 奇幻地基→魔法墙壁→水晶楼层→金色屋顶
+
+返回JSON格式的TEditSch数据。",
 
                 BuildingStyle.Underground =>
-                    $"生成地下基地建筑 {w}x{h}。使用Stone、Obsidian方块，添加Furnace、Anvil、WorkBench工坊家具，放置Torch照明。墙壁使用StoneWall。返回JSON格式。",
+                    $@"生成地下基地建筑，尺寸{w}x{h}。
+
+风格特征: 石头结构、熔炉照明、工坊配置、储藏空间
+推荐方块: Stone(1), Obsidian, Hellstone, Wood(4)
+推荐墙壁: StoneWall(1), ObsidianWall(73)
+家具配置: Furnace, Anvil, WorkBench(21), Chest(50), Torch(10)
+建筑结构: 石头墙壁→工坊区域→储藏室→照明系统
+
+返回JSON格式的TEditSch数据。",
+
+                BuildingStyle.Snow =>
+                    $@"生成雪地风格建筑，尺寸{w}x{h}。
+
+风格特征: 冰块结构、雪块装饰、壁炉取暖、尖顶设计
+推荐方块: Ice(317), SnowBlock, Platform(19), Pine系列材料
+推荐墙壁: SnowWall, IceWall
+家具配置: Fireplace, PineLantern(312), PineBanner(311), PineCandle(384)
+建筑结构: 冰雪地基→雪墙→冰块楼层→尖顶屋顶→松木装饰
+
+返回JSON格式的TEditSch数据。",
 
                 BuildingStyle.Custom =>
-                    !string.IsNullOrEmpty(customStyleText) ? $"{customStyleText} {w}x{h}，使用合适方块和家具，返回JSON格式。" : $"生成建筑 {w}x{h}，返回JSON格式。",
+                    !string.IsNullOrEmpty(customStyleText)
+                        ? $@"{customStyleText}
 
-                _ => $"生成建筑 {w}x{h}，使用多种方块和家具，返回JSON格式。"
+尺寸: {w}x{h}
+请根据描述生成合适的建筑，使用匹配风格的方块和家具。
+返回JSON格式的TEditSch数据。"
+                        : $@"生成建筑，尺寸{w}x{h}。
+使用合适的方块和家具配置。
+返回JSON格式的TEditSch数据。",
+
+                _ => $@"生成建筑，尺寸{w}x{h}。
+使用多种方块和家具配置。
+返回JSON格式的TEditSch数据。"
             };
         }
 

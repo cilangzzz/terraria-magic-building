@@ -2,6 +2,8 @@
 
 本文档按类型整理了 trab 项目的所有技术文档。
 
+**注意**: 项目已升级为**构件级生成架构**，采用多层次设计（原子构件→复合构件→建筑→建筑群）。
+
 ---
 
 ## 目录结构
@@ -49,7 +51,7 @@ AI 功能集成的技术方案和实现文档。
 |------|------|
 | [AI集成技术方案.md](ai-integration/AI集成技术方案.md) | HTTP请求调用AI API、游戏内聊天界面、结构化数据处理、流式输出、安全性 |
 | [AI_Agent升级方案.md](ai-integration/AI_Agent升级方案.md) | 真Agent vs 伪Agent对比、工具调用改造、多轮循环实现、自主决策架构 |
-| [AI建筑生成升级方案_模板检索.md](ai-integration/AI建筑生成升级方案_模板检索.md) | 建筑模板检索系统、向量相似度匹配、模板库设计 |
+| [AI建筑生成升级方案_模板检索.md](ai-integration/AI建筑生成升级方案_模板检索.md) | 建筑模板检索系统、向量相似度匹配、构件级架构设计 |
 
 ---
 
@@ -62,7 +64,7 @@ AI 功能集成的技术方案和实现文档。
 | [SQLite数据库设计方案.md](database/SQLite数据库设计方案.md) | 数据库架构、核心表Schema（tiles/walls/paints/furniture等）、索引设计 |
 | [数据检索文档.md](database/数据检索文档.md) | 混合检索架构、SQL精确查询+向量语义匹配、Agent工具调用接口 |
 | [数据库说明.md](database/数据库说明.md) | 数据库使用说明、表结构说明 |
-| [建筑蓝图数据格式.md](database/建筑蓝图数据格式.md) | TEdit蓝图数据格式、JSON结构定义 |
+| [建筑蓝图数据格式.md](database/建筑蓝图数据格式.md) | TEdit蓝图数据格式、BuildingRules JSON结构定义 |
 | [npc_house_data.json](database/npc_house_data.json) | NPC房屋需求数据 |
 
 ---
@@ -75,6 +77,34 @@ AI 功能集成的技术方案和实现文档。
 |------|------|
 | [项目结构文档.md](project/项目结构文档.md) | 项目目录结构、模块划分、核心文件说明 |
 | [建筑生成模组分析文档.md](project/建筑生成模组分析文档.md) | 主流建筑模组分析（CheatSheet/HEROsMod/StructureHelper）、代码模式、实现思路 |
+
+---
+
+## 构件级架构说明
+
+项目采用多层次构件架构:
+
+```
+层次4: Complex (建筑群)    → 村庄、基地
+层次3: Building (完整建筑) → 住宅、塔楼、商店、神庙
+层次2: Composite (复合构件) → 房间、楼层
+层次1: Atomic (原子构件)   → 屋顶、墙壁、装饰、基础
+```
+
+**核心处理流程**:
+```
+用户描述 → TrueAgentCore (工具调用循环)
+              ↓
+         search_buildings → 检索建筑模板
+         get_building_details → 获取构件详情
+         get_component_rules → 获取生成规则
+         get_style_materials → 获取材料推荐
+         generate_design_rules → 生成BuildingRules
+              ↓
+         ProceduralBuilder → 展开为完整方块数据
+              ↓
+         BuildingExecutor → 世界放置
+```
 
 ---
 
