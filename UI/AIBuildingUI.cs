@@ -121,10 +121,10 @@ namespace trab.UI
         public Point? confirmedAreaStart = null;
         public Point? confirmedAreaEnd = null;
 
-        private int[] sizeWidths = { 100, 10, 20, 35 };
-        private int[] sizeHeights = { 80, 8, 15, 25 };
+        private int[] sizeWidths = { 100, 35 };
+        private int[] sizeHeights = { 80, 25 };
         private string[] styleNames = { "中世纪", "现代", "日式", "奇幻", "地下", "自定义" };
-        private string[] sizeNames = { "无限", "小", "中", "大" };
+        private string[] sizeNames = { "无限", "大" };
 
         private bool wasMouseLeftPressed = false;
 
@@ -216,11 +216,11 @@ namespace trab.UI
             sizeLabel.TextColor = Color.LightGray;
             sizeModule.Append(sizeLabel);
 
-            // 尺寸按钮 - 显示具体尺寸
+            // 尺寸按钮 - 显示具体尺寸 + 选区按钮
             sizeButtons = new UITextPanel<string>[sizeNames.Length];
-            string[] sizeLabels = { "无限", "小10x8", "中20x15", "大35x25" };
-            float sBtnW = 56f;
-            float sBtnGap = 4f;
+            string[] sizeLabels = { "无限", "大35x25" };
+            float sBtnW = 70f;
+            float sBtnGap = 6f;
             float sStartX = 46f;
             for (int i = 0; i < sizeNames.Length; i++)
             {
@@ -235,6 +235,17 @@ namespace trab.UI
                 sizeButtons[i].OnLeftClick += (evt, elem) => SelectSize(idx);
                 sizeModule.Append(sizeButtons[i]);
             }
+
+            // 选区按钮放到尺寸模块
+            var areaBtn = new UITextPanel<string>("选区", 0.65f);
+            areaBtn.Width.Set(60f, 0f);
+            areaBtn.Height.Set(BUTTON_HEIGHT, 0f);
+            areaBtn.Left.Set(sStartX + 2 * (sBtnW + sBtnGap), 0f);
+            areaBtn.Top.Set(10f, 0f);
+            areaBtn.SetPadding(BUTTON_VPADDING);
+            areaBtn.BackgroundColor = new Color(80, 60, 40);
+            areaBtn.OnLeftClick += (evt, elem) => ToggleAreaMode();
+            sizeModule.Append(areaBtn);
 
             startY += MODULE_HEIGHT_SIZE + MODULE_MARGIN;
 
@@ -257,10 +268,10 @@ namespace trab.UI
             funcLabel.TextColor = Color.LightGray;
             functionModule.Append(funcLabel);
 
-            // 功能按钮 - 4个按钮
-            float fBtnW = 56f;
-            float fBtnGap = 3f;
-            float fStartX = 40f;
+            // 功能按钮 - 3个按钮
+            float fBtnW = 60f;
+            float fBtnGap = 5f;
+            float fStartX = 46f;
 
             var genBtn = new UITextPanel<string>("生成", 0.75f);
             genBtn.Width.Set(fBtnW, 0f);
@@ -282,20 +293,10 @@ namespace trab.UI
             placeBtn.OnLeftClick += (evt, elem) => DoPlaceAtMouse();
             functionModule.Append(placeBtn);
 
-            var areaBtn = new UITextPanel<string>("选区", 0.75f);
-            areaBtn.Width.Set(fBtnW, 0f);
-            areaBtn.Height.Set(BUTTON_HEIGHT, 0f);
-            areaBtn.Left.Set(fStartX + 2 * (fBtnW + fBtnGap), 0f);
-            areaBtn.Top.Set(10f, 0f);
-            areaBtn.SetPadding(BUTTON_VPADDING);
-            areaBtn.BackgroundColor = new Color(80, 60, 40);
-            areaBtn.OnLeftClick += (evt, elem) => ToggleAreaMode();
-            functionModule.Append(areaBtn);
-
             agentBtn = new UITextPanel<string>("Agent", 0.75f);
-            agentBtn.Width.Set(48f, 0f);
+            agentBtn.Width.Set(60f, 0f);
             agentBtn.Height.Set(BUTTON_HEIGHT, 0f);
-            agentBtn.Left.Set(fStartX + 3 * (fBtnW + fBtnGap), 0f);
+            agentBtn.Left.Set(fStartX + 2 * (fBtnW + fBtnGap), 0f);
             agentBtn.Top.Set(10f, 0f);
             agentBtn.SetPadding(BUTTON_VPADDING);
             agentBtn.BackgroundColor = useAgentMode ? new Color(60, 120, 60) : new Color(50, 50, 50);

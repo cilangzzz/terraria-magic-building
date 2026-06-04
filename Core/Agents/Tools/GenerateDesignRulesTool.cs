@@ -30,16 +30,14 @@ namespace trab.Core.Agents.Tools
                 ["width"] = new JObject
                 {
                     ["type"] = "integer",
-                    ["description"] = "建筑宽度（6-50格）",
-                    ["minimum"] = 6,
-                    ["maximum"] = 50
+                    ["description"] = "建筑宽度（格）",
+                    ["minimum"] = 1
                 },
                 ["height"] = new JObject
                 {
                     ["type"] = "integer",
-                    ["description"] = "建筑高度（6-32格）",
-                    ["minimum"] = 6,
-                    ["maximum"] = 32
+                    ["description"] = "建筑高度（格）",
+                    ["minimum"] = 1
                 },
                 ["style"] = new JObject
                 {
@@ -96,14 +94,14 @@ namespace trab.Core.Agents.Tools
                 return Task.FromResult(ToolResult.Error($"解析设计规则失败: {ex.Message}"));
             }
 
-            // 验证基本参数
-            if (rules.width < 6 || rules.width > 50)
+            // 验证基本参数（仅验证最小值）
+            if (rules.width < 1)
             {
-                return Task.FromResult(ToolResult.Error($"宽度超出范围: {rules.width}，应为6-50"));
+                return Task.FromResult(ToolResult.Error($"宽度无效: {rules.width}，应大于0"));
             }
-            if (rules.height < 6 || rules.height > 32)
+            if (rules.height < 1)
             {
-                return Task.FromResult(ToolResult.Error($"高度超出范围: {rules.height}，应为6-32"));
+                return Task.FromResult(ToolResult.Error($"高度无效: {rules.height}，应大于0"));
             }
 
             // 估算材料

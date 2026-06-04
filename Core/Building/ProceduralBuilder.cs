@@ -31,9 +31,9 @@ namespace trab.Core.Building
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            // 验证尺寸
-            int width = Math.Clamp(rules.width, 6, 50);
-            int height = Math.Clamp(rules.height, 6, 32);
+            // 使用原始尺寸，不做限制
+            int width = rules.width;
+            int height = rules.height;
 
             // 创建设计对象
             var design = new TEditSchDesign
@@ -936,10 +936,6 @@ namespace trab.Core.Building
                     }
                 }
             }
-
-            // 确保尺寸在有效范围
-            rules.width = Math.Clamp(rules.width, 6, 50);
-            rules.height = Math.Clamp(rules.height, 6, 32);
         }
 
         #endregion

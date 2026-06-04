@@ -217,7 +217,13 @@ namespace trab.Core.Agents.Tools
         {
             var registry = new ToolRegistry();
 
-            // 注册核心工具
+            // 注册构件级工具（新架构）
+            registry.RegisterTool(new SearchBuildingsTool());
+            registry.RegisterTool(new GetBuildingDetailsTool());
+            registry.RegisterTool(new GetComponentRulesTool());
+            registry.RegisterTool(new GetStyleMaterialsTool());
+
+            // 保留兼容工具
             registry.RegisterTool(new SearchBuildingTemplatesTool());
             registry.RegisterTool(new GetTemplateDetailsTool());
             registry.RegisterTool(new SearchMaterialsTool());
@@ -265,6 +271,14 @@ namespace trab.Core.Agents.Tools
         protected bool? GetBoolParam(JObject input, string key)
         {
             return input[key]?.Value<bool?>();
+        }
+
+        /// <summary>
+        /// 安全获取浮点数参数
+        /// </summary>
+        protected double? GetDoubleParam(JObject input, string key)
+        {
+            return input[key]?.Value<double?>();
         }
 
         /// <summary>

@@ -1,0 +1,499 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using trab.Core.KnowledgeBase;
+
+namespace trab.Core.Agents.Tools
+{
+    /// <summary>
+    /// 块检索工具 - 在建筑块库中检索匹配的块
+    /// </summary>
+    public class SearchBlocksTool : BaseAgentTool
+    {
+        public override string Name => "search_blocks";
+
+        public override string Description => "检索建筑块。根据类型、风格、标签、尺寸等条件检索，返回块摘要列表。用于找到可复用的建筑组件。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["type"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["enum"] = new JArray { "building", "structure", "room", "element" },
+                    ["description"] = "块类型: building(完整建筑), structure(结构组件), room(房间), element(基础元素)"
+                },
+                ["style"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "风格: asian, medieval, fantasy, snow, desert, modern"
+                },
+                ["tags"] = new JObject
+                {
+                    ["type"] = "array",
+                    ["items"] = new JObject { ["type"] = "string" },
+                    ["description"] = "特征标签: pagoda, lantern, marble, gold等"
+                },
+                ["min_width"] = new JObject { ["type"] = "integer" },
+                ["max_width"] = new JObject { ["type"] = "integer" },
+                ["min_height"] = new JObject { ["type"] = "integer" },
+                ["max_height"] = new JObject { ["type"] = "integer" },
+                ["top_k"] = new JObject { ["type"] = "integer", ["default"] = 5 }
+            },
+            ["required"] = new JArray()
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            string type = GetStringParam(input, "type");
+            string style = GetStringParam(input, "style");
+            var tags = GetStringArrayParam(input, "tags");
+            int? minWidth = GetIntParam(input, "min_width");
+            int? maxWidth = GetIntParam(input, "max_width");
+            int? minHeight = GetIntParam(input, "min_height");
+            int? maxHeight = GetIntParam(input, "max_height");
+            int topK = GetIntParam(input, "top_k") ?? 5;
+
+            // 检索块
+            var criteria = new BlockSearchCriteria
+            {
+                Type = type,
+                Style = style,
+                Tags = tags,
+                MinWidth = minWidth ?? 0,
+                MaxWidth = maxWidth ?? 1000,
+                MinHeight = minHeight ?? 0,
+                MaxHeight = maxHeight ?? 1000
+            };
+
+            var blocks = kb.Blocks.SearchBlocks(criteria, topK);
+
+            // 生成摘要
+            var summaries = blocks.Select(b => new
+            {
+                id = b.Id,
+                type = b.Type,
+                level = b.Level,
+                dimensions = b.Dimensions,
+                description = new
+                {
+                    name = b.Description?.Name,
+                    summary = b.Description?.Summary,
+                    tags = b.Description?.Tags,
+                    style = b.Description?.Style
+                },
+                child_count = b.Children?.Count ?? 0,
+                has_children = (b.Children?.Count ?? 0) > 0,
+                score = b.Score
+            }).ToList();
+
+            var result = new
+            {
+                blocks = summaries,
+                total = summaries.Count,
+                note = summaries.Count > 0
+                    ? "使用 get_block 获取完整数据，使用 get_block_tree 查看子块结构"
+                    : "未找到匹配块，建议放宽搜索条件"
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+    }
+
+    /// <summary>
+    /// 获取块详情工具 - 加载块的完整数据
+    /// </summary>
+    public class GetBlockTool : BaseAgentTool
+    {
+        public override string Name => "get_block";
+
+        public override string Description => "获取指定块的完整数据，包括tiles、描述、统计信息。用于了解块的详细内容。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["block_id"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "块ID，从search_blocks返回"
+                }
+            },
+            ["required"] = new JArray { "block_id" }
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            string blockId = GetStringParam(input, "block_id");
+
+            if (string.IsNullOrEmpty(blockId))
+            {
+                return Task.FromResult(ToolResult.Error("block_id参数为空"));
+            }
+
+            var block = kb.Blocks.GetBlock(blockId);
+            if (block == null)
+            {
+                return Task.FromResult(ToolResult.Error($"未找到块: {blockId}"));
+            }
+
+            // 返回完整数据
+            var result = new
+            {
+                id = block.Id,
+                type = block.Type,
+                level = block.Level,
+                parent_id = block.ParentId,
+                bounds = block.Bounds,
+                dimensions = block.Dimensions,
+                description = block.Description,
+                statistics = block.Statistics,
+                tile_data_available = block.Tiles != null,
+                children = block.Children?.Select(c => new { id = c.Id, ref_path = c.Ref }).ToList(),
+                note = "tiles数据已就绪，可直接使用此块进行建造"
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+    }
+
+    /// <summary>
+    /// 获取块树结构工具 - 查看块的子块层级
+    /// </summary>
+    public class GetBlockTreeTool : BaseAgentTool
+    {
+        public override string Name => "get_block_tree";
+
+        public override string Description => "获取块的子块树结构，了解建筑的组成方式。用于分析大型建筑的组件构成。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["block_id"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "块ID"
+                },
+                ["depth"] = new JObject
+                {
+                    ["type"] = "integer",
+                    ["default"] = 3,
+                    ["description"] = "展开深度"
+                }
+            },
+            ["required"] = new JArray { "block_id" }
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            string blockId = GetStringParam(input, "block_id");
+            int depth = GetIntParam(input, "depth") ?? 3;
+
+            var block = kb.Blocks.GetBlock(blockId);
+            if (block == null)
+            {
+                return Task.FromResult(ToolResult.Error($"未找到块: {blockId}"));
+            }
+
+            // 递归构建树
+            var tree = BuildTree(block, kb, 0, depth);
+
+            var result = new
+            {
+                root = new
+                {
+                    id = block.Id,
+                    type = block.Type,
+                    name = block.Description?.Name
+                },
+                tree = tree,
+                assembly_sequence = GetAssemblySequence(block)
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+
+        private List<object> BuildTree(BuildingBlock block, KnowledgeBaseManager kb, int currentDepth, int maxDepth)
+        {
+            if (currentDepth >= maxDepth || block.Children == null || block.Children.Count == 0)
+            {
+                return new List<object>();
+            }
+
+            var result = new List<object>();
+            foreach (var childRef in block.Children)
+            {
+                var child = kb.Blocks.GetBlock(childRef.Id);
+                if (child != null)
+                {
+                    result.Add(new
+                    {
+                        id = child.Id,
+                        type = child.Type,
+                        name = child.Description?.Name,
+                        level = child.Level,
+                        children = BuildTree(child, kb, currentDepth + 1, maxDepth)
+                    });
+                }
+            }
+            return result;
+        }
+
+        private List<string> GetAssemblySequence(BuildingBlock block)
+        {
+            // 从build_sequence字段获取，或根据类型推断
+            if (block.BuildSequence != null && block.BuildSequence.Count > 0)
+            {
+                return block.BuildSequence;
+            }
+
+            // 默认顺序: foundation -> wall -> floor -> roof -> decoration
+            var sequence = new List<string>();
+            if (block.Children != null)
+            {
+                var typeOrder = new[] { "foundation", "structure", "room", "element" };
+                foreach (var type in typeOrder)
+                {
+                    var matched = block.Children.Where(c =>
+                    {
+                        var b = kb.Blocks.GetBlock(c.Id);
+                        return b?.Type == type;
+                    }).Select(c => c.Id);
+                    sequence.AddRange(matched);
+                }
+            }
+            return sequence;
+        }
+    }
+
+    /// <summary>
+    /// 检索子块工具 - 在指定父块的子块中检索
+    /// </summary>
+    public class SearchChildrenTool : BaseAgentTool
+    {
+        public override string Name => "search_children";
+
+        public override string Description => "在指定块的子块中检索，用于查找大型建筑中的特定组件。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["parent_id"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "父块ID"
+                },
+                ["child_type"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "子块类型筛选"
+                },
+                ["tags"] = new JObject
+                {
+                    ["type"] = "array",
+                    ["items"] = new JObject { ["type"] = "string" },
+                    ["description"] = "标签筛选"
+                }
+            },
+            ["required"] = new JArray { "parent_id" }
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            string parentId = GetStringParam(input, "parent_id");
+            string childType = GetStringParam(input, "child_type");
+            var tags = GetStringArrayParam(input, "tags");
+
+            var parent = kb.Blocks.GetBlock(parentId);
+            if (parent == null)
+            {
+                return Task.FromResult(ToolResult.Error($"未找到父块: {parentId}"));
+            }
+
+            if (parent.Children == null || parent.Children.Count == 0)
+            {
+                return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(new
+                {
+                    parent_id = parentId,
+                    children = new List<object>(),
+                    note = "此块没有子块"
+                })));
+            }
+
+            // 筛选子块
+            var filteredChildren = new List<object>();
+            foreach (var childRef in parent.Children)
+            {
+                var child = kb.Blocks.GetBlock(childRef.Id);
+                if (child == null) continue;
+
+                // 类型筛选
+                if (!string.IsNullOrEmpty(childType) && child.Type != childType)
+                    continue;
+
+                // 标签筛选
+                if (tags != null && tags.Count > 0)
+                {
+                    var childTags = child.Description?.Tags ?? new List<string>();
+                    if (!tags.Any(t => childTags.Contains(t)))
+                        continue;
+                }
+
+                filteredChildren.Add(new
+                {
+                    id = child.Id,
+                    type = child.Type,
+                    name = child.Description?.Name,
+                    tags = child.Description?.Tags
+                });
+            }
+
+            var result = new
+            {
+                parent_id = parentId,
+                children = filteredChildren,
+                total = filteredChildren.Count
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+    }
+
+    /// <summary>
+    /// 组合块工具 - 将多个块组合为设计
+    /// </summary>
+    public class ComposeBlocksTool : BaseAgentTool
+    {
+        public override string Name => "compose_blocks";
+
+        public override string Description => "组合多个块为一个建筑设计。用于将屋顶、墙壁、地基等组件组合成完整建筑。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["blocks"] = new JObject
+                {
+                    ["type"] = "array",
+                    ["items"] = new JObject
+                    {
+                        ["type"] = "object",
+                        ["properties"] = new JObject
+                        {
+                            ["block_id"] = new JObject { ["type"] = "string" },
+                            ["position"] = new JObject { ["type"] = "string" },
+                            ["scale"] = new JObject { ["type"] = "number", ["default"] = 1.0 },
+                            ["material_replace"] = new JObject { ["type"] = "object" }
+                        }
+                    },
+                    ["description"] = "要组合的块列表"
+                },
+                ["assembly_order"] = new JObject
+                {
+                    ["type"] = "array",
+                    ["items"] = new JObject { ["type"] = "string" },
+                    ["description"] = "组装顺序"
+                }
+            },
+            ["required"] = new JArray { "blocks" }
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            var blocksArray = input["blocks"] as JArray;
+            if (blocksArray == null || blocksArray.Count == 0)
+            {
+                return Task.FromResult(ToolResult.Error("blocks参数为空"));
+            }
+
+            var compositionId = $"composition_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+            var blocksUsed = new List<string>();
+            var totalWidth = 0;
+            var totalHeight = 0;
+
+            foreach (var blockItem in blocksArray)
+            {
+                string blockId = blockItem["block_id"]?.ToString();
+                if (string.IsNullOrEmpty(blockId)) continue;
+
+                var block = kb.Blocks.GetBlock(blockId);
+                if (block == null) continue;
+
+                blocksUsed.Add(blockId);
+
+                // 计算总尺寸（简化处理，实际需要考虑位置）
+                if (block.Dimensions != null)
+                {
+                    totalWidth = Math.Max(totalWidth, block.Dimensions.GetValueOrDefault("width", 0));
+                    totalHeight += block.Dimensions.GetValueOrDefault("height", 0);
+                }
+            }
+
+            var result = new
+            {
+                composition_id = compositionId,
+                blocks_used = blocksUsed,
+                total_dimensions = new { width = totalWidth, height = totalHeight },
+                assembly_sequence = input["assembly_order"]?.ToObject<List<string>>() ?? blocksUsed,
+                estimated_tiles = totalWidth * totalHeight,
+                output_format = "composition_json",
+                note = "组合设计已生成，可使用此设计进行建造"
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+    }
+
+    /// <summary>
+    /// 列出可用块工具 - 显示块库统计
+    /// </summary>
+    public class ListAvailableBlocksTool : BaseAgentTool
+    {
+        public override string Name => "list_available_blocks";
+
+        public override string Description => "列出块库中可用的块类型和数量，用于了解可用资源。";
+
+        public override JObject InputSchema => new JObject
+        {
+            ["type"] = "object",
+            ["properties"] = new JObject
+            {
+                ["type_filter"] = new JObject
+                {
+                    ["type"] = "string",
+                    ["description"] = "类型筛选，为空则显示所有"
+                }
+            },
+            ["required"] = new JArray()
+        };
+
+        public override Task<ToolResult> ExecuteAsync(JObject input, KnowledgeBaseManager kb)
+        {
+            string typeFilter = GetStringParam(input, "type_filter");
+
+            var stats = kb.Blocks.GetStatistics(typeFilter);
+
+            var result = new
+            {
+                total_blocks = stats.TotalBlocks,
+                by_type = stats.ByType,
+                by_style = stats.ByStyle,
+                examples = stats.Examples.Take(5).ToList(),
+                note = "使用 search_blocks 检索具体的块"
+            };
+
+            return Task.FromResult(ToolResult.Success(JsonConvert.SerializeObject(result)));
+        }
+    }
+}
